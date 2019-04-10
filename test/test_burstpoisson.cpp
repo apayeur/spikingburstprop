@@ -121,13 +121,13 @@ int main(int ac, char* av[])
     logger->msg("Running ...",PROGRESS);
     
     // The alternating currents switched between a maximum of 175 pA and a minimum of -210 pA in the dendrites and between 230 pA and 130 pA in the soma. Dendritic input during 75e-3 s and somatic input during 50.e-3 seconds.
-    const double max_dendritic_current = 40e-12; //90e-12;
-    const double min_dendritic_current = -10e-12;
-    const double max_somatic_current = 100.e-12; //650e-12;
-    const double min_somatic_current = 0e-12;
+    const double max_dendritic_current = 2000e-12; //90e-12;
+    const double min_dendritic_current = 1500e-12;
+    const double max_somatic_current = 750.e-12; //650e-12;
+    const double min_somatic_current = 500e-12;
 
     const double period = 200e-3;
-    const double simtime = 1000e-3;
+    const double simtime = 200e-3;
     const double segtime_maxsoma = period/2.;
     const double segtime_minsoma = period/2;
     const double segtime_maxdend = 0.7*period;
@@ -141,7 +141,7 @@ int main(int ac, char* av[])
     curr_inject_dend->set_all_currents(min_dendritic_current/pyr[0].get_Cd());
     sys->run(simtime);
     
-    
+    /*
     // simulate current
     
     for (int i=0;i<10;i++)
@@ -162,36 +162,7 @@ int main(int ac, char* av[])
         curr_inject_dend->set_all_currents(min_dendritic_current/pyr[0].get_Cd());
         sys->run(small_overlap);
     }
-
-    // alternating current to somata only (constant dendritic current):
-    //double dendritic_current[1] = {min_dendritic_current, (min_dendritic_current + max_dendritic_current)/2., max_dendritic_current};
-    /*
-    double dendritic_current[1] = {max_dendritic_current};
-    
-    for (int j=0;j<1;j++){
-        for (int i=0;i<10;i++)
-        {
-            //double somatic_current = min_somatic_current + (i + 1)*(max_somatic_current - min_somatic_current)/11;
-            curr_inject_soma->set_all_currents(max_somatic_current/pyr[0].get_Cs());
-            curr_inject_dend->set_all_currents(dendritic_current[j]/pyr[0].get_Cd());
-            
-            sys->run(segtime_mindend - small_overlap); //20 ms
-            
-            curr_inject_soma->set_all_currents(max_somatic_current/pyr[0].get_Cs());
-            curr_inject_dend->set_all_currents(dendritic_current[j]/pyr[0].get_Cd());
-            sys->run(segtime_maxsoma  - (segtime_mindend - small_overlap) ); //30 ms
-            
-            curr_inject_soma->set_all_currents(min_somatic_current/pyr[0].get_Cs());
-            curr_inject_dend->set_all_currents(dendritic_current[j]/pyr[0].get_Cd());
-            sys->run(segtime_maxdend + segtime_mindend - small_overlap - segtime_maxsoma); //40 ms
-            
-            curr_inject_soma->set_all_currents(min_somatic_current/pyr[0].get_Cs());
-            curr_inject_dend->set_all_currents(dendritic_current[j]/pyr[0].get_Cd());
-            sys->run(small_overlap); // 10 ms
-        }
-    }*/
-    
-    
+    */
     if (errcode)
         auryn_abort(errcode);
     

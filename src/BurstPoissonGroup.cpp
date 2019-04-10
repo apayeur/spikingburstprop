@@ -28,6 +28,7 @@ BurstPoissonGroup::BurstPoissonGroup( NeuronID size, NodeDistributionMode distmo
         
         abs_ref_period = int(20.e-3/auryn_timestep);
         burst_duration = int(10.e-3/auryn_timestep);
+        this->e_dend = -60e-3;
     }
 }
 
@@ -94,8 +95,27 @@ void BurstPoissonGroup::check_thresholds()
     
     for ( AurynState * i = mem->data ; i != mem->data+get_rank_size() ; ++i ) { // it's important to use rank_size here otherwise there might be spikes from units that do not exist
         NeuronID unit = i-mem->data;
-        if ( *i > *thr_ptr and !(*burst_state_ptr) and !(*refractory_state_ptr) ) {
+        if ( *i > *thr_ptr and !(*refractory_state_ptr) ) {
+            
+            // DEBUG //
+            std::cout<<"\nSpiking unit: "<<unit<<"\t"<<sys->get_time()<<std::endl;
+            // END DEBUG //
+            
             push_spike(unit);
+            
+            // DEBUG //
+            SpikeContainer::const_iterator spk;
+            std::cout<<"\nspiking neurons : ";
+            for ( spk = this->get_spikes_immediate()->begin() ;
+                 spk < this->get_spikes_immediate()->end() ;
+                 ++spk ) {
+                
+                const NeuronID s = this->global2rank(*spk);
+                std::cout<<s<<", ";
+            }
+            std::cout<<std::endl;
+            // END DEBUG //
+            
             refractory_state->set(unit, abs_ref_period);
             mem->set( unit, e_reset); // reset
             thr->add_specific( unit, e_spk_thr); // not needed
@@ -108,7 +128,22 @@ void BurstPoissonGroup::check_thresholds()
             }
         }
         else if (*burst_state_ptr==1){
+            // DEBUG //
+            std::cout<<"\nBursting unit: "<<unit<<"\t"<<sys->get_time()<<std::endl;
+            // END DEBUG //
             push_spike(unit);
+            // DEBUG //
+            SpikeContainer::const_iterator bpk;
+            std::cout<<"\nspiking neurons : ";
+            for ( bpk = this->get_spikes_immediate()->begin() ;
+                 bpk < this->get_spikes_immediate()->end() ;
+                 ++bpk ) {
+                
+                const NeuronID s = this->global2rank(*bpk);
+                std::cout<<s<<", ";
+            }
+            std::cout<<std::endl;
+            // END DEBUG //
             mem->set( unit, e_reset);
             thr->add_specific( unit, e_spk_thr);
             state_wsoma->add_specific(unit, 1.0);
@@ -126,8 +161,8 @@ void BurstPoissonGroup::evolve()
     syn_inh_soma->evolve();
     syn_exc_dend->evolve(); //!< integrate_linear_nmda_synapses
     syn_inh_dend->evolve();
-    //integrate_membrane();
-    //check_thresholds();
+    integrate_membrane();
+    check_thresholds();
 }
 
 void BurstPoissonGroup::seed(unsigned int s)

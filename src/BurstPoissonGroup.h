@@ -8,11 +8,11 @@
 #ifndef BURSTPOISSONGROUP_H_
 #define BURSTPOISSONGROUP_H_
 
-#include "auryn.h"
-//#include "auryn_definitions.h"
-//#include "AurynVector.h"
-//#include "NaudGroup.h"
-//#include "System.h"
+//#include "auryn.h"
+#include "auryn_definitions.h"
+#include "AurynVector.h"
+#include "NaudGroup.h"
+#include "System.h"
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
