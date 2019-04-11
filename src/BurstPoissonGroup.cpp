@@ -89,13 +89,12 @@ void BurstPoissonGroup::integrate_membrane()
 void BurstPoissonGroup::check_thresholds()
 {
     AurynState * thr_ptr = thr->data;
-    AurynInt * burst_state_ptr = burst_state->data;
-    AurynInt * refractory_state_ptr = refractory_state->data;
+    
     temp->sigmoid(state_dend, xi, e_dend ); // burst probability
     
     for ( AurynState * i = mem->data ; i != mem->data+get_rank_size() ; ++i ) { // it's important to use rank_size here otherwise there might be spikes from units that do not exist
         NeuronID unit = i-mem->data;
-        if ( *i > *thr_ptr and !(*refractory_state_ptr) ) {
+        if ( *i > *thr_ptr and !refractory_state->get(unit) ) {
             
             // DEBUG //
             std::cout<<"\nSpiking unit: "<<unit<<"\t"<<sys->get_time()<<std::endl;
@@ -127,11 +126,23 @@ void BurstPoissonGroup::check_thresholds()
                 burst_state->set(unit, burst_duration);
             }
         }
-        else if (*burst_state_ptr==1){
+        thr_ptr++;
+    }
+    
+}
+
+void BurstPoissonGroup::generate_bursts()
+{
+    for ( AurynInt * i = burst_state->data ; i != burst_state->data+get_rank_size() ; ++i ) {
+        if (*i==1){
+            NeuronID unit = i-burst_state->data;
+            
             // DEBUG //
             std::cout<<"\nBursting unit: "<<unit<<"\t"<<sys->get_time()<<std::endl;
             // END DEBUG //
+            
             push_spike(unit);
+            
             // DEBUG //
             SpikeContainer::const_iterator bpk;
             std::cout<<"\nspiking neurons : ";
@@ -144,16 +155,14 @@ void BurstPoissonGroup::check_thresholds()
             }
             std::cout<<std::endl;
             // END DEBUG //
+            
             mem->set( unit, e_reset);
             thr->add_specific( unit, e_spk_thr);
             state_wsoma->add_specific(unit, 1.0);
         }
-        thr_ptr++;
-        burst_state_ptr++;
-        refractory_state_ptr++;
     }
-    
 }
+
 
 void BurstPoissonGroup::evolve()
 {
@@ -163,6 +172,7 @@ void BurstPoissonGroup::evolve()
     syn_inh_dend->evolve();
     integrate_membrane();
     check_thresholds();
+    generate_bursts();
 }
 
 void BurstPoissonGroup::seed(unsigned int s)

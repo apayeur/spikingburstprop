@@ -29,7 +29,7 @@ dt = 0.001
 weights = []
 for p in burst_probs:
     syn.reset()
-    protocol = PoissonBurstProtocol(p=p, duration=duration, rate_event=25.)
+    protocol = PoissonBurstProtocol(p=p, duration=duration, rate_event=5.)
     protocol.display('../../results/learning-rule/Poisson/protocol_p'+str(p)[:4]+'.pdf')
     syn.pre.compute_trains(protocol.spiketimes_pre, dt, duration)
     syn.post.compute_trains(protocol.spiketimes_post, dt, duration)
@@ -43,7 +43,7 @@ for p in burst_probs:
 
 
 # plotting
-plt.figure(figsize=(2.*1.6, 2.))
+plt.figure(figsize=(1.5*1.6, 1.5))
 plt.plot(100*burst_probs, weights, color='black')
 plt.plot(100*burst_probs, np.zeros(len(burst_probs)), 'k--', lw=1)
 sns.despine()

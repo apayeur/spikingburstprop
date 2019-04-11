@@ -15,7 +15,7 @@ The plasticity protocol consists in pre- and post-synaptic Poisson processes.
 
 
 # select parameters for pairing protocol
-rates = np.arange(1., 60., 5.)
+rates = np.linspace(1., 30., 10)
 
 # create synapse
 learning_rate = 0.1
@@ -27,8 +27,8 @@ dt = 0.001
 weights = []
 for r in rates:
     syn.reset()
-    protocol = RandomProtocol(spike_number=1000, rate=r)
-    #protocol.display('../../results/learning-rule/Poisson/protocol_p'+str(p)[:4]+'.pdf')
+    protocol = RandomProtocol(spike_number=2000, rate=r)
+    protocol.display('../../results/learning-rule/Poisson/protocolRandom_r'+str(r)[:2]+'.pdf')
     duration = max(np.max(protocol.spiketimes_pre), np.max(protocol.spiketimes_post)) + 0.1
     syn.pre.compute_trains(protocol.spiketimes_pre, dt, duration)
     syn.post.compute_trains(protocol.spiketimes_post, dt, duration)
@@ -42,7 +42,7 @@ for r in rates:
 
 
 # plotting
-plt.figure(figsize=(2.*1.6, 2.))
+plt.figure(figsize=(1.5*1.6, 1.5))
 plt.plot(rates, weights, color='black')
 plt.plot(rates, np.zeros(len(rates)), 'k--', lw=1)
 sns.despine()

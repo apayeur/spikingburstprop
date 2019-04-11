@@ -22,7 +22,7 @@ Delta = 0.010  # t_post - t_pre
 number_of_pairings = 5
 
 # create synapse
-syn = PreEventSynapse(0.1, burst_def=0.025)
+syn = PreEventSynapse(0.1)
 
 # integration time step
 dt = 0.001
@@ -44,7 +44,7 @@ for f in freqs:
     #  by dt in the rule (see preeventsynapse.py)
 
 # plotting
-plt.figure(figsize=(2.*1.6, 2.))
+plt.figure(figsize=(1.5*1.6, 1.5))
 plt.plot(freqs, weights, color='black')
 plt.plot(freqs, np.zeros(len(freqs)), 'k--', lw=1)
 sns.despine()

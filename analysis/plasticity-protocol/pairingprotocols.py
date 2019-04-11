@@ -30,9 +30,10 @@ class PairingProtocol(object):
         try:
             assert(len(self.spiketimes_pre)>0 and len(self.spiketimes_post)>0) # check if spiketimes list are non-empty
             plt.figure(figsize=(5,2))
-            plt.eventplot(self.spiketimes_pre, colors=[custom_colors['red']], lineoffsets=1, linelengths=2, lw=1, label='pre')
-            plt.eventplot(self.spiketimes_post, colors=[custom_colors['blue']], lineoffsets=2, linelengths=2, lw=1, label='post')
-            plt.xlim(xmax=min(10., max(self.spiketimes_post[-1], self.spiketimes_pre[-1])))
+            plt.eventplot(self.spiketimes_pre, colors=[custom_colors['red']], lineoffsets=1, linelengths=2, lw=0.5, label='pre')
+            plt.eventplot(self.spiketimes_post, colors=[custom_colors['blue']], lineoffsets=2, linelengths=2, lw=0.5, label='post')
+            plt.plot([0.5, 0.510], [3.5, 3.5], lw=0.5)
+            plt.xlim([0,min(5, max(self.spiketimes_post[-1], self.spiketimes_pre[-1]))])
             #plt.xticks([])
             #plt.yticks([])
             sns.despine(left=True, bottom=True)
