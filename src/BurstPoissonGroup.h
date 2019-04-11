@@ -57,8 +57,6 @@ namespace auryn {
         
         void check_thresholds();
         
-        void generate_bursts();
-        
         /*! Internally used evolve function. Called by System. */
         virtual void evolve();
         
