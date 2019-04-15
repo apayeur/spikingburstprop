@@ -152,12 +152,11 @@ class RandomProtocol(PairingProtocol):
        Pre- and post-synaptic neurons firing with Poisson rate.
     """
 
-    def __init__(self, spike_number=75, p=0.15, rate=5.):
+    def __init__(self, duration=500, rate=5.):
         """Return a pairing protocol with Poisson events at rate *rate*.
         """
         super().__init__()
-        self.spike_number = spike_number
-        self.p = p
+        self.duration = duration
         self.rate = rate
         self.get_spiketimes()
 
@@ -165,14 +164,23 @@ class RandomProtocol(PairingProtocol):
         """
         Compute the pre and post spike times and put them in lists.
         """
-        if len(self.spiketimes_pre) > 0 and len(self.spiketimes_post) > 0:
-            self.spiketimes_pre = []
-            self.spiketimes_post = []
+        spike_number = int(self.rate*self.duration*10)
+        while True:
+            isis = np.random.exponential(1./self.rate, spike_number)
+            self.spiketimes_pre = isis.cumsum()
 
-        isis = np.random.exponential(1./self.rate, self.spike_number)
-        self.spiketimes_pre = list(isis.cumsum())
-        isis = np.random.exponential(1./self.rate, self.spike_number)
-        self.spiketimes_post = list(isis.cumsum())
+            isis = np.random.exponential(1. / self.rate, spike_number)
+            self.spiketimes_post = isis.cumsum()
+
+            if self.spiketimes_pre[-1] > self.duration and self.spiketimes_post[-1]>self.duration:
+                indices = np.where(self.spiketimes_pre < self.duration)[0]
+                self.spiketimes_pre = self.spiketimes_pre[indices]
+
+                indices = np.where(self.spiketimes_post < self.duration)[0]
+                self.spiketimes_post = self.spiketimes_post[indices]
+                break
+
+            spike_number *= 10
 
 
 class SjostromProtocol(PairingProtocol):

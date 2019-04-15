@@ -1,6 +1,7 @@
 # results folder
 results/*
 figs/*
+data/*
 
 # DS_Store
 .DS_Store

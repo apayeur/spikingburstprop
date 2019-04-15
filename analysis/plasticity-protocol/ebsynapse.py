@@ -28,9 +28,9 @@ class EBSynapse(object):
         """
         Value of weight at next time step
         """
-        self.weight += self.rule(t_int)*timestep
         self.pre.evolve_traces(t_int, timestep)
         self.post.evolve_traces(t_int, timestep)
+        self.weight += self.rule(t_int)*timestep
 
     def reset(self):
         self.weight = 0.
