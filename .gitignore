@@ -1,7 +1,8 @@
-# results folder
-results/*
-figs/*
-data/*
+# folders
+results/
+figs/
+data/
+/test/test-output/
 
 # DS_Store
 .DS_Store

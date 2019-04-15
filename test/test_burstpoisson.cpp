@@ -121,13 +121,13 @@ int main(int ac, char* av[])
     logger->msg("Running ...",PROGRESS);
     
     // The alternating currents switched between a maximum of 175 pA and a minimum of -210 pA in the dendrites and between 230 pA and 130 pA in the soma. Dendritic input during 75e-3 s and somatic input during 50.e-3 seconds.
-    const double max_dendritic_current = 2000e-12; //90e-12;
-    const double min_dendritic_current = 1500e-12;
-    const double max_somatic_current = 750.e-12; //650e-12;
-    const double min_somatic_current = 500e-12;
+    const double max_dendritic_current = 150e-12; //90e-12;
+    const double min_dendritic_current = 0e-12;
+    const double max_somatic_current = 100.e-12; //650e-12;
+    const double min_somatic_current = 0e-12;
 
     const double period = 200e-3;
-    const double simtime = 200e-3;
+    const double simtime = 1000e-3;
     const double segtime_maxsoma = period/2.;
     const double segtime_minsoma = period/2;
     const double segtime_maxdend = 0.7*period;
@@ -141,7 +141,7 @@ int main(int ac, char* av[])
     curr_inject_dend->set_all_currents(min_dendritic_current/pyr[0].get_Cd());
     sys->run(simtime);
     
-    /*
+
     // simulate current
     
     for (int i=0;i<10;i++)
@@ -162,7 +162,7 @@ int main(int ac, char* av[])
         curr_inject_dend->set_all_currents(min_dendritic_current/pyr[0].get_Cd());
         sys->run(small_overlap);
     }
-    */
+
     if (errcode)
         auryn_abort(errcode);
     
