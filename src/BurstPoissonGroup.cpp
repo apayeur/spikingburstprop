@@ -13,7 +13,7 @@ boost::mt19937 BurstPoissonGroup::gen = boost::mt19937();
 
 BurstPoissonGroup::BurstPoissonGroup( NeuronID size, NodeDistributionMode distmode ) : NaudGroup(size, distmode)
 {
-    sys->register_spiking_group(this);
+    //sys->register_spiking_group(this);
     set_name("BurstPoissonGroup");
     if ( evolve_locally() ) {
         dist = new boost::random::uniform_real_distribution<>(0., 1.);
@@ -28,7 +28,7 @@ BurstPoissonGroup::BurstPoissonGroup( NeuronID size, NodeDistributionMode distmo
         
         abs_ref_period = int(20.e-3/auryn_timestep);
         burst_duration = int(10.e-3/auryn_timestep);
-        this->e_dend = -60e-3;
+        this->e_dend = -57e-3;
     }
 }
 
@@ -88,33 +88,13 @@ void BurstPoissonGroup::integrate_membrane()
 
 void BurstPoissonGroup::check_thresholds()
 {
-    AurynState * thr_ptr = thr->data;
-    AurynInt * burst_state_ptr = burst_state->data;
-    AurynInt * refractory_state_ptr = refractory_state->data;
     temp->sigmoid(state_dend, xi, e_dend ); // burst probability
     
     for ( AurynState * i = mem->data ; i != mem->data+get_rank_size() ; ++i ) { // it's important to use rank_size here otherwise there might be spikes from units that do not exist
         NeuronID unit = i-mem->data;
-        if ( *i > *thr_ptr and !(*refractory_state_ptr) ) {
-            
-            // DEBUG //
-            std::cout<<"\nSpiking unit: "<<unit<<"\t"<<sys->get_time()<<std::endl;
-            // END DEBUG //
+        if ( *i > thr->get(unit) and !refractory_state->get(unit) ) {
             
             push_spike(unit);
-            
-            // DEBUG //
-            SpikeContainer::const_iterator spk;
-            std::cout<<"\nspiking neurons : ";
-            for ( spk = this->get_spikes_immediate()->begin() ;
-                 spk < this->get_spikes_immediate()->end() ;
-                 ++spk ) {
-                
-                const NeuronID s = this->global2rank(*spk);
-                std::cout<<s<<", ";
-            }
-            std::cout<<std::endl;
-            // END DEBUG //
             
             refractory_state->set(unit, abs_ref_period);
             mem->set( unit, e_reset); // reset
@@ -127,30 +107,13 @@ void BurstPoissonGroup::check_thresholds()
                 burst_state->set(unit, burst_duration);
             }
         }
-        else if (*burst_state_ptr==1){
-            // DEBUG //
-            std::cout<<"\nBursting unit: "<<unit<<"\t"<<sys->get_time()<<std::endl;
-            // END DEBUG //
+        else if (burst_state->get(unit)==1){
             push_spike(unit);
-            // DEBUG //
-            SpikeContainer::const_iterator bpk;
-            std::cout<<"\nspiking neurons : ";
-            for ( bpk = this->get_spikes_immediate()->begin() ;
-                 bpk < this->get_spikes_immediate()->end() ;
-                 ++bpk ) {
-                
-                const NeuronID s = this->global2rank(*bpk);
-                std::cout<<s<<", ";
-            }
-            std::cout<<std::endl;
-            // END DEBUG //
+            refractory_state->set(unit, abs_ref_period);
             mem->set( unit, e_reset);
             thr->add_specific( unit, e_spk_thr);
             state_wsoma->add_specific(unit, 1.0);
         }
-        thr_ptr++;
-        burst_state_ptr++;
-        refractory_state_ptr++;
     }
     
 }
