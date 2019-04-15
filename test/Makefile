@@ -19,7 +19,7 @@ LDFLAGS=$(BUILDDIR)/src/libauryn.a \
 #         -I$(AURYNDIR)/src -I$(AURYNDIR)/dev/src
 
 
-OBJECTS=BurstPoissonGroup.o BCPConnection.o EBCPConnection.o SineCurrentInjector.o STPeTMConnection.o TransmitBurstConnection.o TransmitEventConnection.o
+OBJECTS=BurstPoissonGroup.o
 
 SIMULATIONS=test_burstpoisson test_burstpoisson_simple
 

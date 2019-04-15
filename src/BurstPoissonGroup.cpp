@@ -174,3 +174,4 @@ void BurstPoissonGroup::seed(unsigned int s)
     
     gen.seed( s + salt );
 }
+

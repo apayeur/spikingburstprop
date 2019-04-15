@@ -62,6 +62,7 @@ namespace auryn {
         
         /*! Use this to seed the random number generator. */
         void seed(unsigned int s);
+        
     };
 }
 

@@ -1,7 +1,7 @@
 # shorthand for your MPI C++ compiler
 CC = mpicxx
 # Your Auryn install path
-AURYNDIR = $(HOME)/auryn
+AURYNDIR = $(HOME)/auryn_master/auryn
 # Path to libauryn.a (see compiling Auryn)
 BUILDDIR = $(AURYNDIR)/build/release/
 
