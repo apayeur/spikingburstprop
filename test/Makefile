@@ -21,7 +21,7 @@ LDFLAGS=$(BUILDDIR)/src/libauryn.a \
 
 OBJECTS=BurstPoissonGroup.o
 
-SIMULATIONS=test_burstpoisson test_burstpoisson_simple
+SIMULATIONS=test_burstpoisson test_burstpoisson_simple test_ficurve_burstpoisson
 
 .SECONDARY:
 

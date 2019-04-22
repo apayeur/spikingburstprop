@@ -12,7 +12,7 @@ filenames = ['./test-output/burstpoisson.0.ras_seed1',
 
 # parameters
 # currents in pA
-max_dendritic_current = 60.
+max_dendritic_current = 150.
 min_dendritic_current = 0.
 max_somatic_current = 100.
 min_somatic_current = 0.
@@ -43,5 +43,5 @@ current_soma = ra.alternating_square_current(times, min_somatic_current, max_som
 inputs = {'times': times, 'dendrite': current_dend, 'soma': current_soma}
 
 # plot
-ra.plot_rates_with_inputs(filenames, inputs)
+ra.display_rates_with_inputs(filenames, './test-output/MultiplexingWithBurstPoisson.pdf', inputs)
 

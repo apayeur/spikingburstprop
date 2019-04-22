@@ -4,6 +4,9 @@ figs/
 data/
 /test/test-output/
 
+*.xml
+*.pyc
+
 # DS_Store
 .DS_Store
 
