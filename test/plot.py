@@ -43,5 +43,5 @@ current_soma = ra.alternating_square_current(times, min_somatic_current, max_som
 inputs = {'times': times, 'dendrite': current_dend, 'soma': current_soma}
 
 # plot
-ra.display_rates_with_inputs(filenames, './test-output/MultiplexingWithBurstPoisson.pdf', inputs)
+ra.display_responses_with_inputs(filenames, './test-output/MultiplexingWithBurstPoisson.pdf', inputs)
 

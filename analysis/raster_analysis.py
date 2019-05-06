@@ -5,15 +5,15 @@ import sys
 import seaborn as sns
 #sys.path.append('./')
 from utils_plotting import custom_colors
-plt.style.use('../analysis/thesis_mplrc.dms')
+plt.style.use('../thesis_mplrc.dms')
 
 
 #################################################################
 #           FUNCTIONS RELATED TO RATE COMPUTATIONS              #
 #################################################################
-def rates_from_raster(filename_raster, binsize=20.e-3, tau=16.e-3):
+def BRER_from_raster(filename_raster, binsize=20.e-3, tau=16.e-3):
     """
-    Computes the event and burst rate from a raster file.
+    Computes the event rate (ER) and burst rate (BR) from a raster file.
     :param filename_raster: Raster file name (1st column = times, 2nd  column = neuron number)
     :param binsize:         Size of the discretization bins (in seconds)
     :param tau:             Burst detection threshold (in seconds)
@@ -54,14 +54,41 @@ def rates_from_raster(filename_raster, binsize=20.e-3, tau=16.e-3):
     return times, event_rate, burst_rate
 
 
-def rates_from_brates(filename):
+def rates_from_raster(filename_raster, binsize=20.e-3):
+    """
+    Computes rate (PSTH) from a raster file.
+    :param filename_raster: Raster file name (1st column = times, 2nd  column = neuron number)
+    :param binsize:         Size of the discretization bins (in seconds)
+    :returns:
+        - times - centers of bins
+        - rate  - PSTH in Hz
+    """
+    raster = np.loadtxt(filename_raster)
+    nb_of_bins = int(np.max(raster[:, 0]) / binsize)
+    nb_of_neurons = int(max(raster[:, 1]))+1
+    rate = np.zeros(nb_of_bins+1)
+
+    for spiketime in raster[:, 0]:
+        rate[int(spiketime/binsize)] += 1.
+
+    rate = rate/(nb_of_neurons * binsize)
+    times = binsize*np.arange(0, len(rate))
+    times += binsize/2.  # center of bin
+    return times, rate
+
+
+def BRER_from_brates(filename):
     data = np.loadtxt(filename)
     BR = data[:,1]
     ER = data[:,2]
-    return data[:,0], ER, BR
+    return data[:,0]-(data[1,0]-data[0,0])/2, ER, BR
+
+def rate_from_ratefile(filename):
+    data = np.loadtxt(filename)
+    return data[:,0]-(data[1,0]-data[0,0])/2, data[:,1]
 
 
-def average_rates_over_realizations(filenames, binsize=20.e-3, tau=16.e-3):
+def average_BRER_over_realizations(filenames, binsize=20.e-3, tau=16.e-3):
     """
     Computes the sample-average event and burst rates
     :param filenames:   List of raster files
@@ -72,8 +99,7 @@ def average_rates_over_realizations(filenames, binsize=20.e-3, tau=16.e-3):
     mean_ER = np.array([])
     mean_BR = np.array([])
     for i, filename in enumerate(filenames):
-        times, ER, BR = rates_from_raster(filename, binsize=binsize, tau=tau)
-        #times, ER, BR = rates_from_brates(filename)
+        times, ER, BR = BRER_from_raster(filename, binsize=binsize, tau=tau)
         if i==0:
             mean_ER = ER
             mean_BR = BR
@@ -85,7 +111,7 @@ def average_rates_over_realizations(filenames, binsize=20.e-3, tau=16.e-3):
     return times, mean_ER, mean_BR
 
 
-def std_rates_over_realizations(filenames, binsize=20.e-3, tau=16.e-3):
+def std_BRER_over_realizations(filenames, binsize=20.e-3, tau=16.e-3):
     """
     Computes the standard deviation of event and burst rates
     :param filenames:   List of raster files
@@ -96,7 +122,8 @@ def std_rates_over_realizations(filenames, binsize=20.e-3, tau=16.e-3):
     ERs = []
     BRs = []
     for i, filename in enumerate(filenames):
-        times, ER, BR = rates_from_raster(filename, binsize=binsize, tau=tau)
+        #times, ER, BR = BRER_from_raster(filename, binsize=binsize, tau=tau)
+        times, ER, BR = BRER_from_brates(filename)
         ERs.append(ER)
         BRs.append(BR)
 
@@ -104,11 +131,72 @@ def std_rates_over_realizations(filenames, binsize=20.e-3, tau=16.e-3):
     BRs = np.array(BRs)
     BPs = BRs / ERs
 
+    mean_ER = np.mean(ERs, axis=0)
+    mean_BR = np.mean(BRs, axis=0)
+    mean_BP = np.mean(BPs, axis=0)
+
     std_ER = np.std(ERs, axis=0)
     std_BR = np.std(BRs, axis=0)
     std_BP = np.std(BPs, axis=0)
 
-    return times, std_ER, std_BR, std_BP
+    print("std = {}".format(np.mean(std_ER)))
+
+    std = {'ER': std_ER, 'BR': std_BR, 'BP': std_BP}
+    mean = {'ER': mean_ER, 'BR': mean_BR, 'BP': mean_BP}
+
+    return times, mean, std
+
+
+def average_rate_over_realizations(filenames, binsize=20.e-3):
+    """
+    Computes the sample-average  rates
+    :param filenames:   List of raster files
+    :param binsize:     Size of the discretization bins (in seconds)
+    :return:            Time-dependent averages rates, over different seeds for the random noise
+    """
+    mean_rate = np.array([])
+    for i, filename in enumerate(filenames):
+        times, rate = rates_from_raster(filename, binsize=binsize)
+        if i==0:
+            mean_rate = rate
+        else:
+            mean_rate += rate[:len(mean_rate)]
+
+    mean_rate /= len(filenames)
+    return times, mean_rate
+
+
+def std_rate_over_realizations(filenames, binsize=20.e-3):
+    """
+    Computes the standard deviation of rates
+    :param filenames:   List of raster files
+    :param binsize:     Size of the discretization bins (in seconds)
+    :return:            Time-dependent std of event and burst rates
+    """
+    rates = []
+    for i, filename in enumerate(filenames):
+        times, rate = rate_from_ratefile(filename)
+        rates.append(rate)
+        rates.append(rate)
+    rates = np.array(rates)
+
+    mean_rate = np.mean(rates, axis=0)
+    std_rate = np.std(rates, axis=0)
+
+    return times, mean_rate, std_rate
+
+
+
+
+def pop_xcorr(filenames_in, filenames_out, binsize=20e-3):
+    c = 0.
+    for i, filenames_in in enumerate(filenames_in):
+        times, rate_in = rates_from_raster(filenames_in, binsize=binsize)
+        times, rate_out = rates_from_raster(filenames_in, binsize=binsize)
+
+        rates.append(rate)
+        rates.append(rate)
+    rates = np.array(rates)
 
 
 def bpercurves(fn, currents):
@@ -140,17 +228,37 @@ def bpercurves(fn, currents):
     return loc_mean_bp, loc_mean_er, loc_mean_br
 
 
+def ficurves(fn, currents):
+    """
+    Compute the firing rate as a function of current.
+    The simulation producing the raw data consists in step increases of currents
+    applied for 1 second each. The firing rate is computed by averaging over the last
+    0.5 sec of the reponse to each step.
+    :param fn:          filename (contains brate)
+    :param currents:    current intensities
+    :returns:
+        - mean_fr - list of firing rates
+    """
+    data = np.loadtxt(fn)
+    times = data[:, 0]
+    fr = data[:, 1]
+    mean_fr = []
+    for i, current in enumerate(currents):
+        indices = np.where(np.logical_and(times > i + 0.5, times < i + 1.))[0]
+        mean_fr.append(np.mean(fr[indices]))
+    return mean_fr
+
 #################################################################
 #                   PLOTTING-RELATED FUNCTIONS                  #
 #################################################################
-def display_rates(filenames, binsize=20.e-3, tau=16.e-3):
+def display_BRER(filenames, binsize=20.e-3, tau=16.e-3):
     """
     Display average rates and burst probability.
     :param filenames:   List of raster files
     :param binsize:     Size of the discretization bins (in seconds)
     :param tau:         Burst detection threshold (in seconds)
     """
-    t, ER, BR = average_rates_over_realizations(filenames, binsize=binsize, tau=tau)
+    t, ER, BR = average_BRER_over_realizations(filenames, binsize=binsize, tau=tau)
     plt.plot(t, ER, color=custom_colors['blue'], label='ER')
     plt.plot(t, BR, color=custom_colors['orange'], label='BR')
     plt.plot(t, 100*BR/ER, color=custom_colors['red'], label='BP')
@@ -160,7 +268,7 @@ def display_rates(filenames, binsize=20.e-3, tau=16.e-3):
     plt.show()
 
 
-def display_rates_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.e-3):
+def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.e-3):
     """
      Display average rates, burst probability together with the dendritic and somatic inputs
      :param filenames:   List of raster files
@@ -169,24 +277,32 @@ def display_rates_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16
      :param binsize:     Size of the discretization bins (in seconds)current traces in pA
      :param tau:         Burst detection threshold (in seconds)
      """
-    t, ER, BR = average_rates_over_realizations(filenames, binsize=binsize, tau=tau)
-    t, std_ER, std_BR, std_BP = std_rates_over_realizations(filenames, binsize=binsize, tau=tau)
+    t, mean, std = std_BRER_over_realizations(filenames, binsize=binsize, tau=tau)
 
-    BP = 100*BR/ER
+    ER = mean['ER']
+    BR = mean['BR']
+    BP = 100*mean['BP']
+
+    std_ER = std['ER']
+    std_BR = std['BR']
+    std_BP = 100*std['BP']
+
     plt.figure(figsize=(4, 4))
     plt.subplot(311)
     plt.plot(t, BP, color=custom_colors['red'], label='BP')
     rescaled_input = np.min(BP) + (inputs['dendrite'] - np.min(inputs['dendrite'])) *\
                                    (np.max(BP)-np.min(BP))/(np.max(inputs['dendrite'])-np.min(inputs['dendrite']))
     plt.plot(inputs['times'], rescaled_input, '--', color=custom_colors['red'])
-    plt.fill_between(t, BP - 200 * std_BP, BP + 200 * std_BP, color=custom_colors['red'], alpha=0.5)
+    plt.fill_between(t, BP - 2 * std_BP, BP + 2 * std_BP, color=custom_colors['red'], alpha=0.5)
     plt.xlim([inputs['times'][0], inputs['times'][-1]])
+    plt.ylim([0., 100.])
     plt.ylabel(r'BP, $I_\mathrm{d}$ (scaled)')
 
     plt.subplot(312)
     plt.plot(t, BR, color=custom_colors['orange'], label='BR')
     plt.fill_between(t, BR - 2 * std_BR, BR + 2 * std_BR, color=custom_colors['orange'], alpha=0.5)
     plt.xlim([inputs['times'][0], inputs['times'][-1]])
+    plt.ylim([0., 5.])
     plt.ylabel('BR [Hz]')
 
     plt.subplot(313)
@@ -196,6 +312,7 @@ def display_rates_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16
     plt.plot(inputs['times'], rescaled_input, '--', color=custom_colors['blue'])
     plt.fill_between(t, ER - 2 * std_ER, ER + 2 * std_ER, color=custom_colors['blue'], alpha=0.5)
     plt.xlim([inputs['times'][0], inputs['times'][-1]])
+    plt.ylim([0., 13.])
     plt.xlabel('Time [s]')
     plt.ylabel('ER [Hz], $I_\mathrm{s}$ (scaled)')
     plt.tight_layout()
@@ -203,7 +320,33 @@ def display_rates_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16
     plt.close()
 
 
-def display_ficurves(currents, outfile, *fns):
+def display_rates_with_inputs(filenames, outfile, inputs, binsize=20.e-3):
+    """
+     Display average rates together with the dendritic and somatic inputs
+     :param filenames:   List of raster files
+     :params outfile:    Output file name
+     :param inputs:      Dictionary with element 'dendrite' and 'soma' and 'times'
+     :param binsize:     Size of the discretization bins (in seconds)current traces in pA
+     :param tau:         Burst detection threshold (in seconds)
+     """
+    t, rate, std_rate = std_rate_over_realizations(filenames, binsize=binsize)
+
+    plt.figure(figsize=(2.5, 2.5/1.6))
+    plt.plot(t, rate, color='black')
+    rescaled_input = np.min(rate) + (inputs['soma'] - np.min(inputs['soma'])) *\
+                                   (np.max(rate)-np.min(rate))/(np.max(inputs['soma'])-np.min(inputs['soma']))
+    plt.plot(inputs['times'], rescaled_input, '--', color=custom_colors['blue'])
+    plt.fill_between(t, rate - 2 * std_rate, rate + 2 * std_rate, color='black', alpha=0.5)
+    plt.xlim([inputs['times'][0], inputs['times'][-1]])
+    plt.ylim([0., 20])
+    plt.xlabel('Time [s]')
+    plt.ylabel('Rate [Hz]')
+    plt.tight_layout()
+    plt.savefig(outfile)
+    plt.close()
+
+
+def display_responsecurves(currents, outfile, *fns):
     """
     Plots FI curves as a function of the applied current.
     :param currents:    Currents
@@ -229,15 +372,40 @@ def display_ficurves(currents, outfile, *fns):
 
     ax1.set_xlabel('$I_\mathrm{dend}$ [pA]')
     ax1.set_ylabel('BP [\%], ER [Hz]')
+    ax1.set_ylim([0, 50])
     ax1.legend(loc='best')
 
     ax2.set_xlabel('$I_\mathrm{dend}$ [pA]')
     ax2.set_ylabel('BR [\%], ER [Hz]')
+    ax2.set_ylim([0, 10])
     ax2.legend(loc='best')
 
     sns.despine()
     plt.tight_layout()
     #plt.savefig('BPversusIdendFromRaster_NoFB.png')
+    plt.savefig(outfile)
+    plt.close()
+
+def display_ficurves(currents, outfile, *fns):
+    """
+    Plots FI curves as a function of the applied current.
+    :param currents:    Dendritici currents
+    :param outfile:     Figure file
+    :param fns:         Files containing population rates
+    :return:
+    """
+    plt.figure(figsize=(2.5*1.6, 2.5))
+    alphas = [0.3, 0.65, 1]
+
+    for i, fn in enumerate(fns):
+        fr = ficurves(fn, currents)
+        plt.plot(currents, fr, color='black', alpha=alphas[i])
+
+    plt.xlabel('$I_\mathrm{dend}$ [pA]')
+    plt.ylabel('Rate [Hz]')
+
+    sns.despine()
+    plt.tight_layout()
     plt.savefig(outfile)
     plt.close()
 
