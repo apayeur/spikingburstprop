@@ -1,5 +1,5 @@
 /***********************************************************
- Description: Trying to matching spiking noise in populations
+ Description: Trying to match spiking noise in populations
  1 and 2.
  ************************************************************/
 

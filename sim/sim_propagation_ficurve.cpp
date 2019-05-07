@@ -257,8 +257,8 @@ int main(int ac, char* av[])
     /**************************************************/
     double binSize_rate = 20.e-3; // ms
     auto label_str = std::to_string(somatic_current*1.e12);
-
     auto seed_str = std::to_string(seed);
+    
     // Burst/event rate monitors
     BurstRateMonitor * brmon1 = new BurstRateMonitor( pyr1, sys->fn("brate1_somacurrent"+label_str), binSize_rate);
     BurstRateMonitor * brmon2 = new BurstRateMonitor( pyr2, sys->fn("brate2_somacurrent"+label_str), binSize_rate);

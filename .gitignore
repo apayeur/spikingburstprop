@@ -2,6 +2,7 @@
 results/
 figs/
 data/
+analysis/.idea/
 /test/test-output/
 
 *.xml

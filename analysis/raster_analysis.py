@@ -186,19 +186,6 @@ def std_rate_over_realizations(filenames, binsize=20.e-3):
     return times, mean_rate, std_rate
 
 
-
-
-def pop_xcorr(filenames_in, filenames_out, binsize=20e-3):
-    c = 0.
-    for i, filenames_in in enumerate(filenames_in):
-        times, rate_in = rates_from_raster(filenames_in, binsize=binsize)
-        times, rate_out = rates_from_raster(filenames_in, binsize=binsize)
-
-        rates.append(rate)
-        rates.append(rate)
-    rates = np.array(rates)
-
-
 def bpercurves(fn, currents):
     """
     Compute the burst probability (BP) and event rate (ER) as a function of current.
@@ -247,6 +234,36 @@ def ficurves(fn, currents):
         indices = np.where(np.logical_and(times > i + 0.5, times < i + 1.))[0]
         mean_fr.append(np.mean(fr[indices]))
     return mean_fr
+
+
+def get_spiketrains(rasterfile, binsize=5e-3):
+    """
+    Construct spike trains for all neurons in raster file
+    :param rasterfile: first column constains spike times; second col contain neuron ID
+    :return: spike trains (dim =  N x (number of time bins) )
+    """
+    raster = np.loadtxt(rasterfile)
+    N_bins = int(np.max(raster[:, 0]) / binsize)
+    N_neurons = int(max(raster[:, 1]))+1
+    spiketrains = np.zeros((N_neurons, N_bins + 1))
+
+    for i, spiketime in enumerate(raster[:, 0]):
+        spiketrains[raster[i, 1], int(spiketime/binsize)] += 1.
+
+    return spiketrains
+
+
+def pop_corr(rasterfile, binsize=5e-3, N_selected_neurons=100):
+    """
+    Compute the auto- and cross-covariance of the population
+    """
+    spiketrains = get_spiketrains(rasterfile, binsize=binsize)
+
+    a = 0.
+    c = 0.
+
+
+
 
 #################################################################
 #                   PLOTTING-RELATED FUNCTIONS                  #
