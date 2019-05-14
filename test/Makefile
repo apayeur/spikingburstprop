@@ -5,7 +5,7 @@ AURYNDIR = $(HOME)/auryn
 # Path to libauryn.a (see compiling Auryn)
 BUILDDIR = $(AURYNDIR)/build/release/
 
-CFLAGS= -ansi -Wall -pipe -O0 -g -std=c++11 -ffast-math -funsafe-math-optimizations \
+CFLAGS= -ansi -Wall -pipe -O3 -g -std=c++11 -ffast-math -funsafe-math-optimizations \
         -march=native -mtune=native -pedantic \
         -I/opt/local/include -I../src -I$(AURYNDIR)/src -I$(AURYNDIR)/src/auryn
 
@@ -19,9 +19,9 @@ LDFLAGS=$(BUILDDIR)/src/libauryn.a \
 #         -I$(AURYNDIR)/src -I$(AURYNDIR)/dev/src
 
 
-OBJECTS=BurstPoissonGroup.o
+OBJECTS=BurstPoissonGroup.o AdaptiveEBCPConnection.o EBCPConnection.o BCPConnection.o
 
-SIMULATIONS=test_burstpoisson test_burstpoisson_simple test_ficurve_burstpoisson
+SIMULATIONS=test_burstpoisson test_burstpoisson_simple test_ficurve_burstpoisson test_adaptive_ebcp
 
 .SECONDARY:
 

@@ -1,3 +1,5 @@
+import numpy as np
+
 # user-defined colors for colorblindness
 custom_colors = {'blue': (0, 0.45, 0.7),
                  'red': (0.57, 0, 0),
@@ -16,4 +18,19 @@ def remove_xticklabel(axis):
     labels = [item.get_text() for item in axis.get_xticklabels()]
     empty_string_labels = [''] * len(labels)
     axis.set_xticklabels(empty_string_labels)
+
+
+def adjust_range(x, y):
+    """
+    For plotting, scale array x so that min(x) = min(y) and max(x) = max(y)
+    :param x: array whose range we want to adjust
+    :param y: array
+    :return: adjusted array
+    """
+    min_x = np.min(x)
+    max_x = np.max(x)
+    min_y = np.min(y)
+    max_y = np.max(y)
+
+    return min_y + (x - min_x)*(max_y - min_y)/(max_x - min_x)
 

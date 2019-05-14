@@ -1,6 +1,7 @@
 import sys
 sys.path.append('../')
 import raster_analysis as ra
+import voltage_analysis as va
 import numpy as np
 import argparse
 
@@ -14,9 +15,13 @@ filenames = ['../../data/single-pop/single_pop.0.brate_seed1',
              '../../data/single-pop/single_pop.0.brate_seed4',
              '../../data/single-pop/single_pop.0.brate_seed5']
 
+file_mem = '../../data/single-pop/single_pop.0.mem'
+file_Vd  = '../../data/single-pop/single_pop.0.Vd'
+fileraster = '../../data/single-pop/single_pop.0.ras_seed1'
+
 # parameters
 # currents in pA
-max_dendritic_current = 50.
+max_dendritic_current = 100.
 min_dendritic_current = 0.
 max_somatic_current = 100.
 min_somatic_current = 0.
@@ -40,7 +45,7 @@ for i in range(10):
 begins_dendrites = np.array(begins_dendrites)
 begins_soma = np.array(begins_soma)
 
-times = np.arange(1, 2., 0.001)
+times = np.arange(1, 3., 0.001)
 #current_dend = 25. + 25*np.sin(2*np.pi*times/(200e-3*np.sqrt(2.)))
 current_dend = ra.alternating_square_current(times, min_dendritic_current, max_dendritic_current, begins_dendrites, segtime_maxdend)
 current_soma = ra.alternating_square_current(times, min_somatic_current, max_somatic_current, begins_soma, period/2)
@@ -48,4 +53,7 @@ current_soma = ra.alternating_square_current(times, min_somatic_current, max_som
 inputs = {'times': times, 'dendrite': current_dend, 'soma': current_soma}
 
 # output figures
-ra.display_BRER_with_inputs(filenames, '../../results/single-pop/Pop_'+args.filesuffix+'.pdf', inputs)
+ra.display_BRER_with_inputs(filenames, '../../results/single-pop/Pop.pdf', inputs)#+args.filesuffix+'.pdf')
+#ra.display_correlations(fileraster, '../../results/single-pop/Corr.pdf', type='spike', binsize=1e-3, N_selected_neurons=4000)
+#va.output_histogram(file_mem, '../../results/single-pop/Vmhist.pdf', comp_type='soma')
+#va.output_histogram(file_Vd, '../../results/single-pop/Vdhist.pdf', comp_type='dend')

@@ -99,7 +99,7 @@ def average_BRER_over_realizations(filenames, binsize=20.e-3, tau=16.e-3):
     mean_ER = np.array([])
     mean_BR = np.array([])
     for i, filename in enumerate(filenames):
-        times, ER, BR = BRER_from_raster(filename, binsize=binsize, tau=tau)
+        times, ER, BR = BRER_from_brates(filename)
         if i==0:
             mean_ER = ER
             mean_BR = BR
@@ -236,54 +236,123 @@ def ficurves(fn, currents):
     return mean_fr
 
 
-def get_spiketrains(rasterfile, binsize=5e-3):
+def get_spiketrains(rasterfile, discard=1, binsize=5e-3):
     """
     Construct spike trains for all neurons in raster file
     :param rasterfile: first column constains spike times; second col contain neuron ID
     :return: spike trains (dim =  N x (number of time bins) )
     """
     raster = np.loadtxt(rasterfile)
-    N_bins = int(np.max(raster[:, 0]) / binsize)
+    N_bins = int(np.max(raster[:, 0] - discard) / binsize)
     N_neurons = int(max(raster[:, 1]))+1
     spiketrains = np.zeros((N_neurons, N_bins + 1))
 
     for i, spiketime in enumerate(raster[:, 0]):
-        spiketrains[raster[i, 1], int(spiketime/binsize)] += 1.
+        if spiketime > discard:
+            spiketrains[int(raster[i, 1]), int((spiketime-discard)/binsize)] += 1.
 
     return spiketrains
 
 
-def pop_corr(rasterfile, binsize=5e-3, N_selected_neurons=100):
+def get_eventtrains(rasterfile, discard=1, binsize=5e-3, burst_detection_thr=16.e-3):
+
+    raster = np.loadtxt(rasterfile)
+    N_bins = int(np.max(raster[:, 0] - discard) / binsize)
+    N_neurons = int(max(raster[:, 1]))+1
+    eventtrains = np.zeros((N_neurons, N_bins + 1))
+    bursttrains = np.zeros((N_neurons, N_bins + 1))
+
+    for n in range(N_neurons):
+        spiketimes = raster[np.where(raster[:, 1] == n)[0], 0]
+        if len(spiketimes) > 0:
+            eventtrains[n, int((spiketimes[0]-discard)/binsize)] += 1.
+
+            burst_state = -1
+            for s in range(1, len(spiketimes)):
+                if spiketimes[s] - spiketimes[s - 1] > burst_detection_thr:
+                    burst_state = -1.
+                    eventtrains[n, int((spiketimes[s] - discard) / binsize)] += 1.
+                else:
+                    if burst_state < 0:
+                        burst_state = 1
+                        bursttrains[n, int((spiketimes[s-1] - discard) / binsize)] += 1.
+
+    return eventtrains, bursttrains
+
+
+def pop_corr(rasterfile, type='spike', discard=1, binsize=5e-3, N_selected_neurons=1000):
     """
     Compute the auto- and cross-covariance of the population
     """
-    spiketrains = get_spiketrains(rasterfile, binsize=binsize)
+    if type == 'spike':
+        spiketrains = get_spiketrains(rasterfile, discard=discard, binsize=binsize)
+    else:
+        eventtrains, bursttrains = get_eventtrains(rasterfile, discard=discard, binsize=binsize)
+        if type == 'event':
+            spiketrains = eventtrains
+        elif type == 'burst':
+            spiketrains = bursttrains
 
+    flipped_spiketrains = np.flip(spiketrains, axis=1)
     a = 0.
     c = 0.
+    for i in range(N_selected_neurons-1):
+        a += np.convolve(spiketrains[i]-np.mean(spiketrains[i]), flipped_spiketrains[i]-np.mean(spiketrains[i]), 'same')
+        c += np.convolve(flipped_spiketrains[i]-np.mean(spiketrains[i]), spiketrains[i+1]-np.mean(spiketrains[i+1]), 'same')
+    a = a/N_selected_neurons
+    c = c/N_selected_neurons
 
-
+    return a, c
 
 
 #################################################################
 #                   PLOTTING-RELATED FUNCTIONS                  #
 #################################################################
-def display_BRER(filenames, binsize=20.e-3, tau=16.e-3):
+def display_BRER(filenames, outfile, binsize=20.e-3, tau=16.e-3):
     """
     Display average rates and burst probability.
     :param filenames:   List of raster files
     :param binsize:     Size of the discretization bins (in seconds)
     :param tau:         Burst detection threshold (in seconds)
     """
-    t, ER, BR = average_BRER_over_realizations(filenames, binsize=binsize, tau=tau)
-    plt.plot(t, ER, color=custom_colors['blue'], label='ER')
-    plt.plot(t, BR, color=custom_colors['orange'], label='BR')
-    plt.plot(t, 100*BR/ER, color=custom_colors['red'], label='BP')
-    plt.xlabel('Time [ms]')
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+    t, mean, std = std_BRER_over_realizations(filenames, binsize=binsize, tau=tau)
 
+    ER = mean['ER']
+    BR = mean['BR']
+    BP = 100 * mean['BP']
+
+    std_ER = std['ER']
+    std_BR = std['BR']
+    std_BP = 100 * std['BP']
+
+    plt.figure(figsize=(4, 4))
+    plt.subplot(311)
+    plt.plot(t, BP, color=custom_colors['red'], label='BP')
+    plt.fill_between(t, BP - 2 * std_BP, BP + 2 * std_BP, color=custom_colors['red'], alpha=0.5)
+    plt.xlim(xmin=1)
+    #plt.xlim([inputs['times'][0], inputs['times'][-1]])
+    plt.ylim([0., 25.])
+    plt.ylabel(r'BP, $I_\mathrm{d}$ (scaled)')
+
+    plt.subplot(312)
+    plt.plot(t, BR, color=custom_colors['orange'], label='BR')
+    plt.fill_between(t, BR - 2 * std_BR, BR + 2 * std_BR, color=custom_colors['orange'], alpha=0.5)
+    plt.xlim(xmin=1)
+    #plt.xlim([inputs['times'][0], inputs['times'][-1]])
+    plt.ylim([0., 2.])
+    plt.ylabel('BR [Hz]')
+
+    plt.subplot(313)
+    plt.plot(t, ER, color=custom_colors['blue'], label='ER')
+    plt.fill_between(t, ER - 2 * std_ER, ER + 2 * std_ER, color=custom_colors['blue'], alpha=0.5)
+    plt.xlim(xmin=1)
+    #plt.xlim([inputs['times'][0], inputs['times'][-1]])
+    plt.ylim([0., 8.])
+    plt.xlabel('Time [s]')
+    plt.ylabel('ER [Hz], $I_\mathrm{s}$ (scaled)')
+    plt.tight_layout()
+    plt.savefig(outfile)
+    plt.close()
 
 def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.e-3):
     """
@@ -304,15 +373,21 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
     std_BR = std['BR']
     std_BP = 100*std['BP']
 
+    min_BP = np.min(BP[int(inputs['times'][0]/binsize):])
+    max_BP = np.max(BP[int(inputs['times'][0]/binsize):])
+
+    min_ER = np.min(ER[int(inputs['times'][0]/binsize):])
+    max_ER = np.max(ER[int(inputs['times'][0]/binsize):])
+
     plt.figure(figsize=(4, 4))
     plt.subplot(311)
     plt.plot(t, BP, color=custom_colors['red'], label='BP')
-    rescaled_input = np.min(BP) + (inputs['dendrite'] - np.min(inputs['dendrite'])) *\
-                                   (np.max(BP)-np.min(BP))/(np.max(inputs['dendrite'])-np.min(inputs['dendrite']))
+    rescaled_input = min_BP + (inputs['dendrite'] - np.min(inputs['dendrite'])) *\
+                                   (max_BP-min_BP)/(np.max(inputs['dendrite'])-np.min(inputs['dendrite']))
     plt.plot(inputs['times'], rescaled_input, '--', color=custom_colors['red'])
     plt.fill_between(t, BP - 2 * std_BP, BP + 2 * std_BP, color=custom_colors['red'], alpha=0.5)
     plt.xlim([inputs['times'][0], inputs['times'][-1]])
-    plt.ylim([0., 100.])
+    plt.ylim([0., min(max_BP + 2*np.max(std_BP[int(inputs['times'][0]/binsize):]) + 5, 100.)])
     plt.ylabel(r'BP, $I_\mathrm{d}$ (scaled)')
 
     plt.subplot(312)
@@ -324,12 +399,12 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
 
     plt.subplot(313)
     plt.plot(t, ER, color=custom_colors['blue'], label='ER')
-    rescaled_input = np.min(ER) + (inputs['soma'] - np.min(inputs['soma'])) *\
-                                   (np.max(ER)-np.min(ER))/(np.max(inputs['soma'])-np.min(inputs['soma']))
+    rescaled_input = min_ER + (inputs['soma'] - np.min(inputs['soma'])) *\
+                                   (max_ER-min_ER)/(np.max(inputs['soma'])-np.min(inputs['soma']))
     plt.plot(inputs['times'], rescaled_input, '--', color=custom_colors['blue'])
     plt.fill_between(t, ER - 2 * std_ER, ER + 2 * std_ER, color=custom_colors['blue'], alpha=0.5)
     plt.xlim([inputs['times'][0], inputs['times'][-1]])
-    plt.ylim([0., 13.])
+    plt.ylim([0., 12.])
     plt.xlabel('Time [s]')
     plt.ylabel('ER [Hz], $I_\mathrm{s}$ (scaled)')
     plt.tight_layout()
@@ -426,6 +501,35 @@ def display_ficurves(currents, outfile, *fns):
     plt.savefig(outfile)
     plt.close()
 
+
+def display_correlations(rasterfile, outfile, type='spike', discard=1., binsize=2e-3, N_selected_neurons=1000):
+    a, c = pop_corr(rasterfile, discard=discard, type=type, binsize=binsize, N_selected_neurons=N_selected_neurons)
+    index_max_a = np.argmax(a)
+    k = np.arange(0, len(a))
+    k = k - index_max_a
+    t = 1000*binsize*k
+    a = a/(len(a) - abs(k))
+    c = c/(len(c) - abs(k))
+
+    plt.figure(figsize=(5, 2))
+
+    plt.subplot(121)
+    plt.plot(t, a/a[index_max_a])
+    plt.xlabel('Time [ms]')
+    plt.ylabel('Autocovariance (norm.)')
+    plt.xlim([-50, 50])
+    plt.ylim([-0.1, 1.])
+
+    plt.subplot(122)
+    plt.plot(t, c[::-1]/binsize**2)  # c is reversed because of the relationship btw correlation and convolution
+    plt.xlabel('Time [ms]')
+    plt.ylabel('Crosscovariance')
+    #plt.ylim([-0.0002, 0.0002])
+    plt.xlim([-50, 50])
+
+    plt.tight_layout()
+    plt.savefig(outfile)
+    plt.close()
 
 
 #################################################################

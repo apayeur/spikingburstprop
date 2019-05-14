@@ -91,6 +91,9 @@ public:
 
 	virtual void propagate();
 	virtual void evolve();
+    
+    Trace * get_tr_event();
+    Trace * get_tr_burst();
 
 };
 

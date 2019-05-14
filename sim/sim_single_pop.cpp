@@ -28,7 +28,9 @@ int main(int ac, char* av[])
     unsigned int seed = 1;
     string dir = "../data/single-pop";
     string simname = "single_pop";
-    
+    float w_epois_to_soma = 0.35;
+    float w_epois_to_dend = 0.05;
+
     /**************************************************/
     /********              OPTIONS            *********/
     /**************************************************/
@@ -38,6 +40,8 @@ int main(int ac, char* av[])
         ("help", "produce help message")
         ("dir", po::value<string>(), "output directory")
         ("seed", po::value<int>(), "random seed")
+        ("w_epois_to_soma", po::value<float>(), "weight from exc poisson to soma")
+        ("w_epois_to_dend", po::value<float>(), "weight from exc poisson to dendrite")
         ;
         
         po::variables_map vm;
@@ -59,6 +63,18 @@ int main(int ac, char* av[])
             std::cout << "seed set to "
             << vm["seed"].as<int>() << ".\n";
             seed = vm["seed"].as<int>();
+        }
+        
+        if (vm.count("w_epois_to_soma")) {
+            std::cout << "w_epois_to_soma set to "
+            << vm["w_epois_to_soma"].as<float>() << ".\n";
+            w_epois_to_soma = vm["w_epois_to_soma"].as<float>();
+        }
+        
+        if (vm.count("w_epois_to_dend")) {
+            std::cout << "w_epois_to_dend set to "
+            << vm["w_epois_to_dend"].as<float>() << ".\n";
+            w_epois_to_dend = vm["w_epois_to_dend"].as<float>();
         }
     }
     catch(std::exception& e) {
@@ -82,42 +98,34 @@ int main(int ac, char* av[])
     initialize_pyr_neurons(pyr);
 
     // define external population of Poisson neurons
-    NeuronID nb_exc_Poisson_neurons = 25000;
-    NeuronID nb_inh_Poisson_neurons = nb_exc_Poisson_neurons;
-    float poisson_rate_exc = 5.;
-    float poisson_rate_inh = 5.;
-    PoissonGroup* exc_Poisson = new PoissonGroup(nb_exc_Poisson_neurons, poisson_rate_exc);
-    PoissonGroup* inh_Poisson = new PoissonGroup(nb_inh_Poisson_neurons, poisson_rate_inh);
+    float poisson_rate = 5.;
+    PoissonGroup* exc_Poisson      = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    PoissonGroup* inh_Poisson      = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    PoissonGroup* exc_Poisson_dend = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    PoissonGroup* inh_Poisson_dend = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     exc_Poisson->seed(seed);
-    inh_Poisson->seed(10*seed);
+    inh_Poisson->seed(seed);
+    exc_Poisson_dend->seed(seed);
+    inh_Poisson_dend->seed(seed);
     
     
     /**************************************************/
     /******           CONNECTIVITY            *********/
     /**************************************************/
-    int number_of_ext_conn[2] = {100, 30}; //exc, inh
+    float ratio_ie_soma = 1.;
+    IdentityConnection * epois_to_soma = new IdentityConnection(exc_Poisson, pyr, w_epois_to_soma, GLUT);
+    epois_to_soma->set_target("g_ampa");
+    IdentityConnection * ipois_to_soma = new IdentityConnection(inh_Poisson, pyr, ratio_ie_soma*w_epois_to_soma, GABA);
+    ipois_to_soma->set_target("g_gaba");
     
-    float p_exc = float(number_of_ext_conn[0])/float(nb_exc_Poisson_neurons);
-    float p_inh = float(number_of_ext_conn[1])/float(nb_inh_Poisson_neurons);
-    
-    const float w_exc = 0.17;        // conductance amplitude in units of leak conductance
-    const float w_inh = 0.26;
+    float ratio_ie_dend = 1.;
+    IdentityConnection * epois_to_dend = new IdentityConnection(exc_Poisson_dend, pyr, w_epois_to_dend, GLUT);
+    epois_to_dend->set_target("g_ampa_dend");
+    IdentityConnection * ipois_to_dend = new IdentityConnection(inh_Poisson_dend, pyr, ratio_ie_dend*w_epois_to_dend, GABA);
+    ipois_to_dend->set_target("g_gaba_dend");
 
-    SparseConnection * con_ext_exc_soma = new SparseConnection(exc_Poisson, pyr, w_exc, p_exc, GLUT);
-    con_ext_exc_soma->set_target("g_ampa");
-    SparseConnection * con_ext_inh_soma = new SparseConnection(inh_Poisson, pyr, w_inh, p_inh, GABA);
-    con_ext_inh_soma->set_target("g_gaba");
-    
-    const float w_exc_dend = 0.0425;
-    const float w_inh_dend = 0.065;
-    
-    SparseConnection * con_ext_exc_dend = new SparseConnection(exc_Poisson, pyr, w_exc_dend, p_exc, GLUT);
-    con_ext_exc_dend->set_target("g_ampa_dend");
-    SparseConnection * con_ext_inh_dend = new SparseConnection(inh_Poisson, pyr, w_inh_dend, p_inh, GABA);
-    con_ext_inh_dend->set_target("g_gaba_dend");
-
-    float w_pyr_to_pyr = 0.05; //0.02;
-    float p_pyr_to_pyr = 0.025;
+    float w_pyr_to_pyr = 0.1; //0.05;
+    float p_pyr_to_pyr = 0.05;
     STPeTMConnection * pyr_to_pyr = new STPeTMConnection(pyr, pyr, w_pyr_to_pyr, p_pyr_to_pyr, GABA);
     set_Facilitating_connection(pyr_to_pyr);
     pyr_to_pyr->set_target("g_gaba_dend");
@@ -137,11 +145,10 @@ int main(int ac, char* av[])
     auto seed_str = std::to_string(seed);
     
     SpikeMonitor * smon          = new SpikeMonitor( pyr, sys->fn("ras_seed"+seed_str) );
-    VoltageMonitor * vmon        = new VoltageMonitor( pyr, 0,   sys->fn("mem") );
-    VoltageMonitor * vmon1       = new VoltageMonitor( pyr, 1,   sys->fn("mem1") );
+    VoltageMonitor * vmon        = new VoltageMonitor( pyr, 0, sys->fn("mem") );
+    VoltageMonitor * vmon1       = new VoltageMonitor( pyr, 1, sys->fn("mem1") );
     StateMonitor * smon_vd       = new StateMonitor( pyr, 0, "Vd", sys->fn("Vd") );
     StateMonitor * smon_vd1      = new StateMonitor( pyr, 1, "Vd", sys->fn("Vd1") );
-    StateMonitor * smon_m        = new StateMonitor( pyr, 0, "thr", sys->fn("thr") );
     PopulationRateMonitor * pmon = new PopulationRateMonitor( pyr, sys->fn("prate"), binSize_rate );
     BurstRateMonitor * brmon     = new BurstRateMonitor( pyr, sys->fn("brate_seed"+seed_str), binSize_rate);
     //StateMonitor * smon_ws  = new StateMonitor( pyr, 0, "wsoma", sys->fn("wsoma") );
@@ -152,10 +159,10 @@ int main(int ac, char* av[])
     /**************************************************/
     logger->msg("Running ...",PROGRESS);
     
-    const double max_dendritic_current = 100e-12; //90e-12;
-    const double min_dendritic_current = 100e-12;
-    const double max_somatic_current = 100.e-12; //650e-12;
-    const double min_somatic_current = 0.e-12;
+    const double max_dendritic_current = 100e-12;
+    const double min_dendritic_current = 0e-12;
+    const double max_somatic_current   = 150e-12;
+    const double min_somatic_current   = 0e-12;
 
     const double period = 200e-3;
     const double simtime = 1000e-3;
