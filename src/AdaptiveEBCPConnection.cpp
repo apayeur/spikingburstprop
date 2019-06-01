@@ -43,6 +43,7 @@ void AdaptiveEBCPConnection::compute_burst_rate()
             tr_burst->inc(s);
             burst_state->set(s,1);
             propagate_backward(s, tr_event->normalized_get(s));
+            //propagate_backward(s, tr_event->normalized_get(s)*exp(10e-3/tr_event->get_tau()) - 1./tr_event->get_tau()); //DEBUG
         }
     }
 }
@@ -53,4 +54,11 @@ void AdaptiveEBCPConnection::propagate()
     compute_burst_rate();
 }
 
+void AdaptiveEBCPConnection::set_post_trace_event_tau(AurynFloat x){
+    tr_event->set_timeconstant(x);
+}
+
+void AdaptiveEBCPConnection::set_post_trace_burst_tau(AurynFloat x){
+    tr_burst->set_timeconstant(x);
+}
 

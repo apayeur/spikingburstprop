@@ -4,7 +4,7 @@ TAU_PRE=20.e-3
 PARENT_DIR="./test-output/adaptive-ebcp"
 mkdir -p $PARENT_DIR
 SIM_NAME="test_adaptive_ebcp"
-W0=0.06
+W0=0.061
 
 make
 function run {

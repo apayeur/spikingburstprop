@@ -48,6 +48,7 @@ def analytical(eta, duration, rate, A_plus, A_minus, burst_threshold, tau_pre, t
     return burst_probs, duration*eta*tau_pre*(burst_probs + A_minus/A_plus)*(rate/(1.+rate*tau_ref_E))**2
 
 
+
 if __name__ == '__main__':
     bp, w = simulate()
     bp_anal, w_anal = analytical(0.1, 400, 5., 1, -0.15, 0.016, 0.020, 0.020)

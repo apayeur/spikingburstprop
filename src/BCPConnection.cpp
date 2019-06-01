@@ -49,9 +49,9 @@ void BCPConnection::init(AurynFloat eta, AurynFloat maxweight, AurynFloat tau_pr
 	burst_thr = std::exp(-1.0);
 
 	
-	tr_event = new EulerTrace(dst->get_vector_size(), 10.0); //!< event rate average
-	tr_burst = new EulerTrace(dst->get_vector_size(), 10.0); //!< burst rate average (currently not needed)
-	tr_hom = dst->get_post_trace(30.0); //!< homeostatic firing rate average 
+	tr_event = new EulerTrace(dst->get_vector_size(), 5.5); //!< event rate average
+	tr_burst = new EulerTrace(dst->get_vector_size(), 5.5); //!< burst rate average (currently not needed)
+	tr_hom = dst->get_post_trace(30.0); //!< homeostatic firing rate average
 	tr_hom->set_all(30.0*min_rate);
 
 	// min/max weight

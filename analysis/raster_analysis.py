@@ -5,8 +5,8 @@ import sys
 import seaborn as sns
 #sys.path.append('./')
 from utils_plotting import custom_colors
-plt.style.use('../thesis_mplrc.dms')
-
+#plt.style.use('../thesis_mplrc.dms')
+from scipy import signal
 
 #################################################################
 #           FUNCTIONS RELATED TO RATE COMPUTATIONS              #
@@ -264,6 +264,7 @@ def get_eventtrains(rasterfile, discard=1, binsize=5e-3, burst_detection_thr=16.
 
     for n in range(N_neurons):
         spiketimes = raster[np.where(raster[:, 1] == n)[0], 0]
+        spiketimes = spiketimes[spiketimes >= discard]
         if len(spiketimes) > 0:
             eventtrains[n, int((spiketimes[0]-discard)/binsize)] += 1.
 
@@ -285,24 +286,48 @@ def pop_corr(rasterfile, type='spike', discard=1, binsize=5e-3, N_selected_neuro
     Compute the auto- and cross-covariance of the population
     """
     if type == 'spike':
-        spiketrains = get_spiketrains(rasterfile, discard=discard, binsize=binsize)
+        spiketrains1 = get_spiketrains(rasterfile, discard=discard, binsize=binsize)
+        spiketrains2 = spiketrains1
     else:
         eventtrains, bursttrains = get_eventtrains(rasterfile, discard=discard, binsize=binsize)
         if type == 'event':
-            spiketrains = eventtrains
+            spiketrains1 = eventtrains
+            spiketrains2 = eventtrains
         elif type == 'burst':
-            spiketrains = bursttrains
+            spiketrains1 = bursttrains
+            spiketrains2 = bursttrains
+        elif type == 'mixed':
+            spiketrains1 = eventtrains
+            spiketrains2 = bursttrains
 
-    flipped_spiketrains = np.flip(spiketrains, axis=1)
+    #flipped_spiketrains2 = np.flip(spiketrains2, axis=1)
     a = 0.
     c = 0.
-    for i in range(N_selected_neurons-1):
-        a += np.convolve(spiketrains[i]-np.mean(spiketrains[i]), flipped_spiketrains[i]-np.mean(spiketrains[i]), 'same')
-        c += np.convolve(flipped_spiketrains[i]-np.mean(spiketrains[i]), spiketrains[i+1]-np.mean(spiketrains[i+1]), 'same')
-    a = a/N_selected_neurons
-    c = c/N_selected_neurons
+    if type == 'event' or type == 'burst':
+        for i in range(N_selected_neurons-1):
+            a += signal.correlate(spiketrains1[i]-np.mean(spiketrains1[i]),
+                                  spiketrains2[i]-np.mean(spiketrains2[i]), mode='full', method='fft')
+            c += signal.correlate(spiketrains2[i]-np.mean(spiketrains2[i]),
+                                  spiketrains1[i+1]-np.mean(spiketrains1[i+1]), mode='full', method='fft')
+    elif type == 'mixed':
+        second_moment = 0.
+        for i in range(N_selected_neurons-1):
+            a += signal.correlate(spiketrains2[i], spiketrains1[i], mode='full', method='fft')
+            c += signal.correlate(spiketrains1[i], spiketrains2[i], mode='full', method='fft')
+    a = a / N_selected_neurons
+    c = c / N_selected_neurons
 
-    return a, c
+    # adjust for bias
+    # see: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.correlate.html
+    L = len(spiketrains2[0])
+    index_for_zero_lag = L - 1
+    k = np.arange(0, 2*L-1)
+    k = k - index_for_zero_lag
+    t = 1000*binsize*k
+    a = a/(L - abs(k))
+    c = c/(L - abs(k))
+
+    return (t, a, c)
 
 
 #################################################################
@@ -503,25 +528,18 @@ def display_ficurves(currents, outfile, *fns):
 
 
 def display_correlations(rasterfile, outfile, type='spike', discard=1., binsize=2e-3, N_selected_neurons=1000):
-    a, c = pop_corr(rasterfile, discard=discard, type=type, binsize=binsize, N_selected_neurons=N_selected_neurons)
-    index_max_a = np.argmax(a)
-    k = np.arange(0, len(a))
-    k = k - index_max_a
-    t = 1000*binsize*k
-    a = a/(len(a) - abs(k))
-    c = c/(len(c) - abs(k))
+    t, a, c = pop_corr(rasterfile, discard=discard, type=type, binsize=binsize, N_selected_neurons=N_selected_neurons)
 
     plt.figure(figsize=(5, 2))
-
     plt.subplot(121)
-    plt.plot(t, a/a[index_max_a])
+    plt.plot(t, a)
     plt.xlabel('Time [ms]')
-    plt.ylabel('Autocovariance (norm.)')
+    plt.ylabel('Autocovariance')
     plt.xlim([-50, 50])
     plt.ylim([-0.1, 1.])
 
     plt.subplot(122)
-    plt.plot(t, c[::-1]/binsize**2)  # c is reversed because of the relationship btw correlation and convolution
+    plt.plot(t, c/binsize**2)  # c is reversed because of the relationship btw correlation and convolution
     plt.xlabel('Time [ms]')
     plt.ylabel('Crosscovariance')
     #plt.ylim([-0.0002, 0.0002])

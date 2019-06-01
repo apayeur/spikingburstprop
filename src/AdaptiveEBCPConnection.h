@@ -46,6 +46,8 @@ namespace auryn {
             //void free();
             virtual void propagate();
             //virtual void evolve();
+            void set_post_trace_event_tau(AurynFloat x);
+            void set_post_trace_burst_tau(AurynFloat x);
 
     };
     

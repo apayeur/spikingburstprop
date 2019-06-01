@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
-from custom_colors import custom_colors
+import sys
+sys.path.append('../')
+from utils_plotting import custom_colors
 import seaborn as sns
 import numpy as np
 

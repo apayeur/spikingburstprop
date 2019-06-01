@@ -152,6 +152,8 @@ int main(int ac, char* av[])
     /******           CONNECTIVITY            *********/
     /**************************************************/
     //-- Connect input group to main group's somata with plastic synapses
+    // when lr = 1e-3, stability when tau_avg = 5.5
+    //
     const double we_soma = w0;
     const double we_dend = d0;
     const double sparseness = 0.5;
@@ -195,11 +197,12 @@ int main(int ac, char* av[])
     
     sys->set_online_rate_monitor_target(neurons_exc);
     sys->set_online_rate_monitor_tau(5.0);
-    SpikeMonitor * smon = new SpikeMonitor( neurons_exc, sys->fn("ras") );
+    SpikeMonitor * smon = new SpikeMonitor( input, sys->fn("ras") );
     PopulationRateMonitor * pmon = new PopulationRateMonitor( neurons_exc, sys->fn("prate"), 5.0 );
     BurstRateMonitor * brmon = new BurstRateMonitor( neurons_exc, sys->fn("brate"), 5.0 );
     BurstRateMonitor * brmon_input = new BurstRateMonitor( input, sys->fn("brate_input"), 5.0 );
-
+    
+    /*
     VoltageMonitor * vmon   = new VoltageMonitor( neurons_exc, 0, sys->fn("mem"), 1e-3);
     vmon->record_for(10);
     StateMonitor * smon_vd  = new StateMonitor( neurons_exc, 0, "Vd", sys->fn("Vd") );
@@ -209,9 +212,9 @@ int main(int ac, char* av[])
     StateMonitor * smon_ws  = new StateMonitor( neurons_exc, 0, "wsoma", sys->fn("wsoma") );
     smon_ws->record_for(10);
     StateMonitor * smon_wd  = new StateMonitor( neurons_exc, 0, "wdend", sys->fn("wdend") );
-    smon_wd->record_for(10);
-    StateMonitor * smon_tr_post_ev  = new StateMonitor( con_ext_soma->get_tr_event(), 0, sys->fn("trevent"), 100e-3);
-    StateMonitor * smon_tr_post_b  = new StateMonitor( con_ext_soma->get_tr_burst(), 0, sys->fn("trburst"), 100e-3);
+    smon_wd->record_for(10);*/
+    StateMonitor * smon_tr_post_ev  = new StateMonitor( con_ext_soma->get_tr_event(), 0, sys->fn("trevent"), 5.);
+    StateMonitor * smon_tr_post_b  = new StateMonitor( con_ext_soma->get_tr_burst(), 0, sys->fn("trburst"), 5.);
 
     
     WeightMonitor * wmon = new WeightMonitor( con_ext_soma, sys->fn("consyn"), 5.0);
@@ -233,65 +236,65 @@ int main(int ac, char* av[])
     double testtime = 10;
     
     con_ext_soma->stdp_active = false;
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
+    //vmon->record_for(testtime);
+    //smon_vd->record_for(testtime);
+    //smon_m->record_for(testtime);
+    //smon_ws->record_for(testtime);
+    //smon_wd->record_for(testtime);
     con_ext_dend->set_all(1.0*we_dend);
-    sys->run(1.5*simtime);
+    sys->run(simtime);
     
     con_ext_soma->stdp_active = true;
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
+    //vmon->record_for(testtime);
+    //smon_vd->record_for(testtime);
+    //smon_m->record_for(testtime);
+    //smon_ws->record_for(testtime);
+    //smon_wd->record_for(testtime);
     con_ext_dend->set_all(1.0*we_dend);
-    sys->run(3*simtime);
+    sys->run(simtime);
     
-    /*
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
+    
+    //vmon->record_for(testtime);
+    //smon_vd->record_for(testtime);
+    //smon_m->record_for(testtime);
+    //smon_ws->record_for(testtime);
+    //smon_wd->record_for(testtime);
     con_ext_dend->set_all(1.5*we_dend);
     sys->run(simtime);
     
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
+    //vmon->record_for(testtime);
+    //smon_vd->record_for(testtime);
+    //smon_m->record_for(testtime);
+    //smon_ws->record_for(testtime);
+   // smon_wd->record_for(testtime);
     con_ext_dend->set_all(1.0*we_dend);
     sys->run(simtime);
     
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
+    //vmon->record_for(testtime);
+    //smon_vd->record_for(testtime);
+    //smon_m->record_for(testtime);
+    //smon_ws->record_for(testtime);
+    //smon_wd->record_for(testtime);
     con_ext_dend->set_all(0.0*we_dend);
     sys->run(simtime);
     
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
+    //vmon->record_for(testtime);
+    //smon_vd->record_for(testtime);
+    //smon_m->record_for(testtime);
+    //smon_ws->record_for(testtime);
+    //smon_wd->record_for(testtime);
     con_ext_dend->set_all(1.0*we_dend);
     sys->run(simtime);
     
     // test that plasticity is not affected by burst prob in input population
     curr_input_pop->set_all_currents(30.e-12/input[0].get_Cd());
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
+    //vmon->record_for(testtime);
+    //smon_vd->record_for(testtime);
+    //smon_m->record_for(testtime);
+    //smon_ws->record_for(testtime);
+    //smon_wd->record_for(testtime);
     sys->run(simtime);
-    */
+    
     
     if (errcode)
         auryn_abort(errcode);
