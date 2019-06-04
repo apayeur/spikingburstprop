@@ -215,6 +215,32 @@ def bpercurves(fn, currents):
     return loc_mean_bp, loc_mean_er, loc_mean_br
 
 
+def bpercurves_from_raster(fn, currents):
+    """
+    Compute the burst probability (BP) and event rate (ER) as a function of current.
+    The simulation producing the raw data consists in step increases of currents
+    applied for 1 second each. The BP and ER are computed by averaging over the last
+    0.5 sec of the reponse to each step.
+    :param fn:          filename (contains brate)
+    :param currents:    current intensities
+    :returns:
+        - loc_mean_bp - list of BPs
+        - loc_mean_er - list of ERs
+        - loc_mean_br - list of BRs
+    """
+    times, er, br = BRER_from_raster(fn, binsize=20.e-3, tau=16.e-3)
+    bp = 100. * br /er
+    loc_mean_bp = []
+    loc_mean_er = []
+    loc_mean_br = []
+    for i, current in enumerate(currents):
+        indices = np.where(np.logical_and(times > i + 0.5, times < i + 1.))[0]
+        loc_mean_bp.append(np.mean(bp[indices]))
+        loc_mean_er.append(np.mean(er[indices]))
+        loc_mean_br.append(np.mean(br[indices]))
+    return loc_mean_bp, loc_mean_er, loc_mean_br
+
+
 def ficurves(fn, currents):
     """
     Compute the firing rate as a function of current.

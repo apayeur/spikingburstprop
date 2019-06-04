@@ -8,7 +8,7 @@
 #include <fstream>
 #include <string>
 #include "STPeTMConnection.h"
-
+#include "EventBurstPoissonGroup.h"
 
 using namespace auryn;
 
@@ -78,20 +78,30 @@ int main(int ac, char* av[])
     /******          NEURON POPULATIONS       *********/
     /**************************************************/
     
-    // First layer of 2-comp pyramidal neurons
+    //-- First layer
+    //  2-comp pyramidal neurons
     NeuronID number_of_neurons = 4000;
     NaudGroup* pyr1 = new NaudGroup(number_of_neurons);
     initialize_pyr_neurons(pyr1);
     
-    // Second layer of 2-comp pyramidal neurons
+    //-- Second layer
+    //  2-comp pyramidal neurons
     NaudGroup* pyr2 = new NaudGroup(number_of_neurons);
     initialize_pyr_neurons(pyr2);
-    
-    // PV neurons
-    AdExGroup* pv = new AdExGroup(1000);
-    fix_parameters_pv_neurons(pv);
-    
-    // External population of Poisson neurons
+    //  PV neurons
+    AdExGroup* pv2 = new AdExGroup(1000);
+    fix_parameters_pv_neurons(pv2);
+    /*
+    //-- Third layer
+    //  2-comp pyramidal neurons
+    BurstPoissonGroup* pyr3 = new BurstPoissonGroup(number_of_neurons);
+    initialize_pyr_neurons(pyr3);
+    //  PV neurons
+    AdExGroup* pv3 = new AdExGroup(1000);
+    fix_parameters_pv_neurons(pv3);
+    */
+    //-- Background
+    //  External population of Poisson neurons
     NeuronID nb_exc_Poisson_neurons = 25000;
     NeuronID nb_inh_Poisson_neurons = nb_exc_Poisson_neurons;
     float poisson_rate = 5.;
@@ -139,43 +149,79 @@ int main(int ac, char* av[])
     SparseConnection * con_ext_inh_dend2 = new SparseConnection(inh_Poisson, pyr2, w_inh_dend, p_inh, GABA);
     con_ext_inh_dend2->set_target("g_gaba_dend");
     
-    // External Poisson neurons -> PV
+    /*
+    // External Poisson neurons -> Pyr3
+    SparseConnection * con_ext_exc_soma3 = new SparseConnection(exc_Poisson, pyr3, w_exc, p_exc, GLUT);
+    con_ext_exc_soma3->set_target("g_ampa");
+    SparseConnection * con_ext_inh_soma3 = new SparseConnection(inh_Poisson, pyr3, w_inh, p_inh, GABA);
+    con_ext_inh_soma3->set_target("g_gaba");
+    SparseConnection * con_ext_exc_dend3 = new SparseConnection(exc_Poisson, pyr3, w_exc_dend, p_exc, GLUT);
+    con_ext_exc_dend3->set_target("g_ampa_dend");
+    SparseConnection * con_ext_inh_dend3 = new SparseConnection(inh_Poisson, pyr3, w_inh_dend, p_inh, GABA);
+    con_ext_inh_dend3->set_target("g_gaba_dend");
+    */
+    
+    // External Poisson neurons -> PV2
     float p_ext_to_pv = 100./float(nb_exc_Poisson_neurons);
     float w_extexc_to_pv = 0.12;
     float w_extinh_to_pv = 0.15;
-    SparseConnection * con_ext_exc_pv = new SparseConnection(exc_Poisson, pv, w_extexc_to_pv, p_ext_to_pv, GLUT);
-    SparseConnection * con_ext_inh_pv = new SparseConnection(inh_Poisson, pv, w_extinh_to_pv, p_ext_to_pv, GABA);
+    SparseConnection * con_ext_exc_pv2 = new SparseConnection(exc_Poisson, pv2, w_extexc_to_pv, p_ext_to_pv, GLUT);
+    SparseConnection * con_ext_inh_pv2 = new SparseConnection(inh_Poisson, pv2, w_extinh_to_pv, p_ext_to_pv, GABA);
     
+    /*
+    // External Poisson neurons -> PV3
+    SparseConnection * con_ext_exc_pv3 = new SparseConnection(exc_Poisson, pv3, w_extexc_to_pv, p_ext_to_pv, GLUT);
+    SparseConnection * con_ext_inh_pv3 = new SparseConnection(inh_Poisson, pv3, w_extinh_to_pv, p_ext_to_pv, GABA);
+    */
     
     //-- CONNECT FeedFORWARD
         // Pyr1 to pyr2 - STD
-    float w_pyr1_to_pyr2 = 0.014; //0.015;
+    float w_pyr1_to_pyr2 = 0.0; //0.014; 0.03 for EventBurstPoisson
     float p_pyr1_to_pyr2 = 0.05;
     STPeTMConnection * pyr1_to_pyr2 = new STPeTMConnection(pyr1, pyr2, w_pyr1_to_pyr2, p_pyr1_to_pyr2, GLUT);
     set_Depressing_connection(pyr1_to_pyr2);
     pyr1_to_pyr2->set_target("g_ampa");
     
-        // Pyr1 to PV - STD
-    float w_pyr1_to_pv = 0.01;
-    float p_pyr1_to_pv = 0.05;
-    STPeTMConnection * pyr1_to_pv = new STPeTMConnection(pyr1, pv, w_pyr1_to_pv, p_pyr1_to_pv, GLUT);
-    set_Depressing_connection(pyr1_to_pv);
+        // Pyr1 to PV2 - STD
+    float w_pyr1_to_pv2 = 0.01;//0.01
+    float p_pyr1_to_pv2 = 0.05;
+    STPeTMConnection * pyr1_to_pv2 = new STPeTMConnection(pyr1, pv2, w_pyr1_to_pv2, p_pyr1_to_pv2, GLUT);
+    set_Depressing_connection(pyr1_to_pv2);
 
-        // PV to Pyr2
-    float w_pv_to_pyr2 = 0.05; //0.04;
-    float p_pv_to_pyr2 = 0.05;
-    STPeTMConnection * pv_to_pyr2 = new STPeTMConnection(pv, pyr2, w_pv_to_pyr2, p_pv_to_pyr2, GABA);
-    pv_to_pyr2->set_target("g_gaba");
+        // PV2 to Pyr2
+    float w_pv2_to_pyr2 = 0.05; //0.05;
+    float p_pv2_to_pyr2 = 0.05;
+    STPeTMConnection * pv2_to_pyr2 = new STPeTMConnection(pv2, pyr2, w_pv2_to_pyr2, p_pv2_to_pyr2, GABA);
+    pv2_to_pyr2->set_target("g_gaba");
+    /*
+    // Pyr2 to pyr3 - STD
+    float w_pyr2_to_pyr3 = 0.05; //0.014;
+    float p_pyr2_to_pyr3 = 0.05;
+    STPeTMConnection * pyr2_to_pyr3 = new STPeTMConnection(pyr2, pyr3, w_pyr2_to_pyr3, p_pyr2_to_pyr3, GLUT);
+    set_Depressing_connection(pyr2_to_pyr3);
+    pyr2_to_pyr3->set_target("g_ampa");
+    
+    // Pyr2 to PV3 - STD
+    float w_pyr2_to_pv3 = 0.01;
+    float p_pyr2_to_pv3 = 0.05;
+    STPeTMConnection * pyr2_to_pv3 = new STPeTMConnection(pyr2, pv3, w_pyr2_to_pv3, p_pyr2_to_pv3, GLUT);
+    set_Depressing_connection(pyr2_to_pv3);
+    
+    // PV3 to Pyr3
+    float w_pv3_to_pyr3 = 0.025; //0.05;
+    float p_pv3_to_pyr3 = 0.05;
+    STPeTMConnection * pv3_to_pyr3 = new STPeTMConnection(pv3, pyr3, w_pv3_to_pyr3, p_pv3_to_pyr3, GABA);
+    pv3_to_pyr3->set_target("g_gaba");
+    */
 
 
     /**************************************************/
     /******         CURRENT INJECTORS         *********/
     /**************************************************/
     CurrentInjector * curr_inject_soma1 = new CurrentInjector(pyr1, "mem");
-    //CurrentInjector * curr_inject_dend1 = new CurrentInjector(pyr1, "Vd");
-    //CurrentInjector * curr_inject_dend2 = new CurrentInjector(pyr2, "Vd");
-    CurrentInjector * curr_inject_pv    = new CurrentInjector(pv, "mem");
-    
+    CurrentInjector * curr_inject_pv2    = new CurrentInjector(pv2, "mem");
+    //CurrentInjector * curr_inject_pv3    = new CurrentInjector(pv3, "mem");
+
     
     /**************************************************/
     /******              MONITORS             *********/
@@ -186,23 +232,35 @@ int main(int ac, char* av[])
     // Burst/event rate monitors
     BurstRateMonitor * brmon1 = new BurstRateMonitor( pyr1, sys->fn("brate1"), binSize_rate);
     BurstRateMonitor * brmon2 = new BurstRateMonitor( pyr2, sys->fn("brate2"), binSize_rate);
+    //BurstRateMonitor * brmon3 = new BurstRateMonitor( pyr3, sys->fn("brate3"), binSize_rate);
+    
     // Population activity monitors
-    PopulationRateMonitor * pv_activity   = new PopulationRateMonitor( pv, sys->fn("pvrate"), binSize_rate );
+    PopulationRateMonitor * pv2_activity   = new PopulationRateMonitor( pv2, sys->fn("pv2rate"), binSize_rate );
+    //PopulationRateMonitor * pv3_activity   = new PopulationRateMonitor( pv3, sys->fn("pv3rate"), binSize_rate );
     
+    // Voltage monitors
+    VoltageMonitor *pyr1_mem = new VoltageMonitor(pyr1, 0,  sys->fn("pyr1_mem"), 1.e-3);
+    VoltageMonitor *pyr2_mem = new VoltageMonitor(pyr2, 0,  sys->fn("pyr2_mem"), 1.e-3);
+    //VoltageMonitor *pyr3_mem = new VoltageMonitor(pyr3, 0,  sys->fn("pyr3_mem"), 1.e-3);
     
+    //Raster
+    SpikeMonitor * smon1 = new SpikeMonitor( pyr1, sys->fn("ras1"));
+    SpikeMonitor * smon2 = new SpikeMonitor( pyr2, sys->fn("ras2"));
+
     /**************************************************/
     /******             SIMULATION            *********/
     /**************************************************/
     logger->msg("Running ...",PROGRESS);
     
-    const double max_somatic_current  = 400e-12;
-    const double min_somatic_current  = -400e-12;
-    const double somatic_current_incr = 50e-12;
+    const double max_somatic_current  = 500e-12;
+    const double min_somatic_current  = -200e-12;
+    const double somatic_current_incr = 100e-12;
     const double simtime = 1000e-3;
     
     double somatic_current = min_somatic_current;
     curr_inject_soma1->set_all_currents(somatic_current/pyr1[0].get_Cs());
-    curr_inject_pv->set_all_currents(205e-12/pv[0].get_c_mem());
+    curr_inject_pv2->set_all_currents(205e-12/pv2[0].get_c_mem());
+    //curr_inject_pv3->set_all_currents(205e-12/pv3[0].get_c_mem());
 
     while (somatic_current < max_somatic_current + somatic_current_incr/2)
     {

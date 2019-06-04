@@ -31,7 +31,7 @@ namespace auryn {
     
     class BurstPoissonGroup : public NaudGroup
     {
-    private:
+    protected:
         static boost::mt19937 gen;
         boost::random::uniform_real_distribution<> * dist;
         boost::variate_generator<boost::mt19937&, boost::random::uniform_real_distribution<> > * die;
