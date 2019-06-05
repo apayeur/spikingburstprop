@@ -8,7 +8,7 @@
 #include <fstream>
 #include <string>
 #include "STPeTMConnection.h"
-#include "EventBurstPoissonGroup.h"
+#include "BurstPoissonGroup.h"
 
 using namespace auryn;
 
@@ -81,12 +81,12 @@ int main(int ac, char* av[])
     //-- First layer
     //  2-comp pyramidal neurons
     NeuronID number_of_neurons = 4000;
-    NaudGroup* pyr1 = new NaudGroup(number_of_neurons);
+    BurstPoissonGroup* pyr1 = new BurstPoissonGroup(number_of_neurons);
     initialize_pyr_neurons(pyr1);
     
     //-- Second layer
     //  2-comp pyramidal neurons
-    NaudGroup* pyr2 = new NaudGroup(number_of_neurons);
+    BurstPoissonGroup* pyr2 = new BurstPoissonGroup(number_of_neurons);
     initialize_pyr_neurons(pyr2);
     //  PV neurons
     AdExGroup* pv2 = new AdExGroup(1000);
@@ -176,7 +176,7 @@ int main(int ac, char* av[])
     
     //-- CONNECT FeedFORWARD
         // Pyr1 to pyr2 - STD
-    float w_pyr1_to_pyr2 = 0.0; //0.014; 0.03 for EventBurstPoisson
+    float w_pyr1_to_pyr2 = 0.014; //0.014; 0.03 for EventBurstPoisson
     float p_pyr1_to_pyr2 = 0.05;
     STPeTMConnection * pyr1_to_pyr2 = new STPeTMConnection(pyr1, pyr2, w_pyr1_to_pyr2, p_pyr1_to_pyr2, GLUT);
     set_Depressing_connection(pyr1_to_pyr2);
