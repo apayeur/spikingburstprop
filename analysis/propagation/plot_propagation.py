@@ -2,36 +2,39 @@ import sys
 sys.path.append('../')
 import raster_analysis as ra
 import numpy as np
+import matplotlib.pyplot as plt
 
-filenames1 = ['../../data/propagation/propagation.0.ras1_seed1',
-              '../../data/propagation/propagation.0.ras1_seed2',
-              '../../data/propagation/propagation.0.ras1_seed3',
-              '../../data/propagation/propagation.0.ras1_seed4',
-              '../../data/propagation/propagation.0.ras1_seed5']
+plt.style.use('../thesis_mplrc.dms')
 
-filenames2 = ['../../data/propagation/propagation.0.ras2_seed1',
-              '../../data/propagation/propagation.0.ras2_seed2',
-              '../../data/propagation/propagation.0.ras2_seed3',
-              '../../data/propagation/propagation.0.ras2_seed4',
-              '../../data/propagation/propagation.0.ras2_seed5']
+filenames1 = ['../../data/propagation/propagation.0.brate1_seed1',
+              '../../data/propagation/propagation.0.brate1_seed2',
+              '../../data/propagation/propagation.0.brate1_seed3',
+              '../../data/propagation/propagation.0.brate1_seed4',
+              '../../data/propagation/propagation.0.brate1_seed5']
 
-filenamesPV = ['../../data/propagation/propagation.0.raspv_seed1',
-               '../../data/propagation/propagation.0.raspv_seed2',
-               '../../data/propagation/propagation.0.raspv_seed3',
-               '../../data/propagation/propagation.0.raspv_seed4',
-               '../../data/propagation/propagation.0.raspv_seed5']
+filenames2 = ['../../data/propagation/propagation.0.brate2_seed1',
+              '../../data/propagation/propagation.0.brate2_seed2',
+              '../../data/propagation/propagation.0.brate2_seed3',
+              '../../data/propagation/propagation.0.brate2_seed4',
+              '../../data/propagation/propagation.0.brate2_seed5']
 
-filenamesSOM = ['../../data/propagation/propagation.0.rassom_seed1',
-               '../../data/propagation/propagation.0.rassom_seed2',
-               '../../data/propagation/propagation.0.rassom_seed3',
-               '../../data/propagation/propagation.0.rassom_seed4',
-               '../../data/propagation/propagation.0.rassom_seed5']
+filenamesPV = ['../../data/propagation/propagation.0.pvrate_seed1',
+               '../../data/propagation/propagation.0.pvrate_seed2',
+               '../../data/propagation/propagation.0.pvrate_seed3',
+               '../../data/propagation/propagation.0.pvrate_seed4',
+               '../../data/propagation/propagation.0.pvrate_seed5']
+
+filenamesSOM = ['../../data/propagation/propagation.0.somrate_seed1',
+               '../../data/propagation/propagation.0.somrate_seed2',
+               '../../data/propagation/propagation.0.somrate_seed3',
+               '../../data/propagation/propagation.0.somrate_seed4',
+               '../../data/propagation/propagation.0.somrate_seed5']
 
 # parameters
 # currents in pA
-max_dendritic_current = 50.
-min_dendritic_current = 0.
-max_somatic_current = 100.
+max_dendritic_current = 100.
+min_dendritic_current = 50.
+max_somatic_current = 150.
 min_somatic_current = 0.
 
 # simulation blocks
@@ -53,7 +56,7 @@ for i in range(10):
 begins_dendrites = np.array(begins_dendrites)
 begins_soma = np.array(begins_soma)
 
-times = np.arange(1, 2., 0.001)
+times = np.arange(1, 3., 0.001)
 current_dend = ra.alternating_square_current(times, min_dendritic_current, max_dendritic_current, begins_dendrites, segtime_maxdend)
 current_soma = ra.alternating_square_current(times, min_somatic_current, max_somatic_current, begins_soma, period/2)
 
@@ -62,5 +65,7 @@ inputs = {'times': times, 'dendrite': current_dend, 'soma': current_soma}
 # output figures
 ra.display_BRER(filenames1, '../../results/propagation/Pop1_3examples.pdf')
 ra.display_BRER(filenames2, '../../results/propagation/Pop2_3examples.pdf')
-#ra.display_rates_with_inputs(filenamesPV, '../../results/propagation/PV.pdf', inputs)
-#ra.display_rates_with_inputs(filenamesSOM, '../../results/propagation/SOM.pdf', inputs)
+#ra.display_BRER_with_inputs(filenames1, '../../results/propagation/Pop1_3examples.pdf', inputs)
+#ra.display_BRER_with_inputs(filenames2, '../../results/propagation/Pop2_3examples.pdf', inputs)
+#ra.display_rates_with_inputs(filenamesPV, '../../results/propagation/PV.pdf', inputs, encoding='event')
+#ra.display_rates_with_inputs(filenamesSOM, '../../results/propagation/SOM.pdf', inputs, encoding='burst')

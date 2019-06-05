@@ -5,6 +5,9 @@ data/
 analysis/.idea/
 /test/test-output/
 
+sim/sim_*
+!sim/sim_*.cpp
+
 *.xml
 *.pyc
 

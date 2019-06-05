@@ -156,7 +156,7 @@ int main(int ac, char* av[])
     
     //-- CONNECT FeedFORWARD
         // Pyr1 to pyr2 - STD
-    float w_pyr1_to_pyr2 = 0.015; //0.017;
+    float w_pyr1_to_pyr2 = 0.02; //0.017;
     float p_pyr1_to_pyr2 = 0.05;
     STPeTMConnection * pyr1_to_pyr2 = new STPeTMConnection(pyr1, pyr2, w_pyr1_to_pyr2, p_pyr1_to_pyr2, GLUT);
     set_Depressing_connection(pyr1_to_pyr2);
@@ -169,7 +169,7 @@ int main(int ac, char* av[])
     set_Depressing_connection(pyr1_to_pv);
 
         // PV to Pyr2
-    float w_pv_to_pyr2 = 0.05; //0.04;
+    float w_pv_to_pyr2 = 0.04; //0.04;
     float p_pv_to_pyr2 = 0.05;
     SparseConnection * pv_to_pyr2 = new SparseConnection(pv, pyr2, w_pv_to_pyr2, p_pv_to_pyr2, GABA);
     pv_to_pyr2->set_target("g_gaba");
@@ -177,21 +177,21 @@ int main(int ac, char* av[])
     
     //-- CONNECT FeedBACK
         // Pyr2 to pyr1 - STF
-    float w_pyr2_to_pyr1 = 0.2;//0.2;
+    float w_pyr2_to_pyr1 = 0.15;//0.2;
     float p_pyr2_to_pyr1 = 0.05;
     STPeTMConnection * pyr2_to_pyr1 = new STPeTMConnection(pyr2, pyr1, w_pyr2_to_pyr1, p_pyr2_to_pyr1, GLUT);
     set_Facilitating_connection(pyr2_to_pyr1);
     pyr2_to_pyr1->set_target("g_ampa_dend");
     
         // Pyr2 to SOM - STF
-    float w_pyr2_to_som = 0.02;
+    float w_pyr2_to_som = 0.25;
     float p_pyr2_to_som = 0.05;
     //SparseConnection * pyr2_to_som = new SparseConnection(pyr2, som, w_pyr2_to_som, p_pyr2_to_som, GLUT);
     STPeTMConnection * pyr2_to_som = new STPeTMConnection(pyr2, som, w_pyr2_to_som, p_pyr2_to_som, GLUT);
     set_Facilitating_connection(pyr2_to_som);
     
         // SOM to pyr1
-    float w_som_to_pyr1 = 0.025;//0.025;
+    float w_som_to_pyr1 = 0.02;//0.025;
     float p_som_to_pyr1 = 0.05;
     SparseConnection * som_to_pyr1 = new SparseConnection(som, pyr1, w_som_to_pyr1, p_som_to_pyr1, GABA);
     som_to_pyr1->set_target("g_gaba_dend");
@@ -237,7 +237,12 @@ int main(int ac, char* av[])
     BurstRateMonitor * brmon1 = new BurstRateMonitor( pyr1, sys->fn("brate1_seed"+seed_str), binSize_rate);
     BurstRateMonitor * brmon2 = new BurstRateMonitor( pyr2, sys->fn("brate2_seed"+seed_str), binSize_rate);
     
+    // Population monitors
+    PopulationRateMonitor * pv_activity   = new PopulationRateMonitor( pv, sys->fn("pvrate_seed"+seed_str), binSize_rate );
+    PopulationRateMonitor * som_activity   = new PopulationRateMonitor( som, sys->fn("somrate_seed"+seed_str), binSize_rate );
+    
     // Raster plots
+    
     SpikeMonitor * smon1 = new SpikeMonitor( pyr1, sys->fn("ras1_seed"+seed_str));
     SpikeMonitor * smon2 = new SpikeMonitor( pyr2, sys->fn("ras2_seed"+seed_str));
     SpikeMonitor * smon_pv = new SpikeMonitor( pv, sys->fn("raspv_seed"+seed_str));
@@ -251,9 +256,9 @@ int main(int ac, char* av[])
     
     // The alternating currents switched between a maximum and a minimum in both the dendrites and the somas.
     const double max_dendritic_current = 100e-12;//90e-12;
-    const double min_dendritic_current = 0e-12;
-    const double max_somatic_current = 150e-12;
-    const double min_somatic_current = 0.; //50e-12;
+    const double min_dendritic_current = 50e-12;
+    const double max_somatic_current = 200e-12;
+    const double min_somatic_current = 50e-12; //50e-12;
     
     const double simtime = 1000e-3;
     const double period = 200e-3;
@@ -271,36 +276,36 @@ int main(int ac, char* av[])
     sys->run(simtime);
     
     // Main simulation
+    
     // first "example"
     curr_inject_soma1->set_all_currents(max_somatic_current/pyr1[0].get_Cs());
-    sys->run(period/2);
+    sys->run(period);
     curr_inject_dend2->set_all_currents(max_dendritic_current/pyr2[0].get_Cd());
-    sys->run(period/2);
+    sys->run(period);
     //recovery
-    curr_inject_soma1->set_all_currents(0./pyr1[0].get_Cs());
-    curr_inject_dend2->set_all_currents(0./pyr2[0].get_Cd());
-    sys->run(period/2);
+    curr_inject_soma1->set_all_currents(min_somatic_current/pyr1[0].get_Cs());
+    curr_inject_dend2->set_all_currents(min_dendritic_current/pyr2[0].get_Cd());
+    sys->run(2*period);
     
     // second "example"
     curr_inject_soma1->set_all_currents(-max_somatic_current/pyr1[0].get_Cs());
-    sys->run(period/2);
-    curr_inject_dend2->set_all_currents((max_dendritic_current/2)/pyr2[0].get_Cd());
-    sys->run(period/2);
+    sys->run(period);
+    curr_inject_dend2->set_all_currents((max_dendritic_current+min_dendritic_current)/2)/pyr2[0].get_Cd());
+    sys->run(period);
     //recovery
-    curr_inject_soma1->set_all_currents(0./pyr1[0].get_Cs());
-    curr_inject_dend2->set_all_currents(0./pyr2[0].get_Cd());
-    sys->run(period/2);
+    curr_inject_soma1->set_all_currents(min_somatic_current/pyr1[0].get_Cs());
+    curr_inject_dend2->set_all_currents(min_dendritic_current/pyr2[0].get_Cd());
+    sys->run(2*period);
     
     // third "example"
     curr_inject_soma1->set_all_currents(max_somatic_current/pyr1[0].get_Cs());
-    sys->run(period/2);
-    curr_inject_dend2->set_all_currents(-(max_dendritic_current/2)/pyr2[0].get_Cd());
-    sys->run(period/2);
-    //rest
-    curr_inject_soma1->set_all_currents(0./pyr1[0].get_Cs());
-    curr_inject_dend2->set_all_currents(0./pyr2[0].get_Cd());
-    sys->run(period/2);
-    
+    sys->run(period);
+    curr_inject_dend2->set_all_currents(-max_dendritic_current/pyr2[0].get_Cd());
+    sys->run(period);
+    //recovery
+    curr_inject_soma1->set_all_currents(min_somatic_current/pyr1[0].get_Cs());
+    curr_inject_dend2->set_all_currents(min_dendritic_current/pyr2[0].get_Cd());
+    sys->run(2*period);
     
     /*
     // alternating currents in both dendrites and soma
@@ -321,8 +326,8 @@ int main(int ac, char* av[])
         curr_inject_soma1->set_all_currents(min_somatic_current/pyr1[0].get_Cs());
         curr_inject_dend2->set_all_currents(min_dendritic_current/pyr2[0].get_Cd());
         sys->run(small_overlap);
-    }*/
-    
+    }
+    */
     /*
      // alternating current to dendrites only (constant somatic current)
      double somatic_current = min_somatic_current;

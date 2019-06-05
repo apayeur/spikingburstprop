@@ -312,11 +312,25 @@ def display_BRER(filenames, outfile, binsize=20.e-3, tau=16.e-3):
     std_BP = 100 * std['BP']
 
     plt.figure(figsize=(4, 4))
-    plt.plot(t, ER, color=custom_colors['blue'], label='ER')
-    plt.plot(t, BR, color=custom_colors['orange'], label='BR')
+    plt.subplot(311)
     plt.plot(t, BP, color=custom_colors['red'], label='BP')
-    plt.xlabel('Time [ms]')
-    plt.legend()
+    plt.fill_between(t, BP - 2 * std_BP, BP + 2 * std_BP, color=custom_colors['red'], alpha=0.5)
+    plt.ylim([0., 100.])
+    plt.ylabel(r'BP [\%]')
+
+    plt.subplot(312)
+    plt.plot(t, BR, color=custom_colors['orange'], label='BR')
+    plt.fill_between(t, BR - 2 * std_BR, BR + 2 * std_BR, color=custom_colors['orange'], alpha=0.5)
+    plt.ylim([0., 5.])
+    plt.ylabel('BR [Hz]')
+
+    plt.subplot(313)
+    plt.plot(t, ER, color=custom_colors['blue'], label='ER')
+    plt.fill_between(t, ER - 2 * std_ER, ER + 2 * std_ER, color=custom_colors['blue'], alpha=0.5)
+    plt.ylim([0., 13.])
+    plt.xlabel('Time [s]')
+    plt.ylabel('ER [Hz]')
+    plt.tight_layout()
     plt.savefig(outfile)
     plt.close()
 
@@ -373,7 +387,7 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
     plt.close()
 
 
-def display_rates_with_inputs(filenames, outfile, inputs, binsize=20.e-3):
+def display_rates_with_inputs(filenames, outfile, inputs, encoding='event', binsize=20.e-3):
     """
      Display average rates together with the dendritic and somatic inputs
      :param filenames:   List of raster files
@@ -382,12 +396,19 @@ def display_rates_with_inputs(filenames, outfile, inputs, binsize=20.e-3):
      :param binsize:     Size of the discretization bins (in seconds)current traces in pA
      :param tau:         Burst detection threshold (in seconds)
      """
+
     t, rate, std_rate = std_rate_over_realizations(filenames, binsize=binsize)
+    if encoding == 'event':
+        current = inputs['soma']
+    elif encoding == 'burst':
+        current = inputs['soma']*inputs['dendrite']
+    elif encoding == 'bp':
+        current = inputs['dendrite']
 
     plt.figure(figsize=(2.5, 2.5/1.6))
     plt.plot(t, rate, color='black')
-    rescaled_input = np.min(rate) + (inputs['soma'] - np.min(inputs['soma'])) *\
-                                   (np.max(rate)-np.min(rate))/(np.max(inputs['soma'])-np.min(inputs['soma']))
+    rescaled_input = np.min(rate) + (current - np.min(current)) *\
+                                   (np.max(rate)-np.min(rate))/(np.max(current)-np.min(current))
     plt.plot(inputs['times'], rescaled_input, '--', color=custom_colors['blue'])
     plt.fill_between(t, rate - 2 * std_rate, rate + 2 * std_rate, color='black', alpha=0.5)
     plt.xlim([inputs['times'][0], inputs['times'][-1]])
