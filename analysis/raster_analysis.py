@@ -294,21 +294,31 @@ def pop_corr(rasterfile, binsize=5e-3, N_selected_neurons=100):
 #################################################################
 #                   PLOTTING-RELATED FUNCTIONS                  #
 #################################################################
-def display_BRER(filenames, binsize=20.e-3, tau=16.e-3):
+def display_BRER(filenames, outfile, binsize=20.e-3, tau=16.e-3):
     """
     Display average rates and burst probability.
     :param filenames:   List of raster files
     :param binsize:     Size of the discretization bins (in seconds)
     :param tau:         Burst detection threshold (in seconds)
     """
-    t, ER, BR = average_BRER_over_realizations(filenames, binsize=binsize, tau=tau)
+    t, mean, std = std_BRER_over_realizations(filenames, binsize=binsize, tau=tau)
+
+    ER = mean['ER']
+    BR = mean['BR']
+    BP = 100 * mean['BP']
+
+    std_ER = std['ER']
+    std_BR = std['BR']
+    std_BP = 100 * std['BP']
+
+    plt.figure(figsize=(4, 4))
     plt.plot(t, ER, color=custom_colors['blue'], label='ER')
     plt.plot(t, BR, color=custom_colors['orange'], label='BR')
-    plt.plot(t, 100*BR/ER, color=custom_colors['red'], label='BP')
+    plt.plot(t, BP, color=custom_colors['red'], label='BP')
     plt.xlabel('Time [ms]')
     plt.legend()
-    plt.tight_layout()
-    plt.show()
+    plt.savefig(outfile)
+    plt.close()
 
 
 def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.e-3):

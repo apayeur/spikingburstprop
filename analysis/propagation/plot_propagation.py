@@ -60,7 +60,7 @@ current_soma = ra.alternating_square_current(times, min_somatic_current, max_som
 inputs = {'times': times, 'dendrite': current_dend, 'soma': current_soma}
 
 # output figures
-ra.display_BRER_with_inputs(filenames1, '../../results/propagation/Pop1.pdf', inputs)
-ra.display_BRER_with_inputs(filenames2, '../../results/propagation/Pop2.pdf', inputs)
-ra.display_rates_with_inputs(filenamesPV, '../../results/propagation/PV.pdf', inputs)
-ra.display_rates_with_inputs(filenamesSOM, '../../results/propagation/SOM.pdf', inputs)
+ra.display_BRER(filenames1, '../../results/propagation/Pop1_3examples.pdf')
+ra.display_BRER(filenames2, '../../results/propagation/Pop2_3examples.pdf')
+#ra.display_rates_with_inputs(filenamesPV, '../../results/propagation/PV.pdf', inputs)
+#ra.display_rates_with_inputs(filenamesSOM, '../../results/propagation/SOM.pdf', inputs)

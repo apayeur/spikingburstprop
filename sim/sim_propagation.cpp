@@ -169,7 +169,7 @@ int main(int ac, char* av[])
     set_Depressing_connection(pyr1_to_pv);
 
         // PV to Pyr2
-    float w_pv_to_pyr2 = 0.0; //0.04;
+    float w_pv_to_pyr2 = 0.05; //0.04;
     float p_pv_to_pyr2 = 0.05;
     SparseConnection * pv_to_pyr2 = new SparseConnection(pv, pyr2, w_pv_to_pyr2, p_pv_to_pyr2, GABA);
     pv_to_pyr2->set_target("g_gaba");
@@ -183,16 +183,15 @@ int main(int ac, char* av[])
     set_Facilitating_connection(pyr2_to_pyr1);
     pyr2_to_pyr1->set_target("g_ampa_dend");
     
-        // Pyr2 to SOM - STD
+        // Pyr2 to SOM - STF
     float w_pyr2_to_som = 0.02;
     float p_pyr2_to_som = 0.05;
     //SparseConnection * pyr2_to_som = new SparseConnection(pyr2, som, w_pyr2_to_som, p_pyr2_to_som, GLUT);
-    
     STPeTMConnection * pyr2_to_som = new STPeTMConnection(pyr2, som, w_pyr2_to_som, p_pyr2_to_som, GLUT);
-    set_Depressing_connection(pyr2_to_som);
+    set_Facilitating_connection(pyr2_to_som);
     
         // SOM to pyr1
-    float w_som_to_pyr1 = 0.03;//0.025;
+    float w_som_to_pyr1 = 0.025;//0.025;
     float p_som_to_pyr1 = 0.05;
     SparseConnection * som_to_pyr1 = new SparseConnection(som, pyr1, w_som_to_pyr1, p_som_to_pyr1, GABA);
     som_to_pyr1->set_target("g_gaba_dend");
@@ -204,7 +203,6 @@ int main(int ac, char* av[])
     STPeTMConnection * pyr1_to_pyr1 = new STPeTMConnection(pyr1, pyr1, w_pyr_to_pyr, p_pyr_to_pyr, GABA);
     set_Facilitating_connection(pyr1_to_pyr1);
     pyr1_to_pyr1->set_target("g_gaba_dend");
-    
     STPeTMConnection * pyr2_to_pyr2 = new STPeTMConnection(pyr2, pyr2, w_pyr_to_pyr, p_pyr_to_pyr, GABA);
     set_Facilitating_connection(pyr2_to_pyr2);
     pyr2_to_pyr2->set_target("g_gaba_dend");
@@ -252,9 +250,9 @@ int main(int ac, char* av[])
     logger->msg("Running ...",PROGRESS);
     
     // The alternating currents switched between a maximum and a minimum in both the dendrites and the somas.
-    const double max_dendritic_current = 50e-12;//90e-12;
+    const double max_dendritic_current = 100e-12;//90e-12;
     const double min_dendritic_current = 0e-12;
-    const double max_somatic_current = 100e-12;
+    const double max_somatic_current = 150e-12;
     const double min_somatic_current = 0.; //50e-12;
     
     const double simtime = 1000e-3;
@@ -273,6 +271,39 @@ int main(int ac, char* av[])
     sys->run(simtime);
     
     // Main simulation
+    // first "example"
+    curr_inject_soma1->set_all_currents(max_somatic_current/pyr1[0].get_Cs());
+    sys->run(period/2);
+    curr_inject_dend2->set_all_currents(max_dendritic_current/pyr2[0].get_Cd());
+    sys->run(period/2);
+    //recovery
+    curr_inject_soma1->set_all_currents(0./pyr1[0].get_Cs());
+    curr_inject_dend2->set_all_currents(0./pyr2[0].get_Cd());
+    sys->run(period/2);
+    
+    // second "example"
+    curr_inject_soma1->set_all_currents(-max_somatic_current/pyr1[0].get_Cs());
+    sys->run(period/2);
+    curr_inject_dend2->set_all_currents((max_dendritic_current/2)/pyr2[0].get_Cd());
+    sys->run(period/2);
+    //recovery
+    curr_inject_soma1->set_all_currents(0./pyr1[0].get_Cs());
+    curr_inject_dend2->set_all_currents(0./pyr2[0].get_Cd());
+    sys->run(period/2);
+    
+    // third "example"
+    curr_inject_soma1->set_all_currents(max_somatic_current/pyr1[0].get_Cs());
+    sys->run(period/2);
+    curr_inject_dend2->set_all_currents(-(max_dendritic_current/2)/pyr2[0].get_Cd());
+    sys->run(period/2);
+    //rest
+    curr_inject_soma1->set_all_currents(0./pyr1[0].get_Cs());
+    curr_inject_dend2->set_all_currents(0./pyr2[0].get_Cd());
+    sys->run(period/2);
+    
+    
+    /*
+    // alternating currents in both dendrites and soma
     for (int i=0;i<10;i++)
     {
         curr_inject_soma1->set_all_currents(max_somatic_current/pyr1[0].get_Cs());
@@ -290,7 +321,8 @@ int main(int ac, char* av[])
         curr_inject_soma1->set_all_currents(min_somatic_current/pyr1[0].get_Cs());
         curr_inject_dend2->set_all_currents(min_dendritic_current/pyr2[0].get_Cd());
         sys->run(small_overlap);
-    }
+    }*/
+    
     /*
      // alternating current to dendrites only (constant somatic current)
      double somatic_current = min_somatic_current;
