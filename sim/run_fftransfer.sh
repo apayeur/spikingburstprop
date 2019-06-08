@@ -10,6 +10,7 @@ mkdir -p $RESULT_DIR
 
 cd ../analysis/fftransfer/
 python plot_fftransfer.py  -resultdir "../"$RESULT_DIR -datadir "../"$DIR
-cd ../../sim/
+open  ../../results/fftransfer/FFTransferFunction.pdf
+
 
 

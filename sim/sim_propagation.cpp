@@ -290,7 +290,7 @@ int main(int ac, char* av[])
     // second "example"
     curr_inject_soma1->set_all_currents(-max_somatic_current/pyr1[0].get_Cs());
     sys->run(period);
-    curr_inject_dend2->set_all_currents((max_dendritic_current+min_dendritic_current)/2)/pyr2[0].get_Cd());
+    curr_inject_dend2->set_all_currents(((max_dendritic_current+min_dendritic_current)/2)/pyr2[0].get_Cd());
     sys->run(period);
     //recovery
     curr_inject_soma1->set_all_currents(min_somatic_current/pyr1[0].get_Cs());

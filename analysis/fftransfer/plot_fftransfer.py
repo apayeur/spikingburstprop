@@ -48,13 +48,13 @@ def power_law_fit(x, p1, p2):
 currents = np.arange(-200, 500, 100)
 
 # BP, ER, BR for population 1, 2, 3
-filenames1 = args.datadir + '/fftransfer.0.ras1'
-bp1, er1, br1 = ra.bpercurves_from_raster(filenames1, currents)
+filenames1 = args.datadir + '/fftransfer.0.brate1'
+bp1, er1, br1 = ra.bpercurves(filenames1, currents)
 #filenames1 = args.datadir + '/fftransfer.0.brate1'
 #bp1, er1, br1 = ra.bpercurves(filenames1, currents)
 
-filenames2 = args.datadir + '/fftransfer.0.ras2'
-bp2, er2, br2 = ra.bpercurves_from_raster(filenames2, currents)
+filenames2 = args.datadir + '/fftransfer.0.brate2'
+bp2, er2, br2 = ra.bpercurves(filenames2, currents)
 #filenames2 = args.datadir + '/fftransfer.0.brate2'
 #bp2, er2, br2 = ra.bpercurves(filenames2, currents)
 
@@ -91,11 +91,11 @@ plt.figure(figsize=(5, 3/1.5))
 plt.subplot(121)
 plt.title(r'\textbf{A} $e_{l} = a_l + c_l \sigma[\alpha_l (I_1 - \gamma_l)]$', loc='left')
 #plt.text(0, 1, r'\textbf{A}', horizontalalignment='left', verticalalignment='top', transform=plt.gca().transAxes)
-plt.semilogy(currents, er1, color=custom_colors['blue'], label='$e_{1}$')
-plt.semilogy(currents, er2, '--', color=custom_colors['blue'], label='$e_{2}$')
+plt.plot(currents, er1, color=custom_colors['blue'], label='$e_{1}$')
+plt.plot(currents, er2, '--', color=custom_colors['blue'], label='$e_{2}$')
 #plt.plot(currents, er3, ':', color=custom_colors['blue'], label='$e_{3}$')
-plt.semilogy(currents, sigmoid_fit(currents, *popt1), color='grey', lw=1)
-plt.semilogy(currents, sigmoid_fit(currents, *popt2), '--', color='grey', lw=1)
+plt.plot(currents, sigmoid_fit(currents, *popt1), color='grey', lw=1)
+plt.plot(currents, sigmoid_fit(currents, *popt2), '--', color='grey', lw=1)
 #plt.plot(currents, sigmoid_fit(currents, *popt3), ':', color='grey', lw=1)
 plt.xlabel('$I_1$ [pA]')
 plt.ylabel('$e_l$ [Hz]')
@@ -108,8 +108,8 @@ plt.legend(fontsize=9)
 plt.subplot(122)
 plt.title(r'\textbf{B} $e_{2} = f(W_2e_1 + n_2)$', loc='left')
 #plt.text(*panel_letter_pos, r'\textbf{C}', horizontalalignment='left', verticalalignment='top', transform=plt.gca().transAxes)
-plt.semilogy(er1, er2, color=custom_colors['blue'])
-plt.semilogy(er1, exp_fit(np.array(er1), *popte2ve1), ':', color='grey', lw=1, label='exp. fit')
+plt.plot(er1, er2, color=custom_colors['blue'])
+plt.plot(er1, exp_fit(np.array(er1), *popte2ve1), ':', color='grey', lw=1, label='exp. fit')
 #plt.plot(er1, combined_sig(er1 , popt1, popt2), ':', color='grey', lw=1, label='combined sigmoids')
 #plt.plot(er1, exp_fit(np.array(er1), *popte2ve1), '--', color='black', lw=1, label='exp. fit')
 #plt.plot(er1, e2_oversimplified(er1, popt1, popt2), '--', color='blue', lw=1, label='linear approx.')

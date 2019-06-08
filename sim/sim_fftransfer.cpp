@@ -81,12 +81,12 @@ int main(int ac, char* av[])
     //-- First layer
     //  2-comp pyramidal neurons
     NeuronID number_of_neurons = 4000;
-    BurstPoissonGroup* pyr1 = new BurstPoissonGroup(number_of_neurons);
+    NaudGroup* pyr1 = new NaudGroup(number_of_neurons);
     initialize_pyr_neurons(pyr1);
     
     //-- Second layer
     //  2-comp pyramidal neurons
-    BurstPoissonGroup* pyr2 = new BurstPoissonGroup(number_of_neurons);
+    NaudGroup* pyr2 = new NaudGroup(number_of_neurons);
     initialize_pyr_neurons(pyr2);
     //  PV neurons
     AdExGroup* pv2 = new AdExGroup(1000);
@@ -176,7 +176,7 @@ int main(int ac, char* av[])
     
     //-- CONNECT FeedFORWARD
         // Pyr1 to pyr2 - STD
-    float w_pyr1_to_pyr2 = 0.014; //0.014; 0.03 for EventBurstPoisson
+    float w_pyr1_to_pyr2 = 0.03; //0.014; 0.03 for EventBurstPoisson
     float p_pyr1_to_pyr2 = 0.05;
     STPeTMConnection * pyr1_to_pyr2 = new STPeTMConnection(pyr1, pyr2, w_pyr1_to_pyr2, p_pyr1_to_pyr2, GLUT);
     set_Depressing_connection(pyr1_to_pyr2);
@@ -219,7 +219,8 @@ int main(int ac, char* av[])
     /******         CURRENT INJECTORS         *********/
     /**************************************************/
     CurrentInjector * curr_inject_soma1 = new CurrentInjector(pyr1, "mem");
-    CurrentInjector * curr_inject_pv2    = new CurrentInjector(pv2, "mem");
+    CurrentInjector * curr_inject_soma2 = new CurrentInjector(pyr2, "mem");
+    CurrentInjector * curr_inject_pv2   = new CurrentInjector(pv2, "mem");
     //CurrentInjector * curr_inject_pv3    = new CurrentInjector(pv3, "mem");
 
     
@@ -259,6 +260,7 @@ int main(int ac, char* av[])
     
     double somatic_current = min_somatic_current;
     curr_inject_soma1->set_all_currents(somatic_current/pyr1[0].get_Cs());
+    curr_inject_soma2->set_all_currents(-100e-12/pyr2[0].get_Cs());
     curr_inject_pv2->set_all_currents(205e-12/pv2[0].get_c_mem());
     //curr_inject_pv3->set_all_currents(205e-12/pv3[0].get_c_mem());
 
