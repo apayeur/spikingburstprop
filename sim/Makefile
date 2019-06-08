@@ -19,10 +19,10 @@ LDFLAGS=$(BUILDDIR)/src/libauryn.a \
 #         -I$(AURYNDIR)/src -I$(AURYNDIR)/dev/src
 
 
-OBJECTS=STPeTMConnection.o BCPConnection.o EBCPConnection.o SineCurrentInjector.o 
+OBJECTS=STPeTMConnection.o BCPConnection.o EBCPConnection.o SineCurrentInjector.o FileCurrentInjector.o
 #TransmitBurstConnection.o TransmitEventConnection.o 
 
-SIMULATIONS=sim_plasticity_rule sim_propagation sim_propagation_ficurve sim_noise_matching sim_single_pop
+SIMULATIONS=sim_plasticity_rule sim_propagation sim_propagation_ficurve sim_noise_matching sim_single_pop sim_credit_assign
 
 .SECONDARY:
 

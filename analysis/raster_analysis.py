@@ -5,6 +5,7 @@ import sys
 import seaborn as sns
 #sys.path.append('./')
 from utils_plotting import custom_colors
+from utils_plotting import remove_xticklabel
 #plt.style.use('../thesis_mplrc.dms')
 from scipy import signal
 
@@ -379,7 +380,7 @@ def display_BRER(filenames, outfile, binsize=20.e-3, tau=16.e-3):
     plt.savefig(outfile)
     plt.close()
 
-def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.e-3):
+def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.e-3, pre_stim_burn=1., population='1'):
     """
      Display average rates, burst probability together with the dendritic and somatic inputs
      :param filenames:   List of raster files
@@ -398,46 +399,65 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
     std_BR = std['BR']
     std_BP = 100*std['BP']
 
-    min_BP = np.min(BP[int(inputs['times'][0]/binsize):])
-    max_BP = np.max(BP[int(inputs['times'][0]/binsize):])
+    min_BP = np.min(BP[int(pre_stim_burn/binsize):])
+    max_BP = np.max(BP[int(pre_stim_burn/binsize):])
 
-    min_ER = np.min(ER[int(inputs['times'][0]/binsize):])
-    max_ER = np.max(ER[int(inputs['times'][0]/binsize):])
+    min_ER = np.min(ER[int(pre_stim_burn/binsize):])
+    max_ER = np.max(ER[int(pre_stim_burn/binsize):])
 
-    plt.figure(figsize=(4, 4))
-    plt.subplot(311)
-    plt.plot(t, BP, color=custom_colors['red'], label='BP')
-    rescaled_input = min_BP + (inputs['dendrite'] - np.min(inputs['dendrite'])) *\
-                                   (max_BP-min_BP)/(np.max(inputs['dendrite'])-np.min(inputs['dendrite']))
-    plt.plot(inputs['times'], rescaled_input, '--', color=custom_colors['red'])
-    plt.fill_between(t, BP - 2 * std_BP, BP + 2 * std_BP, color=custom_colors['red'], alpha=0.5)
-    plt.xlim([inputs['times'][0], inputs['times'][-1]])
-    plt.ylim([0., min(max_BP + 2*np.max(std_BP[int(inputs['times'][0]/binsize):]) + 5, 100.)])
-    plt.ylabel(r'BP, $I_\mathrm{d}$ (scaled)')
+    current_into_dendrites = inputs['dendrite']
+    min_current = np.min(current_into_dendrites[int(pre_stim_burn/binsize):])
+    max_current = np.max(current_into_dendrites[int(pre_stim_burn/binsize):])
+
+    if population == '2':
+        color_line = custom_colors['red']
+        label = '$I_\mathrm{d}$ (scaled)'
+    elif population == '1':
+        color_line = custom_colors['orange']
+        label = 'BR, pop2 (scaled)'
+
+    plt.figure(figsize=(3., 3.))
+    ax1 = plt.subplot(311)
+    ax1.plot(t, BP, color=custom_colors['red'])
+    rescaled_input = min_BP + (current_into_dendrites - min_current) *\
+                                   (max_BP-min_BP)/(max_current-min_current)
+
+    ax1.plot(inputs['times'], rescaled_input, '--', color=color_line, label=label)
+    ax1.fill_between(t, BP - 2 * std_BP, BP + 2 * std_BP, color=custom_colors['red'], alpha=0.5)
+    ax1.set_xlim([1, inputs['times'][-1]])
+    #ax1.set_ylim([0., min(max_BP + 2*np.max(std_BP[int(inputs['times'][0]/binsize):]) + 5, 100.)])
+    ax1.set_ylim([0., 60.])
+    ax1.set_ylabel(r'BP [\%]', fontsize=9)
+    ax1.legend(loc='upper right', frameon=True, bbox_to_anchor=(1.05, 1.3), framealpha=1)
+    remove_xticklabel(ax1)
 
     plt.subplot(312)
     plt.plot(t, BR, color=custom_colors['orange'], label='BR')
     plt.fill_between(t, BR - 2 * std_BR, BR + 2 * std_BR, color=custom_colors['orange'], alpha=0.5)
-    plt.xlim([inputs['times'][0], inputs['times'][-1]])
+    plt.xlim([1, inputs['times'][-1]])
     plt.ylim([0., 5.])
-    plt.ylabel('BR [Hz]')
+    plt.ylabel('BR [Hz]', fontsize=9)
+    remove_xticklabel(plt.gca())
 
-    plt.subplot(313)
-    plt.plot(t, ER, color=custom_colors['blue'], label='ER')
+
+    ax3 = plt.subplot(313)
+    ax3.plot(t, ER, color=custom_colors['blue'])
     rescaled_input = min_ER + (inputs['soma'] - np.min(inputs['soma'])) *\
                                    (max_ER-min_ER)/(np.max(inputs['soma'])-np.min(inputs['soma']))
-    plt.plot(inputs['times'], rescaled_input, '--', color=custom_colors['blue'])
-    plt.fill_between(t, ER - 2 * std_ER, ER + 2 * std_ER, color=custom_colors['blue'], alpha=0.5)
-    plt.xlim([inputs['times'][0], inputs['times'][-1]])
-    plt.ylim([0., 12.])
-    plt.xlabel('Time [s]')
-    plt.ylabel('ER [Hz], $I_\mathrm{s}$ (scaled)')
+    ax3.plot(inputs['times'], rescaled_input, '--', color=custom_colors['blue'], label='$I_\mathrm{s}$ (scaled)')
+    ax3.fill_between(t, ER - 2 * std_ER, ER + 2 * std_ER, color=custom_colors['blue'], alpha=0.5)
+    ax3.set_xlim([1, inputs['times'][-1]])
+    ax3.set_ylim([0., 12.])
+    ax3.set_xlabel('Time [s]', fontsize=9)
+    ax3.set_ylabel('ER [Hz]', fontsize=9)
+    ax3.legend(loc='upper right', frameon=True, bbox_to_anchor=(1.05, 1.3), framealpha=1)
     plt.tight_layout()
     plt.savefig(outfile)
     plt.close()
+    return BR
 
 
-def display_rates_with_inputs(filenames, outfile, inputs, binsize=20.e-3):
+def display_rates_with_inputs(filenames, outfile, inputs, encoding='event', binsize=20.e-3, pre_stim_burn=1.):
     """
      Display average rates together with the dendritic and somatic inputs
      :param filenames:   List of raster files
@@ -447,17 +467,33 @@ def display_rates_with_inputs(filenames, outfile, inputs, binsize=20.e-3):
      :param tau:         Burst detection threshold (in seconds)
      """
     t, rate, std_rate = std_rate_over_realizations(filenames, binsize=binsize)
+    
+    if encoding == 'event':
+        current = inputs['soma']
+        color_line = custom_colors['blue']
+        label = '$I_\mathrm{s}$ (scaled)'
+    elif encoding == 'burst':
+        current = inputs['dendrite']
+        color_line = custom_colors['orange']
+        label = 'BR, pop2 (scaled)'
 
-    plt.figure(figsize=(2.5, 2.5/1.6))
+    min_rate = np.min(rate[int(pre_stim_burn / binsize):])
+    max_rate = np.max(rate[int(pre_stim_burn / binsize):])
+
+    min_current = np.min(current[int(pre_stim_burn / binsize):])
+    max_current = np.max(current[int(pre_stim_burn / binsize):])
+
+    plt.figure(figsize=(3, 3/1.6))
     plt.plot(t, rate, color='black')
-    rescaled_input = np.min(rate) + (inputs['soma'] - np.min(inputs['soma'])) *\
-                                   (np.max(rate)-np.min(rate))/(np.max(inputs['soma'])-np.min(inputs['soma']))
-    plt.plot(inputs['times'], rescaled_input, '--', color=custom_colors['blue'])
+    rescaled_input = min_rate + (current - min_current) *\
+                                   (max_rate-min_rate)/(max_current-min_current)
+    plt.plot(inputs['times'], rescaled_input, '--', color=color_line, label=label)
     plt.fill_between(t, rate - 2 * std_rate, rate + 2 * std_rate, color='black', alpha=0.5)
-    plt.xlim([inputs['times'][0], inputs['times'][-1]])
-    plt.ylim([0., 20])
+    plt.xlim([1, inputs['times'][-1]])
+    plt.ylim([0., 30])
     plt.xlabel('Time [s]')
     plt.ylabel('Rate [Hz]')
+    plt.legend(frameon=False, loc='upper right')
     plt.tight_layout()
     plt.savefig(outfile)
     plt.close()
@@ -554,7 +590,7 @@ def display_correlations(rasterfile, outfile, type='spike', discard=1., binsize=
 #                   INPUT-RELATED FUNCTIONS                     #
 #################################################################
 def add_step(bg, begin, length, amplitude):
-    '''
+    """
     Function that adds a step of amplitude *amplitude* and duration *length*
     atop a background signal *bg*. The step starts at *begin*.
     :param bg: background np.array
@@ -562,9 +598,39 @@ def add_step(bg, begin, length, amplitude):
     :param length: duration (# of bins)
     :param amplitude: amplitude of the step relative to bg
     :return:
-    '''
+    """
     if begin + length < len(bg):
         bg[begin:begin+length+1] += amplitude
+
+
+def add_soft_step(bg, begin, length, amplitude, slope_duration):
+    """
+    Function that adds a "soft step" (step with a leading slope
+    of duration *slope_duration*) of amplitude *amplitude* and duration *length*
+    atop a background signal *bg*. The step starts at *begin*.
+
+    :param bg: background np.array
+    :param begin: beginning of step (index)
+    :param length: duration (# of bins)
+    :param amplitude: amplitude of the step relative to bg
+    :param slope_duration: duration of slope (# of bins)
+    :return:
+    """
+    up_slope = np.arange(0, slope_duration)*amplitude/slope_duration
+    down_slope = np.arange(slope_duration, 0, -1)*amplitude/slope_duration
+
+    if begin + slope_duration < len(bg):
+        bg[begin:begin + slope_duration] += up_slope
+        if begin + length - slope_duration < len(bg):
+            bg[begin + slope_duration:begin + length - slope_duration] += amplitude
+            if begin + length  < len(bg):
+                bg[begin + length - slope_duration:begin + length] += down_slope
+            else:
+                bg[begin + length - slope_duration:len(bg)] += down_slope
+        else:
+            bg[begin + slope_duration:len(bg)] += amplitude
+    else:
+        bg[begin:len(bg)] += up_slope
 
 
 def alternating_square_current(times, mini, maxi, begins, duration):

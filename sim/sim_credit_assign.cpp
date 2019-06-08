@@ -1,6 +1,6 @@
 /***********************************************************
- Description: Trying to match spiking noise in populations
- 1 and 2.
+ Description: Example of "credit assignment" and error
+ generation.
  ************************************************************/
 
 #include "auryn.h"
@@ -8,7 +8,6 @@
 #include <fstream>
 #include <string>
 #include "STPeTMConnection.h"
-#include "SineCurrentInjector.h"
 #include "FileCurrentInjector.h"
 
 using namespace auryn;
@@ -28,10 +27,10 @@ int main(int ac, char* av[])
     char strbuf [255];
     unsigned int seed = 1;
     string dir = "./";
-    string simname = "noise_matching";
-    float w_pyr1_to_pyr2 = 0.03; //0.05
-    float w_pv_to_pyr2   = 0.05; //0.
-    float w_pyr2_to_pyr1 = 0.05;//0.6;
+    string simname = "credit_assign";
+    float w_pyr1_to_pyr2 = 0.05; //0.012
+    float w_pv_to_pyr2   = 0.0; //0.
+    float w_pyr2_to_pyr1 = 0.05;//0.05;
     float w_som_to_pyr1  = 0.0;//0.025;
     
     /**************************************************/
@@ -182,8 +181,8 @@ int main(int ac, char* av[])
     ipois_to_dend2->set_target("g_gaba_dend");
     
     // External Poisson neurons -> SOM
-    float w_epois_to_som = 0.4;
-    float ratio_ie_som = 1.25;
+    float w_epois_to_som = 0.35;
+    float ratio_ie_som = 2.;
     IdentityConnection * epois_to_som = new IdentityConnection(exc_Poisson_som, som, w_epois_to_som, GLUT);
     IdentityConnection * ipois_to_som = new IdentityConnection(inh_Poisson_som, som, w_epois_to_som*ratio_ie_som, GABA);
     
@@ -203,7 +202,7 @@ int main(int ac, char* av[])
     pyr1_to_pyr2->set_target("g_ampa");
     
     // Pyr1 to PV - STD
-    float w_pyr1_to_pv = 0.05; //0.04
+    float w_pyr1_to_pv = 0.04; //0.01
     float p_pyr1_to_pv = 0.05;
     STPeTMConnection * pyr1_to_pv = new STPeTMConnection(pyr1, pv, w_pyr1_to_pv, p_pyr1_to_pv, GLUT);
     set_Depressing_connection(pyr1_to_pv);
@@ -221,11 +220,18 @@ int main(int ac, char* av[])
     set_Facilitating_connection(pyr2_to_pyr1);
     pyr2_to_pyr1->set_target("g_ampa_dend");
     
-    // Pyr2 to SOM - STF
-    float w_pyr2_to_som = 0.5; //0.01
+    //float p_pyr2_to_pyr1_inh = 0.05;
+    //STPeTMConnection * pyr2_to_pyr1_inh = new STPeTMConnection(pyr2, pyr1, w_som_to_pyr1*0.05*4000/(p_pyr2_to_pyr1_inh*number_of_neurons), p_pyr2_to_pyr1_inh, GABA);
+    //set_Depressing_connection(pyr2_to_pyr1_inh);
+    //pyr2_to_pyr1_inh->set_target("g_gaba_dend");
+    /////////////////////////////////////////////
+    
+    
+    // Pyr2 to SOM
+    float w_pyr2_to_som = 0.04; //0.01
     float p_pyr2_to_som = 0.05;
     STPeTMConnection * pyr2_to_som = new STPeTMConnection(pyr2, som, w_pyr2_to_som, p_pyr2_to_som, GLUT);
-    set_Facilitating_connection(pyr2_to_som);
+    set_Depressing_connection(pyr2_to_som);
     
     // SOM to pyr1
     float p_som_to_pyr1 = 0.05; //0.05
@@ -249,36 +255,23 @@ int main(int ac, char* av[])
     /**************************************************/
     /******         CURRENT INJECTORS         *********/
     /**************************************************/
-    CurrentInjector * curr_inject_soma1 = new CurrentInjector(pyr1, "mem");
-    CurrentInjector * curr_inject_dend1 = new CurrentInjector(pyr1, "Vd");
-    CurrentInjector * curr_inject_soma2 = new CurrentInjector(pyr2, "mem");
-    CurrentInjector * curr_inject_dend2 = new CurrentInjector(pyr2, "Vd");
+    // File-based current injections
+    FileCurrentInjector * curr_inject_soma1 = new FileCurrentInjector(pyr1,"../data/credit-assign-example/current_soma.txt" ,"mem");
+    FileCurrentInjector * curr_inject_dend2 = new FileCurrentInjector(pyr2,"../data/credit-assign-example/current_dend.txt" ,"Vd");
+    
+    // Standard current injections
     CurrentInjector * curr_inject_som   = new CurrentInjector(som, "mem");
     CurrentInjector * curr_inject_pv    = new CurrentInjector(pv, "mem");
-    
+    CurrentInjector * curr_inject_dend1 = new CurrentInjector(pyr1, "Vd");
+    CurrentInjector * curr_inject_soma2 = new CurrentInjector(pyr2, "mem");
+
     
     /**************************************************/
     /******              MONITORS             *********/
     /**************************************************/
     double binSize_rate = 20.e-3; // ms
     
-    // Voltage monitors
-    if (seed == 1) {
-        std::vector< StateMonitor* > statemons;
-        for ( NeuronID i = 0; i < 100; ++i ) {
-            StateMonitor * vdmon = new StateMonitor( pyr2, i, "Vd", sys->fn(simname,i,"Vd"));
-            vdmon->enable_compression = false;
-            statemons.push_back(vdmon);
-        }
-    }
-    VoltageMonitor * vmon_som       = new VoltageMonitor( som, 0, sys->fn("memsom") );
-    VoltageMonitor * vmon_som1      = new VoltageMonitor( som, 1, sys->fn("memsom1") );
-    VoltageMonitor * vmon_pv        = new VoltageMonitor( pv,  0, sys->fn("mempv") );
-    VoltageMonitor * vmon_pyrsoma1  = new VoltageMonitor( pyr1, 0, sys->fn("memsoma1") );
-    VoltageMonitor * vmon_pyrsoma2  = new VoltageMonitor( pyr2, 0, sys->fn("memsoma2") );
-    
     // Burst and event rate monitors
-    // To plot burst rate in gnuplot, u 1:2; to plot event rate, u 1:3
     auto seed_str = std::to_string(seed);
     BurstRateMonitor * brmon1 = new BurstRateMonitor( pyr1, sys->fn("brate1_seed"+seed_str), binSize_rate);
     BurstRateMonitor * brmon2 = new BurstRateMonitor( pyr2, sys->fn("brate2_seed"+seed_str), binSize_rate);
@@ -287,96 +280,18 @@ int main(int ac, char* av[])
     PopulationRateMonitor * pv_activity  = new PopulationRateMonitor( pv,  sys->fn("pvrate_seed"+seed_str), binSize_rate );
     PopulationRateMonitor * som_activity = new PopulationRateMonitor( som, sys->fn("somrate_seed"+seed_str), binSize_rate );
     
-    // Raster plots
-    SpikeMonitor * smon1    = new SpikeMonitor( pyr1, sys->fn("ras1_seed"+seed_str));
-    SpikeMonitor * smon2    = new SpikeMonitor( pyr2, sys->fn("ras2_seed"+seed_str));
-    SpikeMonitor * smon_pv  = new SpikeMonitor( pv, sys->fn("raspv_seed"+seed_str));
-    SpikeMonitor * smon_som = new SpikeMonitor( som, sys->fn("rassom_seed"+seed_str));
-    
     
     /**************************************************/
     /******             SIMULATION            *********/
     /**************************************************/
-    logger->msg("Running ...",PROGRESS);
-    
-    // The alternating currents switched between a maximum and a minimum in both the dendrites and the somas.
-    const double max_dendritic_current = 150e-12;//90e-12;
-    const double min_dendritic_current = 50e-12;
-    const double max_somatic_current = 150e-12;
-    const double min_somatic_current = -50.e-12; //50e-12;
-    const double mean_dendritic_current = (max_dendritic_current + min_dendritic_current)/2.;
-    const double mean_somatic_current = (max_somatic_current + min_somatic_current)/2.;
-    
-    
-    const double simtime = 1000e-3;
-    const double period  = 500e-3;
-    const double period_dend = period/sqrt(5.);
-    const double segtime_maxsoma = period/2.;
-    const double segtime_minsoma = period/2;
-    const double segtime_maxdend = 0.7*period;
-    const double segtime_mindend = 0.3*period;
-    const double small_overlap = 0.1*period;
-    
-    // Burn-in period (i.e. relaxation) before alternating stimuation
-    curr_inject_soma1->set_all_currents(mean_somatic_current/pyr1[0].get_Cs());
-    curr_inject_soma2->set_all_currents(0.e-12/pyr2[0].get_Cs());
-
-    curr_inject_dend1->set_all_currents(0.e-12/pyr1[0].get_Cd());
-    
-    curr_inject_dend2->set_all_currents(mean_dendritic_current/pyr2[0].get_Cd());
-    
+    curr_inject_soma2->set_all_currents(-100.e-12/pyr2[0].get_Cs());
+    curr_inject_dend1->set_all_currents(0./pyr1[0].get_Cd());
     curr_inject_som->set_all_currents(0e-12/som[0].get_c_mem());
-    
     curr_inject_pv->set_all_currents(205e-12/pv[0].get_c_mem());
     
+    logger->msg("Running ...",PROGRESS);
+    sys->run(4.);
     
-    SineCurrentInjector * sine_inject_dend2 = new SineCurrentInjector(pyr2, 0, 1./period_dend, 0., "Vd"); //amplitude is set to a nonzero value after a small delay
-    SineCurrentInjector * sine_inject_soma1 = new SineCurrentInjector(pyr1, 0, 1./period, 0., "mem");
-    
-    sys->run(simtime);
-    
-    // Main simulation
-    sine_inject_dend2->set_amplitude(0.5*(max_dendritic_current - min_dendritic_current)/pyr2[0].get_Cd());
-    sine_inject_soma1->set_amplitude(0.5*(max_somatic_current - min_somatic_current)/pyr1[0].get_Cd());
-    sys->run(2*simtime);
-    
-    /*
-     for (int i=0;i<10;i++)
-     {
-     curr_inject_soma1->set_all_currents(( max_somatic_current )/pyr1[0].get_Cs());
-     sys->run(segtime_maxsoma);
-     
-     curr_inject_soma1->set_all_currents(min_somatic_current/pyr1[0].get_Cs());
-     sys->run(segtime_minsoma);
-     }*/
-    
-    /*
-     for (int i=0;i<10;i++)
-     {
-     curr_inject_soma1->set_all_currents(max_somatic_current/pyr1[0].get_Cs());
-     /////////////   DEBUG     /////////////
-     curr_inject_soma2->set_all_currents(max_somatic_current/pyr2[0].get_Cs());
-     curr_inject_dend2->set_all_currents(min_dendritic_current/pyr2[0].get_Cd());
-     sys->run(segtime_mindend - small_overlap);
-     
-     curr_inject_soma1->set_all_currents(max_somatic_current/pyr1[0].get_Cs());
-     /////////////   DEBUG     /////////////
-     curr_inject_soma2->set_all_currents(max_somatic_current/pyr2[0].get_Cs());
-     curr_inject_dend2->set_all_currents(max_dendritic_current/pyr2[0].get_Cd());
-     sys->run(segtime_maxsoma  - (segtime_mindend - small_overlap) );
-     
-     curr_inject_soma1->set_all_currents(min_somatic_current/pyr1[0].get_Cs());
-     /////////////   DEBUG     /////////////
-     curr_inject_soma2->set_all_currents(min_somatic_current/pyr2[0].get_Cs());
-     curr_inject_dend2->set_all_currents(max_dendritic_current/pyr2[0].get_Cd());
-     sys->run(segtime_maxdend + segtime_mindend - small_overlap - segtime_maxsoma);
-     
-     curr_inject_soma1->set_all_currents(min_somatic_current/pyr1[0].get_Cs());
-     /////////////   DEBUG     /////////////
-     curr_inject_soma2->set_all_currents(min_somatic_current/pyr2[0].get_Cs());
-     curr_inject_dend2->set_all_currents(min_dendritic_current/pyr2[0].get_Cd());
-     sys->run(small_overlap);
-     }*/
     
     if (errcode)
         auryn_abort(errcode);

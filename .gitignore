@@ -5,6 +5,10 @@ data/
 analysis/.idea/
 /test/test-output/
 
+# simulation executable, but not the .cpp files
+sim/sim_*
+!sim/sim_*.cpp
+
 *.xml
 *.pyc
 
