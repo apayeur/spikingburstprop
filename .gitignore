@@ -2,7 +2,7 @@
 results/
 figs/
 data/
-analysis/.idea/
+.idea/
 /test/test-output/
 
 # simulation executable, but not the .cpp files

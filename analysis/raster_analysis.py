@@ -216,6 +216,32 @@ def bpercurves(fn, currents):
     return loc_mean_bp, loc_mean_er, loc_mean_br
 
 
+def bpercurves_from_raster(fn, currents):
+    """
+    Compute the burst probability (BP) and event rate (ER) as a function of current.
+    The simulation producing the raw data consists in step increases of currents
+    applied for 1 second each. The BP and ER are computed by averaging over the last
+    0.5 sec of the reponse to each step.
+    :param fn:          filename (contains brate)
+    :param currents:    current intensities
+    :returns:
+        - loc_mean_bp - list of BPs
+        - loc_mean_er - list of ERs
+        - loc_mean_br - list of BRs
+    """
+    times, er, br = BRER_from_raster(fn, binsize=20.e-3, tau=16.e-3)
+    bp = 100. * br /er
+    loc_mean_bp = []
+    loc_mean_er = []
+    loc_mean_br = []
+    for i, current in enumerate(currents):
+        indices = np.where(np.logical_and(times > i + 0.5, times < i + 1.))[0]
+        loc_mean_bp.append(np.mean(bp[indices]))
+        loc_mean_er.append(np.mean(er[indices]))
+        loc_mean_br.append(np.mean(br[indices]))
+    return loc_mean_bp, loc_mean_er, loc_mean_br
+
+
 def ficurves(fn, currents):
     """
     Compute the firing rate as a function of current.
@@ -357,28 +383,27 @@ def display_BRER(filenames, outfile, binsize=20.e-3, tau=16.e-3):
     plt.fill_between(t, BP - 2 * std_BP, BP + 2 * std_BP, color=custom_colors['red'], alpha=0.5)
     plt.xlim(xmin=1)
     #plt.xlim([inputs['times'][0], inputs['times'][-1]])
-    plt.ylim([0., 25.])
-    plt.ylabel(r'BP, $I_\mathrm{d}$ (scaled)')
+    plt.ylim([0., 100.])
+    plt.ylabel(r'BP [\%]')
 
     plt.subplot(312)
     plt.plot(t, BR, color=custom_colors['orange'], label='BR')
     plt.fill_between(t, BR - 2 * std_BR, BR + 2 * std_BR, color=custom_colors['orange'], alpha=0.5)
     plt.xlim(xmin=1)
     #plt.xlim([inputs['times'][0], inputs['times'][-1]])
-    plt.ylim([0., 2.])
+    plt.ylim([0., 5.])
     plt.ylabel('BR [Hz]')
 
     plt.subplot(313)
     plt.plot(t, ER, color=custom_colors['blue'], label='ER')
     plt.fill_between(t, ER - 2 * std_ER, ER + 2 * std_ER, color=custom_colors['blue'], alpha=0.5)
-    plt.xlim(xmin=1)
-    #plt.xlim([inputs['times'][0], inputs['times'][-1]])
-    plt.ylim([0., 8.])
+    plt.ylim([0., 13.])
     plt.xlabel('Time [s]')
-    plt.ylabel('ER [Hz], $I_\mathrm{s}$ (scaled)')
+    plt.ylabel('ER [Hz]')
     plt.tight_layout()
     plt.savefig(outfile)
     plt.close()
+
 
 def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.e-3, pre_stim_burn=1., population='1'):
     """
@@ -466,8 +491,9 @@ def display_rates_with_inputs(filenames, outfile, inputs, encoding='event', bins
      :param binsize:     Size of the discretization bins (in seconds)current traces in pA
      :param tau:         Burst detection threshold (in seconds)
      """
+
     t, rate, std_rate = std_rate_over_realizations(filenames, binsize=binsize)
-    
+
     if encoding == 'event':
         current = inputs['soma']
         color_line = custom_colors['blue']
