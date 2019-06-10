@@ -29,7 +29,7 @@ int main(int ac, char* av[])
     unsigned int seed = 1;
     string dir = "./";
     string simname = "noise_matching";
-    float w_pyr1_to_pyr2 = 0.03; //0.05
+    float w_pyr1_to_pyr2 = 0.04; //0.05
     float w_pv_to_pyr2   = 0.05; //0.
     float w_pyr2_to_pyr1 = 0.05;//0.6;
     float w_som_to_pyr1  = 0.0;//0.025;
@@ -222,7 +222,7 @@ int main(int ac, char* av[])
     pyr2_to_pyr1->set_target("g_ampa_dend");
     
     // Pyr2 to SOM - STF
-    float w_pyr2_to_som = 0.5; //0.01
+    float w_pyr2_to_som = 0.4; //0.01
     float p_pyr2_to_som = 0.05;
     STPeTMConnection * pyr2_to_som = new STPeTMConnection(pyr2, som, w_pyr2_to_som, p_pyr2_to_som, GLUT);
     set_Facilitating_connection(pyr2_to_som);
@@ -319,8 +319,9 @@ int main(int ac, char* av[])
     
     // Burn-in period (i.e. relaxation) before alternating stimuation
     curr_inject_soma1->set_all_currents(mean_somatic_current/pyr1[0].get_Cs());
-    curr_inject_soma2->set_all_currents(0.e-12/pyr2[0].get_Cs());
-
+    /////////////DEBUG///////////////
+    curr_inject_soma2->set_all_currents(-100.e-12/pyr2[0].get_Cs());
+    /////////////DEBUG///////////////
     curr_inject_dend1->set_all_currents(0.e-12/pyr1[0].get_Cd());
     
     curr_inject_dend2->set_all_currents(mean_dendritic_current/pyr2[0].get_Cd());
@@ -336,7 +337,9 @@ int main(int ac, char* av[])
     sys->run(simtime);
     
     // Main simulation
+    ////////////DEBUG//////////////////
     sine_inject_dend2->set_amplitude(0.5*(max_dendritic_current - min_dendritic_current)/pyr2[0].get_Cd());
+    ////////////DEBUG//////////////////
     sine_inject_soma1->set_amplitude(0.5*(max_somatic_current - min_somatic_current)/pyr1[0].get_Cd());
     sys->run(2*simtime);
     

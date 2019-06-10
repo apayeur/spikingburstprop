@@ -5,7 +5,7 @@ mkdir -p $DIR
 A=0.05
 
 make
-for W12 in 0.5
+for W12 in 0.4
 do
 	for W1SOM in 0.03
 	do	
