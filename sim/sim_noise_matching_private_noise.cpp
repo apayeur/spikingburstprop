@@ -29,7 +29,7 @@ int main(int ac, char* av[])
     unsigned int seed = 1;
     string dir = "./";
     string simname = "noise_matching";
-    float w_pyr1_to_pyr2 = 0.04; //0.05
+    float w_pyr1_to_pyr2 = 0.05; //0.05
     float w_pv_to_pyr2   = 0.05; //0.
     float w_pyr2_to_pyr1 = 0.05;//0.6;
     float w_som_to_pyr1  = 0.0;//0.025;
@@ -104,7 +104,7 @@ int main(int ac, char* av[])
     
     // INITIALIZE AURYN
     auryn_init( ac, av, dir, simname );
-    sys->set_master_seed(0);
+    sys->set_master_seed(seed);
     
     /**************************************************/
     /******          NEURON POPULATIONS       *********/
@@ -137,8 +137,8 @@ int main(int ac, char* av[])
     PoissonGroup* inh_Poisson_dend1 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     
     // Pyr2
-    PoissonGroup* exc_Poisson2      = new PoissonGroup(number_of_neurons, 100*poisson_rate);
-    PoissonGroup* inh_Poisson2      = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    PoissonGroup* exc_Poisson2      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
+    PoissonGroup* inh_Poisson2      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
     PoissonGroup* exc_Poisson_dend2 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     PoissonGroup* inh_Poisson_dend2 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     
@@ -222,7 +222,7 @@ int main(int ac, char* av[])
     pyr2_to_pyr1->set_target("g_ampa_dend");
     
     // Pyr2 to SOM - STF
-    float w_pyr2_to_som = 0.4; //0.01
+    float w_pyr2_to_som = 0.3; //0.01
     float p_pyr2_to_som = 0.05;
     STPeTMConnection * pyr2_to_som = new STPeTMConnection(pyr2, som, w_pyr2_to_som, p_pyr2_to_som, GLUT);
     set_Facilitating_connection(pyr2_to_som);
@@ -302,8 +302,8 @@ int main(int ac, char* av[])
     // The alternating currents switched between a maximum and a minimum in both the dendrites and the somas.
     const double max_dendritic_current = 150e-12;//90e-12;
     const double min_dendritic_current = 50e-12;
-    const double max_somatic_current = 150e-12;
-    const double min_somatic_current = -50.e-12; //50e-12;
+    const double max_somatic_current = 200e-12;
+    const double min_somatic_current = -100.e-12; //50e-12;
     const double mean_dendritic_current = (max_dendritic_current + min_dendritic_current)/2.;
     const double mean_somatic_current = (max_somatic_current + min_somatic_current)/2.;
     
@@ -340,7 +340,7 @@ int main(int ac, char* av[])
     ////////////DEBUG//////////////////
     sine_inject_dend2->set_amplitude(0.5*(max_dendritic_current - min_dendritic_current)/pyr2[0].get_Cd());
     ////////////DEBUG//////////////////
-    sine_inject_soma1->set_amplitude(0.5*(max_somatic_current - min_somatic_current)/pyr1[0].get_Cd());
+    sine_inject_soma1->set_amplitude(0.5*(max_somatic_current - min_somatic_current)/pyr1[0].get_Cs()); //////CORRECT THIS!!!!
     sys->run(2*simtime);
     
     /*

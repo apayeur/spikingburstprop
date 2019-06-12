@@ -424,15 +424,15 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
     std_BR = std['BR']
     std_BP = 100*std['BP']
 
-    min_BP = np.min(BP[int(pre_stim_burn/binsize):])
-    max_BP = np.max(BP[int(pre_stim_burn/binsize):])
+    min_BP = np.min(BP[int(1/binsize):])
+    max_BP = np.max(BP[int(1/binsize):])
 
-    min_ER = np.min(ER[int(pre_stim_burn/binsize):])
-    max_ER = np.max(ER[int(pre_stim_burn/binsize):])
+    min_ER = np.min(ER[int(1/binsize):])
+    max_ER = np.max(ER[int(1/binsize):])
 
     current_into_dendrites = inputs['dendrite']
-    min_current = np.min(current_into_dendrites[int(pre_stim_burn/binsize):])
-    max_current = np.max(current_into_dendrites[int(pre_stim_burn/binsize):])
+    min_current = np.min(current_into_dendrites[int(1/binsize):])
+    max_current = np.max(current_into_dendrites[int(1/binsize):])
 
     if population == '2':
         color_line = custom_colors['red']
@@ -449,7 +449,7 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
 
     ax1.plot(inputs['times'], rescaled_input, '--', color=color_line, label=label)
     ax1.fill_between(t, BP - 2 * std_BP, BP + 2 * std_BP, color=custom_colors['red'], alpha=0.5)
-    ax1.set_xlim([1, inputs['times'][-1]])
+    ax1.set_xlim([pre_stim_burn, inputs['times'][-1]])
     #ax1.set_ylim([0., min(max_BP + 2*np.max(std_BP[int(inputs['times'][0]/binsize):]) + 5, 100.)])
     ax1.set_ylim([0., 60.])
     ax1.set_ylabel(r'BP [\%]', fontsize=9)
@@ -459,7 +459,7 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
     plt.subplot(312)
     plt.plot(t, BR, color=custom_colors['orange'], label='BR')
     plt.fill_between(t, BR - 2 * std_BR, BR + 2 * std_BR, color=custom_colors['orange'], alpha=0.5)
-    plt.xlim([1, inputs['times'][-1]])
+    plt.xlim([pre_stim_burn, inputs['times'][-1]])
     plt.ylim([0., 5.])
     plt.ylabel('BR [Hz]', fontsize=9)
     remove_xticklabel(plt.gca())
@@ -471,7 +471,7 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
                                    (max_ER-min_ER)/(np.max(inputs['soma'])-np.min(inputs['soma']))
     ax3.plot(inputs['times'], rescaled_input, '--', color=custom_colors['blue'], label='$I_\mathrm{s}$ (scaled)')
     ax3.fill_between(t, ER - 2 * std_ER, ER + 2 * std_ER, color=custom_colors['blue'], alpha=0.5)
-    ax3.set_xlim([1, inputs['times'][-1]])
+    ax3.set_xlim([pre_stim_burn, inputs['times'][-1]])
     ax3.set_ylim([0., 12.])
     ax3.set_xlabel('Time [s]', fontsize=9)
     ax3.set_ylabel('ER [Hz]', fontsize=9)
@@ -515,7 +515,7 @@ def display_rates_with_inputs(filenames, outfile, inputs, encoding='event', bins
                                    (max_rate-min_rate)/(max_current-min_current)
     plt.plot(inputs['times'], rescaled_input, '--', color=color_line, label=label)
     plt.fill_between(t, rate - 2 * std_rate, rate + 2 * std_rate, color='black', alpha=0.5)
-    plt.xlim([1, inputs['times'][-1]])
+    plt.xlim([pre_stim_burn, inputs['times'][-1]])
     plt.ylim([0., 30])
     plt.xlabel('Time [s]')
     plt.ylabel('Rate [Hz]')

@@ -9,29 +9,33 @@ import utils_plotting as up
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-filesuffix", type=str, help="suffix indicating FF weights", default="")
+parser.add_argument("-datadir", type=str, help="data directory", default="")
+parser.add_argument("-resultdir", type=str, help="parent result directory", default="")
+parser.add_argument("-numberofrealiz", type=int, help="number of realization of the noise", default=1)
+
 args = parser.parse_args()
 
-number_of_realizations = 5
+number_of_realizations = args.numberofrealiz
 
 filenames1 = []
 for i in range(1, number_of_realizations+1):
-    filenames1.append('../../data/noise-matching/noise_matching.0.brate1_seed'+str(i))
+    filenames1.append(args.datadir + 'noise_matching.0.brate1_seed'+str(i))
 
 filenames2 = []
 for i in range(1, number_of_realizations+1):
-    filenames2.append('../../data/noise-matching/noise_matching.0.brate2_seed'+str(i))
+    filenames2.append(args.datadir + 'noise_matching.0.brate2_seed'+str(i))
 
 filenamesPV = []
 for i in range(1, number_of_realizations+1):
-    filenamesPV.append('../../data/noise-matching/noise_matching.0.pvrate_seed'+str(i))
+    filenamesPV.append(args.datadir + 'noise_matching.0.pvrate_seed'+str(i))
 
 filenamesSOM = []
 for i in range(1, number_of_realizations+1):
-    filenamesSOM.append('../../data/noise-matching/noise_matching.0.somrate_seed'+str(i))
+    filenamesSOM.append(args.datadir + 'noise_matching.0.somrate_seed'+str(i))
 
 filenamesVd = []
 for i in range(100):
-    filenamesVd.append('../../data/noise-matching/noise_matching{:d}.0.Vd'.format(i))
+    filenamesVd.append(args.datadir + 'noise-matching/noise_matching{:d}.0.Vd'.format(i))
 
 # parameters
 # currents in pA
@@ -94,12 +98,14 @@ plt.tight_layout()
 plt.show()
 '''
 # output figures
+output_file_prefix = args.resultdir
+
 inputs = {'times': times, 'dendrite': current_dend, 'soma': current_soma}
-BR2 = ra.display_BRER_with_inputs(filenames2, '../../results/noise-matching/Pop2' + args.filesuffix + '.pdf', inputs,
+BR2 = ra.display_BRER_with_inputs(filenames2, output_file_prefix + 'Pop2' + args.filesuffix + '.pdf', inputs,
                             population='2', binsize=binSize)
 inputs = {'times': times, 'dendrite': BR2, 'soma': current_soma}
-BR1 = ra.display_BRER_with_inputs(filenames1, '../../results/noise-matching/Pop1' + args.filesuffix + '.pdf', inputs,
+BR1 = ra.display_BRER_with_inputs(filenames1, output_file_prefix + 'Pop1' + args.filesuffix + '.pdf', inputs,
                             population='1', binsize=binSize)
 
-ra.display_rates_with_inputs(filenamesPV, '../../results/noise-matching/PV' + args.filesuffix + '.pdf', inputs)
-ra.display_rates_with_inputs(filenamesSOM, '../../results/noise-matching/SOM' + args.filesuffix + '.pdf', inputs, encoding='burst')
+ra.display_rates_with_inputs(filenamesPV, output_file_prefix + 'PV' + args.filesuffix + '.pdf', inputs)
+ra.display_rates_with_inputs(filenamesSOM, output_file_prefix + 'SOM' + args.filesuffix + '.pdf', inputs, encoding='burst')

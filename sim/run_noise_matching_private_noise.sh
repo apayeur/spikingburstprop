@@ -1,20 +1,20 @@
 #!/bin/bash
 
 NUM_REAL=5
-DIR="../data/noise-matching"
+DIR="../data/noise-matching/private-noise"
 mkdir -p $DIR
-DATADIR="../../data/noise-matching/"
-RESULTDIR="../results/noise-matching/"
+DATADIR="../../data/noise-matching/private-noise/"
+RESULTDIR="../results/noise-matching/private-noise/"
 mkdir -p $RESULTDIR
 
 make
-for W12 in 0.17
+for W12 in 0.4
 do
-	for W1SOM in 0.02
+	for W1SOM in 0.05
 	do	
 		for (( i=1; i<=$NUM_REAL; i++ ))
 		do
-   			./sim_noise_matching --seed $i --dir $DIR --w12 $W12 --w1som $W1SOM
+   			./sim_noise_matching_private_noise --seed $i --dir $DIR --w12 $W12 --w1som $W1SOM
 		done
 		
 		cd ../analysis/propagation

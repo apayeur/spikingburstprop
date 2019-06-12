@@ -48,15 +48,15 @@ def power_law_fit(x, p1, p2):
 currents = np.arange(-200, 500, 100)
 
 # BP, ER, BR for population 1, 2, 3
+#filenames1 = args.datadir + '/fftransfer.0.ras1'
+#bp1, er1, br1 = ra.bpercurves_from_raster(filenames1, currents)
 filenames1 = args.datadir + '/fftransfer.0.brate1'
 bp1, er1, br1 = ra.bpercurves(filenames1, currents)
-#filenames1 = args.datadir + '/fftransfer.0.brate1'
-#bp1, er1, br1 = ra.bpercurves(filenames1, currents)
 
+#filenames2 = args.datadir + '/fftransfer.0.ras2'
+#bp2, er2, br2 = ra.bpercurves_from_raster(filenames2, currents)
 filenames2 = args.datadir + '/fftransfer.0.brate2'
 bp2, er2, br2 = ra.bpercurves(filenames2, currents)
-#filenames2 = args.datadir + '/fftransfer.0.brate2'
-#bp2, er2, br2 = ra.bpercurves(filenames2, currents)
 
 #filenames3 = args.datadir + '/fftransfer.0.brate3'
 #bp3, er3, br3 = ra.bpercurves(filenames3, currents)

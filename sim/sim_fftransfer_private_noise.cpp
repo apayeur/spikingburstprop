@@ -112,8 +112,8 @@ int main(int ac, char* av[])
     PoissonGroup* inh_Poisson_dend1 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     
     // Pyr2
-    PoissonGroup* exc_Poisson2      = new PoissonGroup(number_of_neurons, 100*poisson_rate);
-    PoissonGroup* inh_Poisson2      = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    PoissonGroup* exc_Poisson2      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
+    PoissonGroup* inh_Poisson2      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
     PoissonGroup* exc_Poisson_dend2 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     PoissonGroup* inh_Poisson_dend2 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     
@@ -191,7 +191,7 @@ int main(int ac, char* av[])
     set_Depressing_connection(pyr1_to_pv2);
 
         // PV2 to Pyr2
-    float w_pv2_to_pyr2 = 0.05; //0.05;
+    float w_pv2_to_pyr2 = 0.2; //0.05;
     float p_pv2_to_pyr2 = 0.05;
     STPeTMConnection * pv2_to_pyr2 = new STPeTMConnection(pv2, pyr2, w_pv2_to_pyr2, p_pv2_to_pyr2, GABA);
     pv2_to_pyr2->set_target("g_gaba");
@@ -262,7 +262,7 @@ int main(int ac, char* av[])
     
     double somatic_current = min_somatic_current;
     curr_inject_soma1->set_all_currents(somatic_current/pyr1[0].get_Cs());
-    curr_inject_soma2->set_all_currents(-300e-12/pyr2[0].get_Cs());
+    curr_inject_soma2->set_all_currents(-100e-12/pyr2[0].get_Cs());
     curr_inject_pv2->set_all_currents(205e-12/pv2[0].get_c_mem());
     //curr_inject_pv3->set_all_currents(205e-12/pv3[0].get_c_mem());
 

@@ -22,7 +22,7 @@ LDFLAGS=$(BUILDDIR)/src/libauryn.a \
 OBJECTS=STPeTMConnection.o BCPConnection.o EBCPConnection.o SineCurrentInjector.o FileCurrentInjector.o BurstPoissonGroup.o EventBurstPoissonGroup.o
 #TransmitBurstConnection.o TransmitEventConnection.o 
 
-SIMULATIONS=sim_plasticity_rule sim_propagation sim_propagation_ficurve sim_noise_matching sim_single_pop sim_credit_assign sim_fftransfer sim_fftransfer_private_noise
+SIMULATIONS=sim_plasticity_rule sim_propagation sim_propagation_ficurve sim_noise_matching sim_noise_matching_private_noise sim_single_pop sim_credit_assign sim_fftransfer sim_fftransfer_private_noise
 
 .SECONDARY:
 
