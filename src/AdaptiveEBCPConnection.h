@@ -31,6 +31,8 @@ namespace auryn {
     {
         protected:
             void compute_burst_rate();
+            AurynWeight on_pre(NeuronID post);
+            void propagate_backward(const NeuronID translated_post, const AurynState valence);
 
         public:
             AdaptiveEBCPConnection(SpikingGroup * source, NeuronGroup * destination,
@@ -48,6 +50,7 @@ namespace auryn {
             //virtual void evolve();
             void set_post_trace_event_tau(AurynFloat x);
             void set_post_trace_burst_tau(AurynFloat x);
+
 
     };
     

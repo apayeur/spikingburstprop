@@ -16,10 +16,55 @@ AdaptiveEBCPConnection::AdaptiveEBCPConnection(
 {
     if ( !name.empty() )
         set_name("AdaptiveEBCPConnection");
+    // homeostasis constants (min and max event rate)
+    min_rate = 0.1;
+    max_rate = 10.0;
 }
 
 void AdaptiveEBCPConnection::finalize() {
     EBCPConnection::finalize();
+}
+
+AurynWeight AdaptiveEBCPConnection::on_pre(NeuronID post)
+{
+    const NeuronID ts = dst->global2rank(post); // only to be used for post traces
+    // compute hom part of local error signal
+    double hom = 0.0;
+    const double rate = tr_event->normalized_get(ts);
+    if (rate<min_rate) {
+        hom = (min_rate-rate);
+        // std::cout << "hom event" << std::endl;
+    }
+    AurynDouble dw = eta_*hom;
+    return dw;
+}
+
+void AdaptiveEBCPConnection::propagate_backward(const NeuronID translated_post, const AurynState valence)
+{
+    if (stdp_active) {
+        // compute hom part of local error signal
+        double hom_neg = 0.0;
+        const double rate = tr_event->normalized_get(translated_post);
+        if (rate>max_rate) {
+            // std::cout << "hom dep" << std::endl;
+            hom_neg = -(rate - max_rate);
+        }
+        const NeuronID post = dst->rank2global(translated_post);
+        
+        // loop over all presynaptic partners
+        for (const NeuronID * c = bkw->get_row_begin(post) ; c != bkw->get_row_end(post) ; ++c ) {
+            // computes plasticity update
+            AurynWeight * weight = bkw->get_data(c);
+            
+            const NeuronID pre = *c;
+            *weight += eta_*((valence+hom_neg)*tr_event_pre->get(pre));
+            
+            // clips weights
+            if ( *weight > get_max_weight() ) *weight = get_max_weight();
+            else
+                if ( *weight < get_min_weight() ) *weight = get_min_weight();
+        }
+    }
 }
 
 void AdaptiveEBCPConnection::compute_burst_rate()

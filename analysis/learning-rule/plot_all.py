@@ -1,21 +1,24 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
-import seaborn as sns
 
-sys.path.append('../../../analysis/plasticity-protocol')
-sys.path.append('/Users/alexandrepayeur/Documents/Recherches/Burstprop/Codes/')
-sys.path.append('../../../analysis')
+sys.path.append('../')
 
 from utils_plotting import remove_xticklabel
-from custom_colors import custom_colors
-plt.style.use('/Users/alexandrepayeur/Documents/Recherches/Burstprop/Codes/thesis_mplrc.dms')
+from utils_plotting import custom_colors
+plt.style.use('../thesis_mplrc.dms')
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("-datadir", type=str, help="data directory", default=".")
+parser.add_argument("-connect_type", type=str, help="connection type", default=".")
+args = parser.parse_args()
 
 
 # import data
-wsum = np.loadtxt('../../../data/learning-rule/EBCP/tau_pre20.e-3/d00.2/w00.03/plasticity_rule.0.wsum')
-brate_post = np.loadtxt('../../../data/learning-rule/EBCP/tau_pre20.e-3/d00.2/w00.03/plasticity_rule.0.brate')
-brate_pre = np.loadtxt('../../../data/learning-rule/EBCP/tau_pre20.e-3/d00.2/w00.03/plasticity_rule.0.brate_input')
+wsum = np.loadtxt(args.datadir + '/plasticity_rule.0.wsum')
+brate_post = np.loadtxt(args.datadir + '/plasticity_rule.0.brate')
+brate_pre = np.loadtxt(args.datadir + '/plasticity_rule.0.brate_input')
 
 
 # plotting
@@ -27,7 +30,7 @@ ax1.plot(brate_post[:, 0], brate_post[:, 1], color=custom_colors['orange'], lw=1
 ax1.set_ylabel('Postsyn. rates [Hz]')
 ax1.spines['top'].set_visible(False)
 ax1.legend(loc='best')
-ax1.set_xticks([0, 200, 400, 600, 800, 1000, 1200])
+#ax1.set_xticks([0, 200, 400, 600, 800, 1000, 1200])
 remove_xticklabel(ax1)
 
 ax1_tw = ax1.twinx()
@@ -42,7 +45,7 @@ ax2.plot(wsum[:, 0], wsum[:, 1], color='black', lw=1.5)
 ax2.set_ylabel('$\sum$ somatic weights')
 ax2.spines['top'].set_visible(False)
 ax2.spines['right'].set_visible(False)
-ax2.set_xticks([0, 200, 400, 600, 800, 1000, 1200])
+#ax2.set_xticks([0, 200, 400, 600, 800, 1000, 1200])
 remove_xticklabel(ax2)
 
 ax3 = fig.add_subplot(313)
@@ -51,7 +54,7 @@ ax3.plot(brate_pre[:, 0], brate_pre[:, 1], color=custom_colors['orange'], lw=1, 
 ax3.set_ylim(ymax=5)
 ax3.set_xlabel('Time [s]')
 ax3.set_ylabel('Presyn. rates [Hz]')
-ax3.set_xticks([0, 200, 400, 600, 800, 1000, 1200])
+#ax3.set_xticks([0, 200, 400, 600, 800, 1000, 1200])
 ax3.spines['top'].set_visible(False)
 
 ax3_tw = ax3.twinx()
@@ -61,5 +64,5 @@ ax3_tw.tick_params('y', labelcolor=custom_colors['red'])
 ax3_tw.spines['top'].set_visible(False)
 
 plt.tight_layout()
-plt.savefig('Wsum_vs_Time.pdf')
+plt.savefig('../../results/learning-rule/Wsum/Wsum_vs_Time_'+args.connect_type+'.pdf')
 plt.close()

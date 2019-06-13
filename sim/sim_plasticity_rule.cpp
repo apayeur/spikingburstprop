@@ -13,6 +13,7 @@
 #include "auryn.h"
 #include "EBCPConnection.h"
 #include "BCPConnection.h"
+#include "AdaptiveEBCPConnection.h"
 
 using namespace auryn;
 
@@ -164,6 +165,7 @@ int main(int ac, char* av[])
     const double sparseness = 0.5;
     const double learning_rate = 1e-3;
     const double max_weight = 1.0;
+    const double moving_average_time_constant = 4.;
     
     BCPConnection * con_ext_soma;
     
@@ -174,6 +176,13 @@ int main(int ac, char* av[])
     else if (connect_type == "EBCP"){
         con_ext_soma = new EBCPConnection(input, neurons_exc, we_soma,
                                           sparseness, learning_rate, max_weight, tau_pre);
+    }
+    else if (connect_type == "AdaptiveEBCP"){
+        con_ext_soma = new AdaptiveEBCPConnection(input, neurons_exc, we_soma,
+                                                  sparseness, learning_rate, max_weight, tau_pre);
+        con_ext_soma->set_post_trace_event_tau(moving_average_time_constant);
+        con_ext_soma->set_post_trace_burst_tau(moving_average_time_constant);
+
     }
     
     con_ext_soma->set_target("g_ampa");
@@ -208,13 +217,13 @@ int main(int ac, char* av[])
     /**************************************************/
     /******              MONITORS             *********/
     /**************************************************/
-    
+    const double binsize = 2.;
     sys->set_online_rate_monitor_target(neurons_exc);
-    sys->set_online_rate_monitor_tau(5.0);
+    sys->set_online_rate_monitor_tau(binsize);
     SpikeMonitor * smon = new SpikeMonitor( neurons_exc, sys->fn("ras") );
-    PopulationRateMonitor * pmon = new PopulationRateMonitor( neurons_exc, sys->fn("prate"), 5.0 );
-    BurstRateMonitor * brmon = new BurstRateMonitor( neurons_exc, sys->fn("brate"), 5.0 );
-    BurstRateMonitor * brmon_input = new BurstRateMonitor( input, sys->fn("brate_input"), 5.0 );
+    PopulationRateMonitor * pmon = new PopulationRateMonitor( neurons_exc, sys->fn("prate"), binsize );
+    BurstRateMonitor * brmon = new BurstRateMonitor( neurons_exc, sys->fn("brate"), binsize );
+    BurstRateMonitor * brmon_input = new BurstRateMonitor( input, sys->fn("brate_input"), binsize );
 
     VoltageMonitor * vmon   = new VoltageMonitor( neurons_exc, 0, sys->fn("mem"), 1e-3);
     vmon->record_for(10);
@@ -227,7 +236,7 @@ int main(int ac, char* av[])
     StateMonitor * smon_wd  = new StateMonitor( neurons_exc, 0, "wdend", sys->fn("wdend") );
     smon_wd->record_for(10);
     
-    WeightMonitor * wmon = new WeightMonitor( con_ext_soma, sys->fn("consyn"), 5.0);
+    WeightMonitor * wmon = new WeightMonitor( con_ext_soma, sys->fn("consyn"), binsize);
     wmon->add_equally_spaced(100);
     
     WeightSumMonitor * wsmon = new WeightSumMonitor( con_ext_soma, sys->fn("wsum") );
@@ -245,53 +254,25 @@ int main(int ac, char* av[])
     // simulate
     double testtime = 10;
     
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
+    con_ext_soma->stdp_active = false;
     con_ext_dend->set_all(1.0*we_dend);
-    sys->run(simtime);
+    sys->run(moving_average_time_constant*3);
     
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
+    con_ext_soma->stdp_active = true;
     con_ext_dend->set_all(1.5*we_dend);
     sys->run(simtime);
     
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
     con_ext_dend->set_all(1.0*we_dend);
     sys->run(simtime);
     
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
     con_ext_dend->set_all(0.0*we_dend);
     sys->run(simtime);
     
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
     con_ext_dend->set_all(1.0*we_dend);
     sys->run(simtime);
     
     // test that plasticity is not affected by burst prob in input population
     curr_input_pop->set_all_currents(30.e-12/input[0].get_Cd());
-    vmon->record_for(testtime);
-    smon_vd->record_for(testtime);
-    smon_m->record_for(testtime);
-    smon_ws->record_for(testtime);
-    smon_wd->record_for(testtime);
     sys->run(simtime);
     
     

@@ -104,7 +104,6 @@ void EBCPConnection::propagate_forward(const NeuronID pre)
                 if ( *weight < get_min_weight() ) *weight = get_min_weight();
         }
     }
-    
 }
 
 void EBCPConnection::propagate_backward(const NeuronID translated_post, const AurynState valence)

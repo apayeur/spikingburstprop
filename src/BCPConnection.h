@@ -92,6 +92,9 @@ public:
 	virtual void propagate();
 	virtual void evolve();
     
+    virtual void set_post_trace_event_tau(AurynFloat x) { }
+    virtual void set_post_trace_burst_tau(AurynFloat x) { }
+    
     Trace * get_tr_event();
     Trace * get_tr_burst();
 
