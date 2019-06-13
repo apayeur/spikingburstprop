@@ -109,9 +109,10 @@ void BurstPoissonGroup::check_thresholds()
         else if (burst_state->get(unit)==1){
             push_spike(unit);
             refractory_state->set(unit, abs_ref_period);
-            mem->set( unit, e_reset);
-            thr->add_specific( unit, e_spk_thr);
-            state_wsoma->add_specific(unit, 1.0);
+            // commenting the next three lines mean that there is no soma-dendrite coupling
+            //mem->set( unit, e_reset);
+            //thr->add_specific( unit, e_spk_thr);
+            //state_wsoma->add_specific(unit, 1.0);
         }
     }
     

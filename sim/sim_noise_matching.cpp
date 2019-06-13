@@ -29,7 +29,7 @@ int main(int ac, char* av[])
     unsigned int seed = 1;
     string dir = "./";
     string simname = "noise_matching";
-    float w_pyr1_to_pyr2 = 0.02; //0.017;
+    float w_pyr1_to_pyr2 = 0.05; //0.017;
     float w_pv_to_pyr2 = 0.04; //0.04;
     float w_pyr2_to_pyr1 = 0.15;//0.2;
     float w_som_to_pyr1 = 0.02;//0.025;
@@ -144,21 +144,21 @@ int main(int ac, char* av[])
     //-- CONNECT BACKGROUND POISSON
     
     // External Poisson neurons -> Pyr1
-    int number_of_ext_conn[2] = {100, 30}; //exc, inh
+    int number_of_ext_conn[2] = {100, 100}; //exc, inh
     
     float p_exc = float(number_of_ext_conn[0])/float(nb_exc_Poisson_neurons);
     float p_inh = float(number_of_ext_conn[1])/float(nb_inh_Poisson_neurons);
     
-    const float w_exc = 0.17;   // conductance amplitude in units of leak conductance
-    const float w_inh = 0.26;
+    const float w_exc = 0.35;   // 0.17 conductance amplitude in units of leak conductance
+    const float w_inh = 0.35; // 0.26
     
     SparseConnection * con_ext_exc_soma1 = new SparseConnection(exc_Poisson, pyr1, w_exc, p_exc, GLUT);
     con_ext_exc_soma1->set_target("g_ampa");
     SparseConnection * con_ext_inh_soma1 = new SparseConnection(inh_Poisson, pyr1, w_inh, p_inh, GABA);
     con_ext_inh_soma1->set_target("g_gaba");
     
-    const float w_exc_dend = 0.0425;        // conductance amplitude in units of leak conductance
-    const float w_inh_dend = 0.065;
+    const float w_exc_dend = 0.05;        //0.0425 conductance amplitude in units of leak conductance
+    const float w_inh_dend = 0.05; //0.065
     
     SparseConnection * con_ext_exc_dend1 = new SparseConnection(exc_Poisson, pyr1, w_exc_dend, p_exc, GLUT);
     con_ext_exc_dend1->set_target("g_ampa_dend");
@@ -177,13 +177,13 @@ int main(int ac, char* av[])
     
     // External Poisson neurons -> SOM
     float p_ext_to_som = 100./float(nb_exc_Poisson_neurons);
-    SparseConnection * con_ext_exc_som = new SparseConnection(exc_Poisson, som, 0.3, p_ext_to_som, GLUT);
-    SparseConnection * con_ext_inh_som = new SparseConnection(inh_Poisson, som, 0.3*1.25, p_ext_to_som, GABA);
+    SparseConnection * con_ext_exc_som = new SparseConnection(exc_Poisson, som, 0.4, p_ext_to_som, GLUT);
+    SparseConnection * con_ext_inh_som = new SparseConnection(inh_Poisson, som, 0.4*1.25, p_ext_to_som, GABA);
     
     // External Poisson neurons -> PV
     float p_ext_to_pv = 100./float(nb_exc_Poisson_neurons);
-    float w_extexc_to_pv = 0.12;
-    float w_extinh_to_pv = 0.15;
+    float w_extexc_to_pv = 0.75; //0.12
+    float w_extinh_to_pv = 0.75*1.5; //0.15
     SparseConnection * con_ext_exc_pv = new SparseConnection(exc_Poisson, pv, w_extexc_to_pv, p_ext_to_pv, GLUT);
     SparseConnection * con_ext_inh_pv = new SparseConnection(inh_Poisson, pv, w_extinh_to_pv, p_ext_to_pv, GABA);
     
@@ -196,7 +196,7 @@ int main(int ac, char* av[])
     pyr1_to_pyr2->set_target("g_ampa");
     
     // Pyr1 to PV - STD
-    float w_pyr1_to_pv = 0.01;
+    float w_pyr1_to_pv = 0.05; //0.01
     float p_pyr1_to_pv = 0.05;
     STPeTMConnection * pyr1_to_pv = new STPeTMConnection(pyr1, pv, w_pyr1_to_pv, p_pyr1_to_pv, GLUT);
     set_Depressing_connection(pyr1_to_pv);
@@ -293,7 +293,7 @@ int main(int ac, char* av[])
     logger->msg("Running ...",PROGRESS);
     
     // The alternating currents switched between a maximum and a minimum in both the dendrites and the somas.
-    const double max_dendritic_current = 100e-12;//90e-12;
+    const double max_dendritic_current = 150e-12;//90e-12;
     const double min_dendritic_current = 50e-12;
     const double max_somatic_current = 200e-12;
     const double min_somatic_current = -100.e-12; //50e-12;
@@ -313,9 +313,9 @@ int main(int ac, char* av[])
     // Burn-in period (i.e. relaxation) before alternating stimuation
     curr_inject_soma1->set_all_currents(mean_somatic_current/pyr1[0].get_Cs());
     /////////////DEBUG///////////////
-    curr_inject_soma2->set_all_currents(0.e-12/pyr2[0].get_Cs());
+    curr_inject_soma2->set_all_currents(-100.e-12/pyr2[0].get_Cs());
     /////////////DEBUG///////////////
-    curr_inject_dend1->set_all_currents(min_dendritic_current/pyr1[0].get_Cd());
+    curr_inject_dend1->set_all_currents(0/pyr1[0].get_Cd());
     
     curr_inject_dend2->set_all_currents(mean_dendritic_current/pyr2[0].get_Cd());
     

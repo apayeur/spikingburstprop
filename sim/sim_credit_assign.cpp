@@ -28,7 +28,7 @@ int main(int ac, char* av[])
     unsigned int seed = 1;
     string dir = "./";
     string simname = "credit_assign";
-    const NeuronID number_of_neurons = 10000;
+    const NeuronID number_of_neurons = 8000;
     const NeuronID N_other_neuron = number_of_neurons/4;
     
     float w_pyr1_to_pyr2 = 0.05*4000/number_of_neurons; //0.012
@@ -218,7 +218,7 @@ int main(int ac, char* av[])
     //------ CONNECT FeedBACK ------//
     // Pyr2 to pyr1 - STF
     float p_pyr2_to_pyr1 = 0.05;
-    STPeTMConnection * pyr2_to_pyr1 = new STPeTMConnection(pyr2, pyr1, w_pyr2_to_pyr1*0.05*4000/(p_pyr2_to_pyr1*number_of_neurons), p_pyr2_to_pyr1, GLUT);
+    STPeTMConnection * pyr2_to_pyr1 = new STPeTMConnection(pyr2, pyr1, w_pyr2_to_pyr1, p_pyr2_to_pyr1, GLUT);
     set_Facilitating_connection(pyr2_to_pyr1);
     pyr2_to_pyr1->set_target("g_ampa_dend");
     
@@ -280,7 +280,7 @@ int main(int ac, char* av[])
     /******             SIMULATION            *********/
     /**************************************************/
     curr_inject_soma2->set_all_currents(-100.e-12/pyr2[0].get_Cs());
-    curr_inject_dend1->set_all_currents(0./pyr1[0].get_Cd());
+    curr_inject_dend1->set_all_currents(-50.e-12/pyr1[0].get_Cd());
     curr_inject_som->set_all_currents(0e-12/som[0].get_c_mem());
     curr_inject_pv->set_all_currents(205e-12/pv[0].get_c_mem());
     

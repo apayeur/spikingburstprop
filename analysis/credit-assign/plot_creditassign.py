@@ -41,7 +41,7 @@ params = {'baseline_soma': 50.e-12,
           'relaxation_period': 500.e-3,
           'number_of_examples': 3,
           'amplitudes_soma': [200.e-12, 200.e-12, -200.e-12],
-          'amplitudes_dend': [100.e-12, -200.e-12, 100.e-12],
+          'amplitudes_dend': [200.e-12, -200.e-12, 200.e-12],  # +100 previously
           'slope_duration_soma': 0.2 * 500.e-3,
           'slope_duration_dend': 0.2 * 500.e-3}
 binSize = 20.e-3

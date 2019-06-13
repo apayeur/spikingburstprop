@@ -8,9 +8,9 @@ RESULTDIR="../results/noise-matching/"
 mkdir -p $RESULTDIR
 
 make
-for W12 in 0.17
+for W12 in 0.3
 do
-	for W1SOM in 0.02
+	for W1SOM in 0.03
 	do	
 		for (( i=1; i<=$NUM_REAL; i++ ))
 		do

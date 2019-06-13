@@ -10,6 +10,7 @@
 #include "STPeTMConnection.h"
 #include "SineCurrentInjector.h"
 #include "FileCurrentInjector.h"
+#include "BurstPoissonGroup.h"
 
 using namespace auryn;
 
@@ -112,11 +113,11 @@ int main(int ac, char* av[])
     
     // First layer of 2-comp pyramidal neurons
     NeuronID number_of_neurons = 4000;
-    NaudGroup* pyr1 = new NaudGroup(number_of_neurons);
+    BurstPoissonGroup* pyr1 = new BurstPoissonGroup(number_of_neurons);
     initialize_pyr_neurons(pyr1);
     
     // Second layer of 2-comp pyramidal neurons
-    NaudGroup* pyr2 = new NaudGroup(number_of_neurons);
+    BurstPoissonGroup* pyr2 = new BurstPoissonGroup(number_of_neurons);
     initialize_pyr_neurons(pyr2);
     
     // PV neurons
@@ -137,8 +138,8 @@ int main(int ac, char* av[])
     PoissonGroup* inh_Poisson_dend1 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     
     // Pyr2
-    PoissonGroup* exc_Poisson2      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
-    PoissonGroup* inh_Poisson2      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
+    PoissonGroup* exc_Poisson2      = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    PoissonGroup* inh_Poisson2      = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     PoissonGroup* exc_Poisson_dend2 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     PoissonGroup* inh_Poisson_dend2 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     
@@ -234,6 +235,7 @@ int main(int ac, char* av[])
     
     
     // -- OTHER CONNECTIONS
+    /*
     // Pyr to Pyr - fake inh STF
     float w_pyr_to_pyr = 0.1;
     float p_pyr_to_pyr = 0.05*4000/number_of_neurons;
@@ -244,7 +246,7 @@ int main(int ac, char* av[])
     STPeTMConnection * pyr2_to_pyr2 = new STPeTMConnection(pyr2, pyr2, w_pyr_to_pyr, p_pyr_to_pyr, GABA);
     set_Facilitating_connection(pyr2_to_pyr2);
     pyr2_to_pyr2->set_target("g_gaba_dend");
-    
+    */
     
     /**************************************************/
     /******         CURRENT INJECTORS         *********/
@@ -300,8 +302,8 @@ int main(int ac, char* av[])
     logger->msg("Running ...",PROGRESS);
     
     // The alternating currents switched between a maximum and a minimum in both the dendrites and the somas.
-    const double max_dendritic_current = 150e-12;//90e-12;
-    const double min_dendritic_current = 50e-12;
+    const double max_dendritic_current = 300e-12;//90e-12;
+    const double min_dendritic_current = 150e-12;
     const double max_somatic_current = 200e-12;
     const double min_somatic_current = -100.e-12; //50e-12;
     const double mean_dendritic_current = (max_dendritic_current + min_dendritic_current)/2.;
@@ -322,7 +324,7 @@ int main(int ac, char* av[])
     /////////////DEBUG///////////////
     curr_inject_soma2->set_all_currents(-100.e-12/pyr2[0].get_Cs());
     /////////////DEBUG///////////////
-    curr_inject_dend1->set_all_currents(0.e-12/pyr1[0].get_Cd());
+    curr_inject_dend1->set_all_currents(min_dendritic_current/pyr1[0].get_Cd());
     
     curr_inject_dend2->set_all_currents(mean_dendritic_current/pyr2[0].get_Cd());
     
