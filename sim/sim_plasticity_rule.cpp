@@ -10,10 +10,9 @@
  pyr population to the soma of the postsynaptic population.
 ************************************************************/
 
-
-// need to have compiled auryn in branch feature_tau_pre
 #include "auryn.h"
-//#include "EBCPConnection.h"
+#include "EBCPConnection.h"
+#include "BCPConnection.h"
 
 using namespace auryn;
 
