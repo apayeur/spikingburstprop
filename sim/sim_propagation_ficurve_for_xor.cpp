@@ -1,13 +1,13 @@
 /***********************************************************
- Description: Example of "credit assignment" and error
- generation with BurstPoisson neurons and Transmit connections.
- ************************************************************/
+ Description: Compute ficurves of pre- et postsynaptic
+ populations in the context of the FF and FB propagation.
+ Helps fine-tune parameters.
+************************************************************/
 
 #include "auryn.h"
 #include <cmath>
 #include <fstream>
 #include <string>
-#include "FileCurrentInjector.h"
 #include "BurstPoissonGroup.h"
 #include "TransmitBurstConnection.h"
 #include "TransmitEventConnection.h"
@@ -18,22 +18,24 @@ namespace po = boost::program_options;
 
 void initialize_pyr_neurons(NaudGroup* pyr);
 
-
 int main(int ac, char* av[])
 {
     int errcode = 0;
     char strbuf [255];
     unsigned int seed = 1;
-    string dir = "./";
-    string simname = "credit_assign";
+    string dir = "../data/propagation/ficurve/for-xor";
+    string simname = "propagation_ficurve";
+    double somatic_current = 100e-12;
+    
     const NeuronID number_of_neurons = 4000;
     const NeuronID N_other_neuron = number_of_neurons/4;
-    
-    float w_pyr1_to_pyr2_exc = 0.07*4000/number_of_neurons;
-    float w_pyr1_to_pyr2_inh = 0.03*4000/number_of_neurons;
 
+    float w_pyr1_to_pyr2_exc = 0.07*4000/number_of_neurons;
+    float w_pyr1_to_pyr2_inh = 0.03*4000/number_of_neurons; //0.03
+    
     float w_pyr2_to_pyr1_exc = 0.12*4000/number_of_neurons;
     float w_pyr2_to_pyr1_inh = 0.03*4000/number_of_neurons;
+
 
     /**************************************************/
     /********              OPTIONS            *********/
@@ -42,9 +44,10 @@ int main(int ac, char* av[])
         po::options_description desc("Allowed options");
         desc.add_options()
         ("help", "produce help message")
-        ("dir",  po::value<string>(), "output directory")
-        ("seed", po::value<int>(),    "random seed")
-        ;
+        ("dir", po::value<string>(), "output directory")
+        ("seed", po::value<int>(), "random seed")
+        ("somacurrent", po::value<double>(), "somatic current")
+         ;
         
         po::variables_map vm;
         po::store(po::parse_command_line(ac, av, desc), vm);
@@ -66,6 +69,12 @@ int main(int ac, char* av[])
             << vm["seed"].as<int>() << ".\n";
             seed = vm["seed"].as<int>();
         }
+        
+        if (vm.count("somacurrent")) {
+            std::cout << "soma current set to "
+            << vm["somacurrent"].as<double>() << ".\n";
+            somatic_current = vm["somacurrent"].as<double>();
+        }
     }
     catch(std::exception& e) {
         std::cerr << "error: " << e.what() << "\n";
@@ -75,7 +84,6 @@ int main(int ac, char* av[])
         std::cerr << "Exception of unknown type!\n";
     }
     
-
     // INITIALIZE AURYN
     auryn_init( ac, av, dir, simname );
     sys->set_master_seed(seed);
@@ -105,6 +113,7 @@ int main(int ac, char* av[])
     PoissonGroup* inh_Poisson2      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
     PoissonGroup* exc_Poisson_dend2 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     PoissonGroup* inh_Poisson_dend2 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    
     
     /**************************************************/
     /******           CONNECTIVITY            *********/
@@ -163,43 +172,45 @@ int main(int ac, char* av[])
     /**************************************************/
     /******         CURRENT INJECTORS         *********/
     /**************************************************/
-    // File-based current injections
-    FileCurrentInjector * curr_inject_soma1 = new FileCurrentInjector(pyr1,"../data/credit-assign/current_soma.txt", "mem");
-    FileCurrentInjector * curr_inject_dend2 = new FileCurrentInjector(pyr2,"../data/credit-assign/current_dend.txt", "Vd");
-    
-    // Standard current injections
+    CurrentInjector * curr_inject_soma1 = new CurrentInjector(pyr1, "mem");
     CurrentInjector * curr_inject_dend1 = new CurrentInjector(pyr1, "Vd");
-    CurrentInjector * const_curr_inject_dend2 = new CurrentInjector(pyr2, "Vd");
     CurrentInjector * curr_inject_soma2 = new CurrentInjector(pyr2, "mem");
-    
+    CurrentInjector * curr_inject_dend2 = new CurrentInjector(pyr2, "Vd");
     
     /**************************************************/
     /******              MONITORS             *********/
     /**************************************************/
     double binSize_rate = 20.e-3; // ms
-    
-    // Burst and event rate monitors
+    auto label_str = std::to_string(somatic_current*1.e12);
     auto seed_str = std::to_string(seed);
-    BurstRateMonitor * brmon1 = new BurstRateMonitor( pyr1, sys->fn("brate1_seed"+seed_str), binSize_rate);
-    BurstRateMonitor * brmon2 = new BurstRateMonitor( pyr2, sys->fn("brate2_seed"+seed_str), binSize_rate);
     
-    // Voltage monitors
-    VoltageMonitor *pyr1_mem = new VoltageMonitor(pyr1, 0,  sys->fn("mem1"), 1.e-3);
-    VoltageMonitor *pyr2_mem = new VoltageMonitor(pyr2, 0,  sys->fn("mem2"), 1.e-3);
-    StateMonitor *pyr1_Vd    = new StateMonitor(pyr1, 0, "Vd", sys->fn("Vd"), 1.e-3);
-    StateMonitor *pyr2_Vd    = new StateMonitor(pyr2, 0, "Vd", sys->fn("Vd2"), 1.e-3);
-    
+    // Burst/event rate monitors
+    BurstRateMonitor * brmon1 = new BurstRateMonitor( pyr1, sys->fn("brate1_somacurrent"+label_str), binSize_rate);
+    BurstRateMonitor * brmon2 = new BurstRateMonitor( pyr2, sys->fn("brate2_somacurrent"+label_str), binSize_rate);
+    SpikeMonitor * smon1 = new SpikeMonitor( pyr1, sys->fn("ras1_somacurrent"+label_str) );
+    SpikeMonitor * smon2 = new SpikeMonitor( pyr2, sys->fn("ras2_somacurrent"+label_str) );
+
     /**************************************************/
     /******             SIMULATION            *********/
     /**************************************************/
-    curr_inject_soma2->set_all_currents(-100.e-12/pyr2[0].get_Cs());
-    curr_inject_dend1->set_all_currents(00.e-12/pyr1[0].get_Cd());
-    const_curr_inject_dend2->set_all_currents(325.e-12/pyr2[0].get_Cd());
-
     logger->msg("Running ...",PROGRESS);
-    sys->run(0.5+3*1.);
     
+    const double max_dendritic_current  = 1600e-12;
+    const double min_dendritic_current  = -400e-12;
+    const double dendritic_current_incr = 200e-12;
+    const double simtime = 1000e-3;
     
+    double dendritic_current = min_dendritic_current;
+    curr_inject_soma1->set_all_currents(somatic_current/pyr1[0].get_Cs());
+    curr_inject_dend1->set_all_currents(0e-12/pyr1[0].get_Cd());
+
+    while (dendritic_current < max_dendritic_current + dendritic_current_incr/2)
+    {
+        curr_inject_dend2->set_all_currents(dendritic_current/pyr2[0].get_Cd());
+        dendritic_current += dendritic_current_incr;
+        sys->run(simtime);
+    }
+
     if (errcode)
         auryn_abort(errcode);
     

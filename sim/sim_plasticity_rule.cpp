@@ -28,6 +28,7 @@ int main(int ac, char* av[])
     double kappa = 1.0;
     double tau_pre = 20.e-3;
     double simtime = 1800;
+    double moving_average_time_constant = 4.;
     std::string connect_type = "BCP";
     string simname = "plasticity_rule";
     std::string dir = ".";
@@ -48,6 +49,7 @@ int main(int ac, char* av[])
         ("seed", po::value<int>(), "random seed")
         ("connect_type", po::value<string>(), "connection type: BCP or EBCP")
         ("tau_pre", po::value<double>(), "presynaptic trace time constant")
+        ("alpha", po::value<double>(), "moving average time constant")
         ("sim_name", po::value<string>(), "simulation name")
         ;
         
@@ -108,6 +110,12 @@ int main(int ac, char* av[])
             tau_pre = vm["tau_pre"].as<double>();
         }
         
+        if (vm.count("alpha")) {
+            std::cout << "moving average time constant set to "
+            << vm["alpha"].as<double>() << ".\n";
+            moving_average_time_constant = vm["alpha"].as<double>();
+        }
+        
         if (vm.count("sim_name")) {
             std::cout << "simulation name set to "
             << vm["sim_name"].as<string>() << ".\n";
@@ -134,6 +142,8 @@ int main(int ac, char* av[])
     
     // Main neuron group
     NaudGroup * neurons_exc = new NaudGroup(100);
+    //neurons_exc->syn_exc_soma->set_nmda_ampa_current_ampl_ratio(0.);
+    //neurons_exc->syn_exc_dend->set_nmda_ampa_current_ampl_ratio(0.);
     neurons_exc->syn_exc_soma->set_ampa_nmda_ratio(1);
     neurons_exc->syn_exc_dend->set_ampa_nmda_ratio(100);
     
@@ -165,7 +175,6 @@ int main(int ac, char* av[])
     const double sparseness = 0.5;
     const double learning_rate = 1e-3;
     const double max_weight = 1.0;
-    const double moving_average_time_constant = 4.;
     
     BCPConnection * con_ext_soma;
     
@@ -217,7 +226,7 @@ int main(int ac, char* av[])
     /**************************************************/
     /******              MONITORS             *********/
     /**************************************************/
-    const double binsize = 2.;
+    const double binsize = moving_average_time_constant/5.;
     sys->set_online_rate_monitor_target(neurons_exc);
     sys->set_online_rate_monitor_tau(binsize);
     SpikeMonitor * smon = new SpikeMonitor( neurons_exc, sys->fn("ras") );

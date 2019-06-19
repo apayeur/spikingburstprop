@@ -11,7 +11,10 @@ plt.style.use('../thesis_mplrc.dms')
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-datadir", type=str, help="data directory", default=".")
+parser.add_argument("-resultdir", type=str, help="result directory", default=".")
 parser.add_argument("-connect_type", type=str, help="connection type", default=".")
+parser.add_argument("-outfile_name", type=str, help="name of output file", default=".")
+
 args = parser.parse_args()
 
 
@@ -64,5 +67,5 @@ ax3_tw.tick_params('y', labelcolor=custom_colors['red'])
 ax3_tw.spines['top'].set_visible(False)
 
 plt.tight_layout()
-plt.savefig('../../results/learning-rule/Wsum/Wsum_vs_Time_'+args.connect_type+'.pdf')
+plt.savefig(args.outfile_name)
 plt.close()

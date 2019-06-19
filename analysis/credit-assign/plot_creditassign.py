@@ -37,13 +37,13 @@ for i in range(1, number_of_realizations+1):
 # construct currents
 params = {'baseline_soma': 50.e-12,
           'baseline_dend': 75.e-12,
-          'example_duration': 1000.e-3,
-          'relaxation_period': 500.e-3,
+          'example_duration': 1.,
+          'relaxation_period': 0.5,
           'number_of_examples': 3,
-          'amplitudes_soma': [200.e-12, 200.e-12, -200.e-12],
-          'amplitudes_dend': [200.e-12, -200.e-12, 200.e-12],  # +100 previously
-          'slope_duration_soma': 0.2 * 500.e-3,
-          'slope_duration_dend': 0.2 * 500.e-3}
+          'amplitudes_soma': [200.e-12, 100.e-12, -200.e-12],
+          'amplitudes_dend': [200.e-12, -200.e-12, 200.e-12],  # previously +100
+          'slope_duration_soma': 0. * 500.e-3,
+          'slope_duration_dend': 0. * 500.e-3}
 binSize = 20.e-3
 times, current_soma, current_dend = example_credit_assign(params, binsize=binSize)
 

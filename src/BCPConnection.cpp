@@ -34,7 +34,7 @@ void BCPConnection::init(AurynFloat eta, AurynFloat maxweight, AurynFloat tau_pr
 
 	// homeostasis constants
 	min_rate = 0.1;
-	max_rate = 15.0;
+	max_rate = 20.0;
 
 	auryn::logger->parameter("eta",eta);
 
