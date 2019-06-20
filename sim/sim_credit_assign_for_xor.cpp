@@ -197,7 +197,7 @@ int main(int ac, char* av[])
     const_curr_inject_dend2->set_all_currents(325.e-12/pyr2[0].get_Cd());
 
     logger->msg("Running ...",PROGRESS);
-    sys->run(0.5+3*1.);
+    sys->run(0.5+3*1.5);
     
     
     if (errcode)

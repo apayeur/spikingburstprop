@@ -26,7 +26,7 @@ int main(int ac, char* av[])
     string dir = "../data/fftransfer/for-xor";
     string simname = "fftransfer";
     
-    const NeuronID number_of_neurons = 4000;
+    const NeuronID number_of_neurons = 1000;
     const NeuronID N_other_neuron = number_of_neurons/4;
     
     float w_pyr1_to_pyr2_exc = 0.07*4000/number_of_neurons; //0.07
@@ -35,8 +35,8 @@ int main(int ac, char* av[])
     float w_pyr2_to_pyr1_exc = 0.12*4000/number_of_neurons;
     float w_pyr2_to_pyr1_inh = 0.03*4000/number_of_neurons;
     
-    float w_pyr2_to_pyr3_exc = 0.07*4000/number_of_neurons; //0.07
-    float w_pyr2_to_pyr3_inh = 0.03*4000/number_of_neurons; //0.03
+    float w_pyr2_to_pyr3_exc = 0.09*4000/number_of_neurons; //0.07
+    float w_pyr2_to_pyr3_inh = 0.05*4000/number_of_neurons; //0.03
     
     float w_pyr3_to_pyr2_exc = 0.12*4000/number_of_neurons;
     float w_pyr3_to_pyr2_inh = 0.03*4000/number_of_neurons;
@@ -223,12 +223,12 @@ int main(int ac, char* av[])
     // Burst/event rate monitors
     BurstRateMonitor * brmon1 = new BurstRateMonitor( pyr1, sys->fn("brate1"), binSize_rate);
     BurstRateMonitor * brmon2 = new BurstRateMonitor( pyr2, sys->fn("brate2"), binSize_rate);
-    //BurstRateMonitor * brmon3 = new BurstRateMonitor( pyr3, sys->fn("brate3"), binSize_rate);
+    BurstRateMonitor * brmon3 = new BurstRateMonitor( pyr3, sys->fn("brate3"), binSize_rate);
     
     // Voltage monitors
     VoltageMonitor *pyr1_mem = new VoltageMonitor(pyr1, 0,  sys->fn("pyr1_mem"), 1.e-3);
     VoltageMonitor *pyr2_mem = new VoltageMonitor(pyr2, 0,  sys->fn("pyr2_mem"), 1.e-3);
-    //VoltageMonitor *pyr3_mem = new VoltageMonitor(pyr3, 0,  sys->fn("pyr3_mem"), 1.e-3);
+    VoltageMonitor *pyr3_mem = new VoltageMonitor(pyr3, 0,  sys->fn("pyr3_mem"), 1.e-3);
     
     //Raster
     SpikeMonitor * smon1 = new SpikeMonitor( pyr1, sys->fn("ras1"));
@@ -246,7 +246,8 @@ int main(int ac, char* av[])
     
     double somatic_current = min_somatic_current;
     curr_inject_soma1->set_all_currents(somatic_current/pyr1[0].get_Cs());
-    //curr_inject_soma2->set_all_currents(-100e-12/pyr2[0].get_Cs());
+    curr_inject_soma2->set_all_currents(-100e-12/pyr2[0].get_Cs());
+    curr_inject_soma3->set_all_currents(-200e-12/pyr3[0].get_Cs());
 
     while (somatic_current < max_somatic_current + somatic_current_incr/2)
     {

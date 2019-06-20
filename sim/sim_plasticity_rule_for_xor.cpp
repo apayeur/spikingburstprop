@@ -142,7 +142,7 @@ int main(int ac, char* av[])
     /**************************************************/
     
     // Main neuron group
-    NaudGroup * neurons_exc = new NaudGroup(100);
+    BurstPoissonGroup * neurons_exc = new BurstPoissonGroup(100);
     neurons_exc->syn_exc_soma->set_nmda_ampa_current_ampl_ratio(0.);
     neurons_exc->syn_exc_dend->set_nmda_ampa_current_ampl_ratio(0.);
     //neurons_exc->syn_exc_soma->set_ampa_nmda_ratio(1);
@@ -174,7 +174,7 @@ int main(int ac, char* av[])
     const double we_soma = w0;
     const double we_dend = d0;
     const double sparseness = 0.5;
-    const double learning_rate = 1e-3;
+    const double learning_rate = 2e-3;
     const double max_weight = 1.0;
     
     BCPConnection * con_ext_soma;
@@ -194,7 +194,6 @@ int main(int ac, char* av[])
         con_ext_soma->set_post_trace_burst_tau(moving_average_time_constant);
 
     }
-    
     con_ext_soma->set_target("g_ampa");
     
     
@@ -227,7 +226,7 @@ int main(int ac, char* av[])
     /**************************************************/
     /******              MONITORS             *********/
     /**************************************************/
-    const double binsize = std::max(moving_average_time_constant/5., 1.);
+    const double binsize = moving_average_time_constant/5.;
     sys->set_online_rate_monitor_target(neurons_exc);
     sys->set_online_rate_monitor_tau(binsize);
     SpikeMonitor * smon = new SpikeMonitor( neurons_exc, sys->fn("ras") );
@@ -258,6 +257,9 @@ int main(int ac, char* av[])
     /******         CURRENT INJECTORS         *********/
     /**************************************************/
     CurrentInjector *curr_input_pop = new CurrentInjector(input, "Vd");
+    CurrentInjector *curr_dend_exc = new CurrentInjector(neurons_exc, "Vd");
+    const double bkg_dend_curr = 400e-12;
+    curr_dend_exc->set_all_currents(bkg_dend_curr/neurons_exc[0].get_Cd());
     
     /**************************************************/
     /******             SIMULATION            *********/
@@ -268,23 +270,27 @@ int main(int ac, char* av[])
     double testtime = 10;
     
     con_ext_soma->stdp_active = false;
-    con_ext_dend->set_all(1.0*we_dend);
+    //con_ext_dend->set_all(1.0*we_dend);
     sys->run(moving_average_time_constant*3);
     
     con_ext_soma->stdp_active = true;
-    con_ext_dend->set_all(1.0*we_dend);
+    //con_ext_dend->set_all(1.0*we_dend);
     sys->run(simtime);
     
-    con_ext_dend->set_all(1.5*we_dend);
+    //con_ext_dend->set_all(1.5*we_dend);
+    curr_dend_exc->set_all_currents(1.75*bkg_dend_curr/neurons_exc[0].get_Cd());
     sys->run(simtime);
     
-    con_ext_dend->set_all(1.0*we_dend);
+    //con_ext_dend->set_all(1.0*we_dend);
+    curr_dend_exc->set_all_currents(bkg_dend_curr/neurons_exc[0].get_Cd());
     sys->run(simtime);
     
-    con_ext_dend->set_all(0.0*we_dend);
+    //con_ext_dend->set_all(0.0*we_dend);
+    curr_dend_exc->set_all_currents(0*bkg_dend_curr/neurons_exc[0].get_Cd());
     sys->run(simtime);
     
-    con_ext_dend->set_all(1.0*we_dend);
+    //con_ext_dend->set_all(1.0*we_dend);
+    curr_dend_exc->set_all_currents(bkg_dend_curr/neurons_exc[0].get_Cd());
     sys->run(simtime);
     
     // test that plasticity is not affected by burst prob in input population

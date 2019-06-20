@@ -18,7 +18,7 @@ AdaptiveEBCPConnection::AdaptiveEBCPConnection(
         set_name("AdaptiveEBCPConnection");
     // homeostasis constants (min and max event rate)
     min_rate = 0.1;
-    max_rate = 10.0;
+    max_rate = 15.0;
 }
 
 void AdaptiveEBCPConnection::finalize() {
