@@ -8,7 +8,7 @@ mkdir -p $RESULTDIR
 
 DUREX=10
 ALPHA=4
-NUMEX=4
+NUMEX=120
 
 make
 

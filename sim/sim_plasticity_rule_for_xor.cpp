@@ -25,7 +25,7 @@ int main(int ac, char* av[])
     int errcode = 0;
     int seed = 123;
     double w0 = 0.8;
-    double d0 = 0.1;
+    double d0 = 0.;
     double kappa = 1.0;
     double tau_pre = 20.e-3;
     double simtime = 1800;
@@ -142,29 +142,32 @@ int main(int ac, char* av[])
     /**************************************************/
     
     // Main neuron group
-    BurstPoissonGroup * neurons_exc = new BurstPoissonGroup(100);
-    neurons_exc->syn_exc_soma->set_nmda_ampa_current_ampl_ratio(0.);
-    neurons_exc->syn_exc_dend->set_nmda_ampa_current_ampl_ratio(0.);
-    //neurons_exc->syn_exc_soma->set_ampa_nmda_ratio(1);
-    //neurons_exc->syn_exc_dend->set_ampa_nmda_ratio(100);
+    const NeuronID number_of_neurons = 500;
+    BurstPoissonGroup * main_neurons = new BurstPoissonGroup(number_of_neurons);
+    main_neurons->syn_exc_soma->set_nmda_ampa_current_ampl_ratio(0.);
+    main_neurons->syn_exc_dend->set_nmda_ampa_current_ampl_ratio(0.);
+    //main_neurons->syn_exc_soma->set_ampa_nmda_ratio(1);
+    //main_neurons->syn_exc_dend->set_ampa_nmda_ratio(100);
     
     // Input group
-    //PoissonGroup * poisson_soma = new PoissonGroup(4000, kappa);
-    NaudGroup * input = new NaudGroup(800);
+    BurstPoissonGroup * input = new BurstPoissonGroup(number_of_neurons);
     input->syn_exc_soma->set_nmda_ampa_current_ampl_ratio(0.);
     input->syn_exc_dend->set_nmda_ampa_current_ampl_ratio(0.);
     input->random_mem(-70e-3, 5.e-3);
     
     // Noise groups
         // dendritic noise for main neuron group
-    PoissonGroup * poisson_dend = new PoissonGroup(100, kappa);
+    float poisson_rate = 5.;
+    PoissonGroup* exc_Poisson      = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    PoissonGroup* inh_Poisson      = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    PoissonGroup* exc_Poisson_dend = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    PoissonGroup* inh_Poisson_dend = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     
         // noise for input neuron group
-    NeuronID nb_exc_Poisson_neurons = 25000;
-    NeuronID nb_inh_Poisson_neurons = nb_exc_Poisson_neurons;
-    float poisson_rate = 5.;
-    PoissonGroup* exc_Poisson = new PoissonGroup(nb_exc_Poisson_neurons, poisson_rate);
-    PoissonGroup* inh_Poisson = new PoissonGroup(nb_inh_Poisson_neurons, poisson_rate);
+    PoissonGroup* exc_Poisson_input      = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    PoissonGroup* inh_Poisson_input      = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    PoissonGroup* exc_Poisson_dend_input = new PoissonGroup(number_of_neurons, 100*poisson_rate);
+    PoissonGroup* inh_Poisson_dend_input = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     
     
     /**************************************************/
@@ -172,23 +175,22 @@ int main(int ac, char* av[])
     /**************************************************/
     //-- Connect input group to main group's somata with plastic synapses
     const double we_soma = w0;
-    const double we_dend = d0;
-    const double sparseness = 0.5;
-    const double learning_rate = 2e-3;
+    const double sparseness = 0.05;
+    const double learning_rate = 1e-3;
     const double max_weight = 1.0;
     
     BCPConnection * con_ext_soma;
     
     if (connect_type == "BCP") {
-        con_ext_soma = new BCPConnection(input, neurons_exc, we_soma,
+        con_ext_soma = new BCPConnection(input, main_neurons, we_soma,
                                          sparseness, learning_rate, max_weight, tau_pre, GLUT);
     }
     else if (connect_type == "EBCP"){
-        con_ext_soma = new EBCPConnection(input, neurons_exc, we_soma,
+        con_ext_soma = new EBCPConnection(input, main_neurons, we_soma,
                                           sparseness, learning_rate, max_weight, tau_pre, GLUT);
     }
     else if (connect_type == "AdaptiveEBCP"){
-        con_ext_soma = new AdaptiveEBCPConnection(input, neurons_exc, we_soma,
+        con_ext_soma = new AdaptiveEBCPConnection(input, main_neurons, we_soma,
                                                   sparseness, learning_rate, max_weight, tau_pre, GLUT);
         con_ext_soma->set_post_trace_event_tau(moving_average_time_constant);
         con_ext_soma->set_post_trace_burst_tau(moving_average_time_constant);
@@ -196,57 +198,57 @@ int main(int ac, char* av[])
     }
     con_ext_soma->set_target("g_ampa");
     
+    // noise
+    // External Poisson neurons -> main neuron group
+    float w_epois_to_soma = 0.35;
+    float ratio_ie_soma = 1.;
+    IdentityConnection * epois_to_soma = new IdentityConnection(exc_Poisson, main_neurons, w_epois_to_soma, GLUT);
+    epois_to_soma->set_target("g_ampa");
+    IdentityConnection * ipois_to_soma = new IdentityConnection(inh_Poisson, main_neurons, ratio_ie_soma*w_epois_to_soma, GABA);
+    ipois_to_soma->set_target("g_gaba");
     
-    //-- Connect first Poisson noise group to main group's dendrites
-    SparseConnection * con_ext_dend = new SparseConnection(poisson_dend, neurons_exc, we_dend, sparseness);
-    con_ext_dend->set_target("g_ampa_dend");
+    float w_epois_to_dend = 0.05;
+    float ratio_ie_dend = 1.;
+    IdentityConnection * epois_to_dend = new IdentityConnection(exc_Poisson_dend, main_neurons, w_epois_to_dend, GLUT);
+    epois_to_dend->set_target("g_ampa_dend");
+    IdentityConnection * ipois_to_dend = new IdentityConnection(inh_Poisson_dend, main_neurons, ratio_ie_dend*w_epois_to_dend, GABA);
+    ipois_to_dend->set_target("g_gaba_dend");
     
-    //-- Connect noise to input population
-    int number_of_ext_conn[2] = {100, 30}; //exc, inh
-    
-    float p_exc = float(number_of_ext_conn[0])/float(nb_exc_Poisson_neurons);
-    float p_inh = float(number_of_ext_conn[1])/float(nb_inh_Poisson_neurons);
-    
-    const float w_exc = 0.17;   // conductance amplitude in units of leak conductance
-    const float w_inh = 0.26;
-    
-    SparseConnection * con_ext_exc_soma1 = new SparseConnection(exc_Poisson, input, w_exc, p_exc, GLUT);
-    con_ext_exc_soma1->set_target("g_ampa");
-    SparseConnection * con_ext_inh_soma1 = new SparseConnection(inh_Poisson, input, w_inh, p_inh, GABA);
-    con_ext_inh_soma1->set_target("g_gaba");
-    
-    const float w_exc_dend = 0.0425;        // conductance amplitude in units of leak conductance
-    const float w_inh_dend = 0.065;
-    
-    SparseConnection * con_ext_exc_dend1 = new SparseConnection(exc_Poisson, input, w_exc_dend, p_exc, GLUT);
-    con_ext_exc_dend1->set_target("g_ampa_dend");
-    SparseConnection * con_ext_inh_dend1 = new SparseConnection(inh_Poisson, input, w_inh_dend, p_inh, GABA);
-    con_ext_inh_dend1->set_target("g_gaba_dend");
+    // External Poisson neurons -> input neurons
+    IdentityConnection * epois_to_soma_input = new IdentityConnection(exc_Poisson_input, input, w_epois_to_soma, GLUT);
+    epois_to_soma_input->set_target("g_ampa");
+    IdentityConnection * ipois_to_soma_input = new IdentityConnection(inh_Poisson_input, input, ratio_ie_soma*w_epois_to_soma, GABA);
+    ipois_to_soma_input->set_target("g_gaba");
+    IdentityConnection * epois_to_dend_input = new IdentityConnection(exc_Poisson_dend_input, input, w_epois_to_dend, GLUT);
+    epois_to_dend_input->set_target("g_ampa_dend");
+    IdentityConnection * ipois_to_dend_input = new IdentityConnection(inh_Poisson_dend_input, input, ratio_ie_dend*w_epois_to_dend, GABA);
+    ipois_to_dend_input->set_target("g_gaba_dend");
+
     
     /**************************************************/
     /******              MONITORS             *********/
     /**************************************************/
-    const double binsize = moving_average_time_constant/5.;
-    sys->set_online_rate_monitor_target(neurons_exc);
+    const double binsize = 5.;//moving_average_time_constant/5.;
+    sys->set_online_rate_monitor_target(main_neurons);
     sys->set_online_rate_monitor_tau(binsize);
-    SpikeMonitor * smon = new SpikeMonitor( neurons_exc, sys->fn("ras") );
-    PopulationRateMonitor * pmon = new PopulationRateMonitor( neurons_exc, sys->fn("prate"), binsize );
-    BurstRateMonitor * brmon = new BurstRateMonitor( neurons_exc, sys->fn("brate"), binsize );
+    SpikeMonitor * smon = new SpikeMonitor( main_neurons, sys->fn("ras") );
+    PopulationRateMonitor * pmon = new PopulationRateMonitor( main_neurons, sys->fn("prate"), binsize );
+    BurstRateMonitor * brmon = new BurstRateMonitor( main_neurons, sys->fn("brate"), binsize );
     BurstRateMonitor * brmon_input = new BurstRateMonitor( input, sys->fn("brate_input"), binsize );
 
-    VoltageMonitor * vmon   = new VoltageMonitor( neurons_exc, 0, sys->fn("mem"), 1e-3);
+    VoltageMonitor * vmon   = new VoltageMonitor( main_neurons, 0, sys->fn("mem"), 1e-3);
     vmon->record_for(10);
-    StateMonitor * smon_vd  = new StateMonitor( neurons_exc, 0, "Vd", sys->fn("Vd") );
+    StateMonitor * smon_vd  = new StateMonitor( main_neurons, 0, "Vd", sys->fn("Vd") );
     smon_vd->record_for(10);
-    StateMonitor * smon_m   = new StateMonitor( neurons_exc, 0, "thr", sys->fn("thr") );
+    StateMonitor * smon_m   = new StateMonitor( main_neurons, 0, "thr", sys->fn("thr") );
     smon_m->record_for(10);
-    StateMonitor * smon_ws  = new StateMonitor( neurons_exc, 0, "wsoma", sys->fn("wsoma") );
+    StateMonitor * smon_ws  = new StateMonitor( main_neurons, 0, "wsoma", sys->fn("wsoma") );
     smon_ws->record_for(10);
-    StateMonitor * smon_wd  = new StateMonitor( neurons_exc, 0, "wdend", sys->fn("wdend") );
+    StateMonitor * smon_wd  = new StateMonitor( main_neurons, 0, "wdend", sys->fn("wdend") );
     smon_wd->record_for(10);
     
-    WeightMonitor * wmon = new WeightMonitor( con_ext_soma, sys->fn("consyn"), binsize);
-    wmon->add_equally_spaced(100);
+    //WeightMonitor * wmon = new WeightMonitor( con_ext_soma, sys->fn("consyn"), binsize);
+    //wmon->add_equally_spaced(100);
     
     WeightSumMonitor * wsmon = new WeightSumMonitor( con_ext_soma, sys->fn("wsum") );
     
@@ -257,9 +259,9 @@ int main(int ac, char* av[])
     /******         CURRENT INJECTORS         *********/
     /**************************************************/
     CurrentInjector *curr_input_pop = new CurrentInjector(input, "Vd");
-    CurrentInjector *curr_dend_exc = new CurrentInjector(neurons_exc, "Vd");
+    CurrentInjector *curr_dend_exc = new CurrentInjector(main_neurons, "Vd");
     const double bkg_dend_curr = 400e-12;
-    curr_dend_exc->set_all_currents(bkg_dend_curr/neurons_exc[0].get_Cd());
+    curr_dend_exc->set_all_currents(bkg_dend_curr/main_neurons[0].get_Cd());
     
     /**************************************************/
     /******             SIMULATION            *********/
@@ -268,35 +270,36 @@ int main(int ac, char* av[])
     
     // simulate
     double testtime = 10;
-    
-    con_ext_soma->stdp_active = false;
-    //con_ext_dend->set_all(1.0*we_dend);
+    sys->run(5000.);
+    //con_ext_soma->set_all(0.25);
+    //curr_dend_exc->set_all_currents(1.5*bkg_dend_curr/main_neurons[0].get_Cd());
+    //sys->run(10.);
+    //curr_dend_exc->set_all_currents(bkg_dend_curr/main_neurons[0].get_Cd());
+    //sys->run(200.);
+
+    /*
+    //con_ext_soma->stdp_active = false;
     sys->run(moving_average_time_constant*3);
     
     con_ext_soma->stdp_active = true;
-    //con_ext_dend->set_all(1.0*we_dend);
     sys->run(simtime);
     
-    //con_ext_dend->set_all(1.5*we_dend);
-    curr_dend_exc->set_all_currents(1.75*bkg_dend_curr/neurons_exc[0].get_Cd());
+    curr_dend_exc->set_all_currents(1.75*bkg_dend_curr/main_neurons[0].get_Cd());
     sys->run(simtime);
     
-    //con_ext_dend->set_all(1.0*we_dend);
-    curr_dend_exc->set_all_currents(bkg_dend_curr/neurons_exc[0].get_Cd());
+    curr_dend_exc->set_all_currents(bkg_dend_curr/main_neurons[0].get_Cd());
     sys->run(simtime);
     
-    //con_ext_dend->set_all(0.0*we_dend);
-    curr_dend_exc->set_all_currents(0*bkg_dend_curr/neurons_exc[0].get_Cd());
+    curr_dend_exc->set_all_currents(0*bkg_dend_curr/main_neurons[0].get_Cd());
     sys->run(simtime);
     
-    //con_ext_dend->set_all(1.0*we_dend);
-    curr_dend_exc->set_all_currents(bkg_dend_curr/neurons_exc[0].get_Cd());
+    curr_dend_exc->set_all_currents(bkg_dend_curr/main_neurons[0].get_Cd());
     sys->run(simtime);
     
     // test that plasticity is not affected by burst prob in input population
     curr_input_pop->set_all_currents(30.e-12/input[0].get_Cd());
     sys->run(simtime);
-    
+    */
     
     if (errcode)
         auryn_abort(errcode);

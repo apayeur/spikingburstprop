@@ -272,8 +272,6 @@ int main(int ac, char* av[])
     sys->run(moving_average_time_constant*3);
     
     con_ext_soma->stdp_active = true;
-    con_ext_dend->set_all(1.0*we_dend);
-    sys->run(simtime);
     
     con_ext_dend->set_all(1.5*we_dend);
     sys->run(simtime);

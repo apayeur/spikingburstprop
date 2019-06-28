@@ -10,6 +10,7 @@
 #include <string>
 #include <cstdlib>
 #include <time.h>
+#include <iostream>
 
 #include "BurstPoissonGroup.h"
 #include "TransmitBurstConnection.h"
@@ -31,6 +32,7 @@ void fix_plastic_connections_parameters(AdaptiveEBCPConnection * connect, double
 const NeuronID number_of_neurons = 1000;
 const NeuronID number_inh_neurons = number_of_neurons/4;
 const AurynFloat e_max = 15.; // maximum event rate
+const AurynFloat e_min = 2.; // minimum event rate (for error gen and cost function)
 
 // definition of global variables
 int count_example = 0;
@@ -48,11 +50,11 @@ struct input_output_XOR {
     input_output_XOR(double curr_one, double curr_zero):current_for_one(curr_one), current_for_zero(curr_zero) {}
     input_output_XOR():current_for_one(200.e-12), current_for_zero(-200e-12) {}
     
-    void select_XOR_example() {
+    void select_XOR_example_random() {
         input1 = rand() % 2;
         input2 = rand() % 2;
         
-        std::cout<<"input = ("<<input1<<", "<<input2<<")"<<std::endl;
+        std::cout<<std::endl<<"input = ("<<input1<<", "<<input2<<")"<<std::endl;
 
         if ( input1==0 and input2==0) output = 0;
         else if ( input1==1 and input2==0) output = 1;
@@ -89,12 +91,28 @@ struct input_output_XOR {
                 output=0;
         }
         
-        std::cout<<"input = ("<<input1<<", "<<input2<<")"<<std::endl;
+        std::cout<<std::endl<<"input = ("<<input1<<", "<<input2<<")"<<std::endl;
         
         input_current1 = current_for_zero + (current_for_one-current_for_zero)*input1;
         input_current2 = current_for_zero + (current_for_one-current_for_zero)*input2;
         
         count_example++;
+    }
+    
+    void select_XOR_example_specific(short a1, short a2) {
+        input1 = a1;
+        input2 = a2;
+        
+        std::cout<<std::endl<<"input = ("<<input1<<", "<<input2<<")"<<std::endl;
+        
+        if ( input1==0 and input2==0) output = 0;
+        else if ( input1==1 and input2==0) output = 1;
+        else if ( input1==0 and input2==1) output = 1;
+        else output = 0;
+        
+        input_current1 = current_for_zero + (current_for_one-current_for_zero)*input1;
+        input_current2 = current_for_zero + (current_for_one-current_for_zero)*input2;
+        
     }
 };
 
@@ -110,6 +128,12 @@ int main(int ac, char* av[])
     string simname = "xor";
     double moving_average_time_constant = 4.;
     int number_of_training_examples = 1;
+    
+    const double learning_rate_hid_to_out = 2.e-3;
+    const double learning_rate_in_to_hid = 2.e-3;
+    const double max_weight    = 1.0;
+    const double tau_pre       = 20.e-3;
+    std::ofstream outfile_cost;
     srand (1);
 
 
@@ -176,7 +200,8 @@ int main(int ac, char* av[])
     }
     
     auryn_init( ac, av, dir, simname );
-    
+    outfile_cost.open(dir+"/cost2.dat");
+
     //*********************************************************//
     //***                NEURAL POPULATIONS                 ***//
     //*********************************************************//
@@ -308,38 +333,34 @@ int main(int ac, char* av[])
 
     //-- CONNECT FeedFORWARD
     const float p_ff = 0.05; //0.05
-    float w_in_to_hid_exc = 0.07*4000/number_of_neurons;
-    float w_in_to_hid_inh = 0.03*4000/number_of_neurons;
+    float w_in_to_hid_exc  = 0.07*4000/number_of_neurons;
+    float w_in_to_hid_inh  = 0.03*4000/number_of_neurons;
     float w_hid_to_out_exc = 0.09*4000/number_of_neurons;
     float w_hid_to_out_inh = 0.05*4000/number_of_neurons;
     
-    const double learning_rate = 4e-3;
-    const double max_weight    = 1.0;
-    const double tau_pre       = 20.e-3;
-    
         // (1) Connect input layer to hidden layer
             // Excitation
-    AdaptiveEBCPConnection * con_input1_to_hidden1_exc = new AdaptiveEBCPConnection(input_pyr1, hidden_pyr1, 0.5*w_in_to_hid_exc, p_ff, learning_rate, max_weight, tau_pre);
+    AdaptiveEBCPConnection * con_input1_to_hidden1_exc = new AdaptiveEBCPConnection(input_pyr1, hidden_pyr1, 0.8*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_input1_to_hidden1_exc, moving_average_time_constant);
     
-    AdaptiveEBCPConnection * con_input1_to_hidden2_exc = new AdaptiveEBCPConnection(input_pyr1, hidden_pyr2, 0.4*w_in_to_hid_exc, p_ff, learning_rate, max_weight, tau_pre);
-    fix_plastic_connections_parameters(con_input1_to_hidden2_exc, moving_average_time_constant);
-
-    AdaptiveEBCPConnection * con_input2_to_hidden1_exc = new AdaptiveEBCPConnection(input_pyr2, hidden_pyr1, 0.5*w_in_to_hid_exc, p_ff, learning_rate, max_weight, tau_pre);
+    AdaptiveEBCPConnection * con_input2_to_hidden1_exc = new AdaptiveEBCPConnection(input_pyr2, hidden_pyr1, 0.5*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_input2_to_hidden1_exc, moving_average_time_constant);
     
-    AdaptiveEBCPConnection * con_input2_to_hidden2_exc = new AdaptiveEBCPConnection(input_pyr2, hidden_pyr2, 0.6*w_in_to_hid_exc, p_ff, learning_rate, max_weight, tau_pre);
+    AdaptiveEBCPConnection * con_input1_to_hidden2_exc = new AdaptiveEBCPConnection(input_pyr1, hidden_pyr2, 0.5*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
+    fix_plastic_connections_parameters(con_input1_to_hidden2_exc, moving_average_time_constant);
+    
+    AdaptiveEBCPConnection * con_input2_to_hidden2_exc = new AdaptiveEBCPConnection(input_pyr2, hidden_pyr2, 0.8*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_input2_to_hidden2_exc, moving_average_time_constant);
 
             // Inhibition
     TransmitEventConnection * con_input1_to_hidden1_inh = new TransmitEventConnection(input_pyr1, hidden_pyr1, 0.5*w_in_to_hid_inh, p_ff, GABA);
     con_input1_to_hidden1_inh->set_target("g_gaba");
     
-    TransmitEventConnection * con_input1_to_hidden2_inh = new TransmitEventConnection(input_pyr1, hidden_pyr2, 0.5*w_in_to_hid_inh, p_ff, GABA);
-    con_input1_to_hidden2_inh->set_target("g_gaba");
-    
-    TransmitEventConnection * con_input2_to_hidden1_inh = new TransmitEventConnection(input_pyr2, hidden_pyr1, 0.5*w_in_to_hid_inh, p_ff, GABA);
+    TransmitEventConnection * con_input2_to_hidden1_inh = new TransmitEventConnection(input_pyr2, hidden_pyr1, 2*w_in_to_hid_inh, p_ff, GABA); //DEBUG; was 2*
     con_input2_to_hidden1_inh->set_target("g_gaba");
+    
+    TransmitEventConnection * con_input1_to_hidden2_inh = new TransmitEventConnection(input_pyr1, hidden_pyr2, 2*w_in_to_hid_inh, p_ff, GABA);//DEBUG; was 2*
+    con_input1_to_hidden2_inh->set_target("g_gaba");
     
     TransmitEventConnection * con_input2_to_hidden2_inh = new TransmitEventConnection(input_pyr2, hidden_pyr2, 0.5*w_in_to_hid_inh, p_ff, GABA);
     con_input2_to_hidden2_inh->set_target("g_gaba");
@@ -347,12 +368,12 @@ int main(int ac, char* av[])
     
     // (2) Connect hidden layer to output layer
     // Excitation
-    AdaptiveEBCPConnection * con_hidden1_to_output_exc = new AdaptiveEBCPConnection(hidden_pyr1, output_pyr, 0.5*w_hid_to_out_exc, p_ff, learning_rate, max_weight, tau_pre);
+    AdaptiveEBCPConnection * con_hidden1_to_output_exc = new AdaptiveEBCPConnection(hidden_pyr1, output_pyr, 0.5*w_hid_to_out_exc, p_ff, learning_rate_hid_to_out, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_hidden1_to_output_exc, moving_average_time_constant);
     
-    AdaptiveEBCPConnection * con_hidden2_to_output_exc = new AdaptiveEBCPConnection(hidden_pyr2, output_pyr, 0.5*w_hid_to_out_exc, p_ff, learning_rate, max_weight, tau_pre);
+    AdaptiveEBCPConnection * con_hidden2_to_output_exc = new AdaptiveEBCPConnection(hidden_pyr2, output_pyr, 0.5*w_hid_to_out_exc, p_ff, learning_rate_hid_to_out, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_hidden2_to_output_exc, moving_average_time_constant);
-    
+
     // Inhibition
     TransmitEventConnection * con_hidden1_to_output_inh = new TransmitEventConnection(hidden_pyr1, output_pyr, 0.5*w_hid_to_out_inh, p_ff, GABA);
     con_hidden1_to_output_inh->set_target("g_gaba");
@@ -397,7 +418,9 @@ int main(int ac, char* av[])
     curr_inject_hidden_pyr1_soma->set_all_currents(-100.e-12/hidden_pyr1[0].get_Cs());
     curr_inject_hidden_pyr2_soma->set_all_currents(-100.e-12/hidden_pyr2[0].get_Cs());
     curr_inject_output_pyr_soma->set_all_currents(-200.e-12/output_pyr[0].get_Cs());
-
+    curr_inject_output_pyr_dend->set_all_currents(0.);
+    
+    
     /**************************************************/
     /******              MONITORS             *********/
     /**************************************************/
@@ -418,35 +441,46 @@ int main(int ac, char* av[])
     WeightSumMonitor * wsmon_in2_to_hid2 = new WeightSumMonitor( con_input2_to_hidden2_exc, sys->fn("wsum_in2_to_hid2"), binSize_wsum );
     WeightSumMonitor * wsmon_hid1_to_out = new WeightSumMonitor( con_hidden1_to_output_exc, sys->fn("wsum_hid1_to_out"), binSize_wsum );
     WeightSumMonitor * wsmon_hid2_to_out = new WeightSumMonitor( con_hidden2_to_output_exc, sys->fn("wsum_hid2_to_out"), binSize_wsum );
-
+    
+    // Monitoring estimated burst probability for an example output neuron
+    StateMonitor * smon_tr_post_ev  = new StateMonitor( con_hidden1_to_output_exc->get_tr_event(), 0, sys->fn("trevent"), binSize_rate);
+    StateMonitor * smon_tr_post_b   = new StateMonitor( con_hidden1_to_output_exc->get_tr_burst(), 0, sys->fn("trburst"), binSize_rate);
+     
     //**********************************************************************/
     //***                          SIMULATIONS                           ***/
     //**********************************************************************/
-    const double max_input_current = 400e-12;
+    const double max_input_current = 300e-12;
     const double min_input_current = -300e-12;
     
     input_output_XOR example(max_input_current, min_input_current);
     const int number_of_examples_before_test = 25;
     const int number_of_examples_before_cost = 4;
-
+    
     double Cs_input_pyr1 = input_pyr1[0].get_Cs();
     double Cs_input_pyr2 = input_pyr2[0].get_Cs();
     double Cd_output_pyr = output_pyr[0].get_Cd();
+    
+     double cost = 0;
     
     // burn-in period (plasticity is off)
     con_input1_to_hidden1_exc->stdp_active = false;
     con_input1_to_hidden2_exc->stdp_active = false;
     con_input2_to_hidden1_exc->stdp_active = false;
     con_input2_to_hidden2_exc->stdp_active = false;
+    
     con_hidden1_to_output_exc->stdp_active = false;
     con_hidden2_to_output_exc->stdp_active = false;
 
+    const float prediction_time = 0.5*durex;
+    const float learning_time = durex - prediction_time;
+
     sys->run(3*moving_average_time_constant);
-    
     
     // loop over set of training examples
     for (int i=1;i<=number_of_training_examples;i++){
-        // select example at random
+        // select example (random or deterministic)
+        //if (i % 2 == 0) example.select_XOR_example_specific(1,0);
+        //else example.select_XOR_example_specific(0,1);
         example.select_XOR_example_deterministic();
         
         // inject input currents according to the selected example
@@ -462,13 +496,17 @@ int main(int ac, char* av[])
         con_hidden1_to_output_exc->stdp_active = false;
         con_hidden2_to_output_exc->stdp_active = false;
         
-        // run for half the duration of the example
-        sys->run(durex/2.);
+        // run for the predicition time
+        sys->run(prediction_time);
+        cost = compute_cost(con_hidden1_to_output_exc, example.output);
+        std::cout<<"example #"<<i <<": cost (pre) = "<<cost<<std::endl;
+        outfile_cost<<i<<"\t"<<cost;
         
         // inject current in output pyramids' dendrites to generate error
         generate_error(con_hidden1_to_output_exc, curr_inject_output_pyr_dend, example.output, Cd_output_pyr);
         
         // turn plasticity on
+        ///////////// DEBUG ///////////////
         con_input1_to_hidden1_exc->stdp_active = true;
         con_input1_to_hidden2_exc->stdp_active = true;
         con_input2_to_hidden1_exc->stdp_active = true;
@@ -476,13 +514,20 @@ int main(int ac, char* av[])
         
         con_hidden1_to_output_exc->stdp_active = true;
         con_hidden2_to_output_exc->stdp_active = true;
-        
+        ///////////// DEBUG ///////////////
+
         // propagate credit and learn
-        sys->run(durex/2.);
+        sys->run(learning_time);
+        cost = compute_cost(con_hidden1_to_output_exc, example.output);
+        std::cout<<"example #"<<i <<": cost (post) = "<<cost<<std::endl;
+        outfile_cost<<"\t"<<cost<<std::endl;
         
+        // back to baseline current injection in output dendrites
+        curr_inject_output_pyr_dend->set_all_currents(0.);
+        /*
         // compute cost
         if ( i % number_of_examples_before_cost == 0 ){
-            double cost = 0;
+            cost = 0;
             con_input1_to_hidden1_exc->stdp_active = false;
             con_input1_to_hidden2_exc->stdp_active = false;
             con_input2_to_hidden1_exc->stdp_active = false;
@@ -521,9 +566,38 @@ int main(int ac, char* av[])
             
             std::cout<<"example #"<<i <<": cost = "<<cost<<std::endl;
 
-        }
-        
+        }*/
     }
+
+    
+    // test set
+    con_input1_to_hidden1_exc->stdp_active = false;
+    con_input1_to_hidden2_exc->stdp_active = false;
+    con_input2_to_hidden1_exc->stdp_active = false;
+    con_input2_to_hidden2_exc->stdp_active = false;
+    
+    con_hidden1_to_output_exc->stdp_active = false;
+    con_hidden2_to_output_exc->stdp_active = false;
+    
+    // input (0,0)
+    curr_inject_input_pyr1_soma->set_all_currents(min_input_current/Cs_input_pyr1);
+    curr_inject_input_pyr2_soma->set_all_currents(min_input_current/Cs_input_pyr2);
+        sys->run(durex);
+    
+    // input (0,1)
+    curr_inject_input_pyr1_soma->set_all_currents(min_input_current/Cs_input_pyr1);
+    curr_inject_input_pyr2_soma->set_all_currents(max_input_current/Cs_input_pyr2);
+    sys->run(durex);
+    
+    // input (1,0)
+    curr_inject_input_pyr1_soma->set_all_currents(max_input_current/Cs_input_pyr1);
+    curr_inject_input_pyr2_soma->set_all_currents(min_input_current/Cs_input_pyr2);
+    sys->run(durex);
+    
+    // input (1,1)
+    curr_inject_input_pyr1_soma->set_all_currents(max_input_current/Cs_input_pyr1);
+    curr_inject_input_pyr2_soma->set_all_currents(max_input_current/Cs_input_pyr2);
+    sys->run(durex);
     
     
     if (errcode)
@@ -531,6 +605,7 @@ int main(int ac, char* av[])
     
     logger->msg("Freeing ...",PROGRESS,true);
     auryn_free();
+    outfile_cost.close();
     return errcode;
 }
 
@@ -544,21 +619,28 @@ void generate_error(AdaptiveEBCPConnection * connect,  CurrentInjector * inject_
     Trace * tmp_event_trace = connect->get_tr_event();
     AurynFloat injected_current;
     AurynFloat er_estimate;
+    double base_deflection = 1000e-12;
+    double desired_deltap = 0.;
     
     for (NeuronID i=0; i<number_of_neurons;i++){
         er_estimate = tmp_event_trace->normalized_get(i);
         if ( output == 0 ){
-            if (er_estimate < e_max - 0.5) injected_current = (-500e-12/0.4)/(e_max - er_estimate) ;
-            else injected_current = (-500e-12/0.4)/0.5;
-            inject_dend->set_current(i, injected_current/capacitance);
+            desired_deltap += -1/(e_max - er_estimate);
+            if (er_estimate < e_max - 0.5) {
+                injected_current = -base_deflection/(e_max - er_estimate) ;
+                if (er_estimate < 5.) injected_current = 0.;
+            }
+            else injected_current = -base_deflection/0.5;
         }
         else {
-            if (abs(er_estimate - e_max) < 0.1) {injected_current = 0;}
-            else {injected_current = (-500e-12/0.4)/er_estimate;}
-            inject_dend->set_current(i, injected_current/capacitance);
+            desired_deltap += 1/(er_estimate - e_min);
+            if (er_estimate < e_min) {injected_current = 0;}
+            else {injected_current = base_deflection/(er_estimate - e_min);}
         }
+        inject_dend->set_current(i, injected_current/capacitance);
     }
-    
+    std::cout<<"desired delta p = "<<desired_deltap/number_of_neurons<<std::endl;
+
 }
 
 double compute_cost(AdaptiveEBCPConnection * connect, int output){
@@ -569,14 +651,17 @@ double compute_cost(AdaptiveEBCPConnection * connect, int output){
     for (NeuronID i=0; i<number_of_neurons;i++){
         mean_er += tmp_event_trace->normalized_get(i);
     }
+    
     mean_er /= number_of_neurons;
+    std::cout<<"Event rate = "<<mean_er<<std::endl;
+
+    mean_er = (mean_er - e_min)/(e_max - e_min);
     
     // compute cost
-    if (mean_er > e_max) {
-        mean_er = 0.99*e_max;
+    if (mean_er > 0.99) {
+        mean_er = 0.99;
     }
-    double cost = -output*log(mean_er/e_max) - (1 - output)*log(1. - mean_er/e_max);
-
+    double cost = -output*log(mean_er) - (1 - output)*log(1. - mean_er);
     return cost;
     
 }

@@ -5,10 +5,10 @@ TAU_PRE=20.e-3
 PARENT_DIR="../data/learning-rule/$CONNECT_TYPE/tau_pre$TAU_PRE"
 mkdir -p ../results/learning-rule/for-xor/Wsum
 mkdir -p $PARENT_DIR
-EXAMPLE_DURATION=5
+EXAMPLE_DURATION=10
 SIM_NAME="plasticity_rule"
-W0=0.06
-ALPHA=1
+W0=0.05
+ALPHA=2
 
 make
 function run {
@@ -34,7 +34,7 @@ function run {
 }
 
 
-for D in 0.3
+for D in 0
 do
 	run $D
 done
