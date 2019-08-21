@@ -23,7 +23,7 @@ namespace po = boost::program_options;
 int main(int ac, char* av[])
 {
     int errcode = 0;
-    int seed = 123;
+    int seed = 1;
     double w0 = 0.8;
     double d0 = 0.1;
     double kappa = 1.0;
@@ -142,7 +142,7 @@ int main(int ac, char* av[])
     /**************************************************/
     
     // Main neuron group
-    NaudGroup * neurons_exc = new NaudGroup(100);
+    NaudGroup * neurons_exc = new NaudGroup(1000);
     neurons_exc->syn_exc_soma->set_nmda_ampa_current_ampl_ratio(0.);
     neurons_exc->syn_exc_dend->set_nmda_ampa_current_ampl_ratio(0.);
     //neurons_exc->syn_exc_soma->set_ampa_nmda_ratio(1);
@@ -150,7 +150,7 @@ int main(int ac, char* av[])
     
     // Input group
     //PoissonGroup * poisson_soma = new PoissonGroup(4000, kappa);
-    NaudGroup * input = new NaudGroup(800);
+    NaudGroup * input = new NaudGroup(1000);
     input->syn_exc_soma->set_nmda_ampa_current_ampl_ratio(0.);
     input->syn_exc_dend->set_nmda_ampa_current_ampl_ratio(0.);
     input->random_mem(-70e-3, 5.e-3);
@@ -173,8 +173,8 @@ int main(int ac, char* av[])
     //-- Connect input group to main group's somata with plastic synapses
     const double we_soma = w0;
     const double we_dend = d0;
-    const double sparseness = 0.5;
-    const double learning_rate = 1e-3;
+    const double sparseness = 0.2;
+    const double learning_rate = 5e-3;
     const double max_weight = 1.0;
     
     BCPConnection * con_ext_soma;
@@ -227,7 +227,7 @@ int main(int ac, char* av[])
     /**************************************************/
     /******              MONITORS             *********/
     /**************************************************/
-    const double binsize = std::max(moving_average_time_constant/5., 1.);
+    const double binsize = 4.; //std::max(moving_average_time_constant/5., 5.);
     sys->set_online_rate_monitor_target(neurons_exc);
     sys->set_online_rate_monitor_tau(binsize);
     SpikeMonitor * smon = new SpikeMonitor( neurons_exc, sys->fn("ras") );
@@ -236,9 +236,7 @@ int main(int ac, char* av[])
     BurstRateMonitor * brmon_input = new BurstRateMonitor( input, sys->fn("brate_input"), binsize );
 
     VoltageMonitor * vmon   = new VoltageMonitor( neurons_exc, 0, sys->fn("mem"), 1e-3);
-    vmon->record_for(10);
     StateMonitor * smon_vd  = new StateMonitor( neurons_exc, 0, "Vd", sys->fn("Vd") );
-    smon_vd->record_for(10);
     StateMonitor * smon_m   = new StateMonitor( neurons_exc, 0, "thr", sys->fn("thr") );
     smon_m->record_for(10);
     StateMonitor * smon_ws  = new StateMonitor( neurons_exc, 0, "wsoma", sys->fn("wsoma") );
@@ -249,15 +247,25 @@ int main(int ac, char* av[])
     WeightMonitor * wmon = new WeightMonitor( con_ext_soma, sys->fn("consyn"), binsize);
     wmon->add_equally_spaced(100);
     
-    WeightSumMonitor * wsmon = new WeightSumMonitor( con_ext_soma, sys->fn("wsum") );
+    WeightSumMonitor * wsmon = new WeightSumMonitor( con_ext_soma, sys->fn("wsum"), binsize );
     
-    StateMonitor * smon_tr_post_ev  = new StateMonitor( con_ext_soma->get_tr_event(), 0, sys->fn("trevent"), binsize);
-    StateMonitor * smon_tr_post_b   = new StateMonitor( con_ext_soma->get_tr_burst(), 0, sys->fn("trburst"), binsize);
+    // Monitors for  estimating burst probability
+    std::vector< StateMonitor* > smon_tr_post_ev;
+    std::vector< StateMonitor* > smon_tr_post_b;
     
+    for (int i=0;i<50;i++){
+        StateMonitor * ev = new StateMonitor( con_ext_soma->get_tr_event(), i, sys->fn(simname,i,"trevent"), binsize);
+        smon_tr_post_ev.push_back(ev);
+        StateMonitor * b = new StateMonitor( con_ext_soma->get_tr_burst(), i, sys->fn(simname,i,"trburst"), binsize);
+        smon_tr_post_b.push_back(b);
+        
+    }
     /**************************************************/
     /******         CURRENT INJECTORS         *********/
     /**************************************************/
     CurrentInjector *curr_input_pop = new CurrentInjector(input, "Vd");
+    CurrentInjector *curr_dend_main = new CurrentInjector(neurons_exc, "Vd");
+    curr_dend_main->set_all_currents(50.e-12/neurons_exc[0].get_Cd());
     
     /**************************************************/
     /******             SIMULATION            *********/
@@ -265,30 +273,55 @@ int main(int ac, char* av[])
     logger->msg("Running ...",PROGRESS);
     
     // simulate
+    /*
+
+    double testtime = 10;
+    con_ext_soma->stdp_active = false;
+    sys->run(5*moving_average_time_constant);
+    con_ext_soma->stdp_active = true;
+    sys->run(4000.);
+     */
+    /*
+    vmon->record_for(20);
+    smon_vd->record_for(20);
+    sys->run(100.);
+    vmon->record_for(20);
+    smon_vd->record_for(20);
+    sys->run(100.);
+    vmon->record_for(20);
+    smon_vd->record_for(20);
+    sys->run(100.);
+    vmon->record_for(20);
+    smon_vd->record_for(20);
+    sys->run(100.);
+    smon_vd->record_for(20);
+    vmon->record_for(20);
+    sys->run(100.);
+*/
     double testtime = 10;
     
     con_ext_soma->stdp_active = false;
     con_ext_dend->set_all(1.0*we_dend);
-    sys->run(moving_average_time_constant*3);
+    sys->run(moving_average_time_constant*4);
     
     con_ext_soma->stdp_active = true;
-    
+    sys->run(simtime);
+
     con_ext_dend->set_all(1.5*we_dend);
     sys->run(simtime);
-    
+
     con_ext_dend->set_all(1.0*we_dend);
     sys->run(simtime);
     
-    con_ext_dend->set_all(0.0*we_dend);
+    con_ext_dend->set_all(0.55*we_dend);
     sys->run(simtime);
     
     con_ext_dend->set_all(1.0*we_dend);
     sys->run(simtime);
     
     // test that plasticity is not affected by burst prob in input population
-    curr_input_pop->set_all_currents(30.e-12/input[0].get_Cd());
+    curr_input_pop->set_all_currents(40.e-12/input[0].get_Cd());
     sys->run(simtime);
-    
     
     if (errcode)
         auryn_abort(errcode);

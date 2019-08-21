@@ -26,7 +26,7 @@ BurstPoissonGroup::BurstPoissonGroup( NeuronID size, NodeDistributionMode distmo
         burst_state->set_all(0);
         
         abs_ref_period = int(20.e-3/auryn_timestep);
-        burst_duration = int(10.e-3/auryn_timestep);
+        burst_duration = 10.e-3;
         this->e_dend = -57e-3;
     }
 }
@@ -102,8 +102,9 @@ void BurstPoissonGroup::check_thresholds()
             
             // check whether a burst occurs
             AurynDouble r = (*die)();
+            AurynDouble r_dur = (*die)();
             if ( r<temp->get(unit) ){
-                burst_state->set(unit, burst_duration);
+                burst_state->set(unit, int((5.e-3 + r_dur*burst_duration)/auryn_timestep));
             }
         }
         else if (burst_state->get(unit)==1){

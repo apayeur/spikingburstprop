@@ -30,6 +30,7 @@ namespace auryn {
     class AdaptiveEBCPConnection : public EBCPConnection
     {
         protected:
+            Trace * tr_event_aux; // to avoid using the most recent event for burst-mediatied potentiation
             void compute_burst_rate();
             AurynWeight on_pre(NeuronID post);
             void propagate_backward(const NeuronID translated_post, const AurynState valence);
@@ -43,11 +44,11 @@ namespace auryn {
                           TransmitterType transmitter=GLUT,
                           string name = "AdaptiveEBCPConnection" );
         
-            //virtual ~AdaptiveEBCPConnection();
+            virtual ~AdaptiveEBCPConnection();
             virtual void finalize();
-            //void free();
+            void free();
             virtual void propagate();
-            //virtual void evolve();
+            virtual void evolve();
             void set_post_trace_event_tau(AurynFloat x);
             void set_post_trace_burst_tau(AurynFloat x);
 

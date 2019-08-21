@@ -12,16 +12,16 @@ estimates its burst probability.
 """
 
 
-def simulate(bps, eta, duration, alpha, burst_threshold, tau_pre):
+def simulate(bps, eta, duration, alpha, burst_threshold, tau_pre, event_rate):
     """
-    Compute the weight change for the burst-poisson protocol for
-    different initial estimated
-    :param bps:             Pre-pairing burst probabilities (in [0,1])
+    Compute the weight change for the burst-poisson protocol
+    :param bps:             Burst probabilities of the protocol
     :param eta:             Learning rate
     :param duration:        Duration of the protocol (s)
     :param alpha:           Time constant of exponential moving average
     :param burst_threshold: Threshold for burst detection
     :param tau_pre:         Decay time constant of presynaptic trace
+    :param event_rate:      Frequency of event generation
     :return:                Weights
     """
     # set random seed for reproducibility
@@ -29,8 +29,8 @@ def simulate(bps, eta, duration, alpha, burst_threshold, tau_pre):
 
     # parameters
     nb_reals = 20       # number of realizations of the random pairing
-    ER = 5.             # event rate
-    bp_protocol = 0.2  # Burst probability used to generate bursts in protocol
+    ER = event_rate     # event rate
+    bp_protocol = 0.2   # initial BP estimate
     dt = 0.001          # integration time step
 
     weights = np.zeros(bps.shape)
@@ -40,9 +40,9 @@ def simulate(bps, eta, duration, alpha, burst_threshold, tau_pre):
             print('realization #{}'.format(n+1))
         for i, p in enumerate(bps):
             syn = AdaptivePreEventSynapse(eta, tau_trace=tau_pre, tau_ma=alpha, burst_def=burst_threshold,
-                                          starting_estimate=(ER, p*ER))
+                                          starting_estimate=(ER, bp_protocol*ER))
 
-            protocol = PoissonBurstProtocol(p=bp_protocol, duration=duration, rate_event=ER/(1 - ER*0.020))
+            protocol = PoissonBurstProtocol(p=p, duration=duration, rate_event=ER/(1 - ER*0.020))
             # Note: rate_event is equal to ER/(1 - ER*abs_ref_event) to yield the event rate = ER in
             # the protocol. This is not essential a priori.
 

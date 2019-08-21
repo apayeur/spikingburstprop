@@ -41,7 +41,7 @@ namespace auryn {
         AurynVector<unsigned int> * burst_state;
 
         unsigned int abs_ref_period; //!< absolute refractory period following somatic spike
-        unsigned int burst_duration;
+        float burst_duration;
         
         
     public:

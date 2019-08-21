@@ -5,10 +5,10 @@ TAU_PRE=20.e-3
 PARENT_DIR="../data/learning-rule/$CONNECT_TYPE/tau_pre$TAU_PRE"
 mkdir -p ../results/learning-rule/for-xor/Wsum
 mkdir -p $PARENT_DIR
-EXAMPLE_DURATION=10
+EXAMPLE_DURATION=40
 SIM_NAME="plasticity_rule"
 W0=0.05
-ALPHA=2
+ALPHA=10
 
 make
 function run {
@@ -26,7 +26,7 @@ function run {
         --sim_name $SIM_NAME \
 	--alpha $ALPHA
 	cd ../analysis/learning-rule
-	OUTFILE_NAME="../../results/learning-rule/for-xor/Wsum/Wsum_vs_Time_"$CONNECT_TYPE"_taupre"$TAU_PRE"_w0"$W0"_alpha"$ALPHA"_durex"$EXAMPLE_DURATION".pdf"
+	OUTFILE_NAME="../../results/learning-rule/for-xor/Wsum/Wsum_vs_Time_"$CONNECT_TYPE"_taupre"$TAU_PRE"_w0"$W0"_alpha"$ALPHA"_durex"$EXAMPLE_DURATION"_ForXOR.pdf"
 	python plot_all.py -datadir "../"$DATADIR -connect_type $CONNECT_TYPE -outfile_name $OUTFILE_NAME -durex $EXAMPLE_DURATION -alpha $ALPHA
 	open $OUTFILE_NAME
 	cd ../../sim

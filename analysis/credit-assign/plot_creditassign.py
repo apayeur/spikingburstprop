@@ -6,56 +6,104 @@ import voltage_analysis as va
 import numpy as np
 import argparse
 import utils_plotting as up
+plt.style.use('../thesis_mplrc.dms')
+
 from build_current import example_credit_assign
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-filesuffix", type=str, help="suffix indicating FF weights", default="")
+parser.add_argument("-resultdir", type=str, help="parent result directory", default="../../results/credit-assign")
+
 args = parser.parse_args()
 
-number_of_realizations = 1
+# load data
+brate1 = np.loadtxt('../../data/credit-assign/credit_assign.0.brate1_seed'+str(1))
+brate2 = np.loadtxt('../../data/credit-assign/credit_assign.0.brate2_seed'+str(1))
 
-filenames1 = []
-for i in range(1, number_of_realizations+1):
-    filenames1.append('../../data/credit-assign/credit_assign.0.brate1_seed'+str(i))
+er_trace = np.loadtxt('../../data/credit-assign/credit_assign0.0.trevent')
+br_trace = np.loadtxt('../../data/credit-assign/credit_assign0.0.trburst')
+for i in range(1,50):
+    er_tmp = np.loadtxt('../../data/credit-assign/credit_assign'+str(i)+'.0.trevent')
+    br_tmp = np.loadtxt('../../data/credit-assign/credit_assign'+str(i)+'.0.trburst')
+    er_trace[:,1] += er_tmp[:,1]
+    br_trace[:,1] += br_tmp[:,1]
+er_trace[:,1] /= 50.
+br_trace[:,1] /= 50.
 
-filenames2 = []
-for i in range(1, number_of_realizations+1):
-    filenames2.append('../../data/credit-assign/credit_assign.0.brate2_seed'+str(i))
+wsum = np.loadtxt('../../data/credit-assign/credit_assign.0.wsum')
 
-filenamesPV = []
-for i in range(1, number_of_realizations+1):
-    filenamesPV.append('../../data/credit-assign/credit_assign.0.pvrate_seed'+str(i))
 
-filenamesSOM = []
-for i in range(1, number_of_realizations+1):
-    filenamesSOM.append('../../data/credit-assign/credit_assign.0.somrate_seed'+str(i))
+# import currents
+current_soma = np.loadtxt("../../data/credit-assign/current_soma.txt")
+current_dend = np.loadtxt("../../data/credit-assign/current_dend.txt")
+binSize = current_soma[1,0] - current_soma[0,0]
 
-#filenamesVd = []
-#for i in range(100):
-#    filenamesVd.append('../../data/noise-matching/noise_matching{:d}.0.Vd'.format(i))
 
-# construct currents
-params = {'baseline_soma': 50.e-12,
-          'baseline_dend': 75.e-12,
-          'example_duration': 1.,
-          'relaxation_period': 0.5,
-          'number_of_examples': 3,
-          'amplitudes_soma': [200.e-12, 100.e-12, -200.e-12],
-          'amplitudes_dend': [200.e-12, -200.e-12, 200.e-12],  # previously +100
-          'slope_duration_soma': 0. * 500.e-3,
-          'slope_duration_dend': 0. * 500.e-3}
-binSize = 20.e-3
-times, current_soma, current_dend = example_credit_assign(params, binsize=binSize)
+# rescale BR2
+BP1 = 100*brate1[:,1]/brate1[:,2]
+min_BP1 = np.min(BP1[int(1/binSize):])
+max_BP1 = np.max(BP1[int(1/binSize):])
+BR2 = brate2[:,1]
+min_BR2 = np.min(BR2[int(1/binSize):])
+max_BR2 = np.max(BR2[int(1/binSize):])
+rescaled_BR2 = min_BP1 + (BR2 - min_BR2)*(max_BP1-min_BP1)/(max_BR2-min_BR2)
 
-# output figures
-inputs = {'times': times, 'dendrite': current_dend, 'soma': current_soma}
-BR2 = ra.display_BRER_with_inputs(filenames2, '../../results/credit-assign/Pop2' + args.filesuffix + '.pdf', inputs,
-                                  population='2', binsize=binSize, pre_stim_burn=0.)
-print('size BR2 = {}'.format(len(BR2)))
-print('size current dend = {}'.format(len(inputs['dendrite'])))
-inputs = {'times': times, 'dendrite': BR2, 'soma': current_soma}
-BR1 = ra.display_BRER_with_inputs(filenames1, '../../results/credit-assign/Pop1' + args.filesuffix + '.pdf', inputs,
-                            population='1', binsize=binSize, pre_stim_burn=0.)
+# plotting
+plt.figure(figsize=(4, 4/1.6))
+tics = [0, 10, 25, 40, 55]
+ax = plt.subplot(221)
+plt.plot(brate1[:,0], BP1, color=up.custom_colors['red'])
+plt.plot(brate1[:,0], rescaled_BR2, '--', color=up.custom_colors['orange'], lw=1, label='BR2 (scaled)')
+plt.xlim(xmin=0)
+plt.ylim([0., 100.])
+plt.xticks(tics)
+plt.ylabel(r'BP [\%]')
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+plt.legend(loc='best')
 
-ra.display_rates_with_inputs(filenamesPV, '../../results/credit-assign/PV' + args.filesuffix + '.pdf', inputs, pre_stim_burn=0.)
-ra.display_rates_with_inputs(filenamesSOM, '../../results/credit-assign/SOM' + args.filesuffix + '.pdf', inputs, encoding='burst', pre_stim_burn=0.)
+plt.subplot(222, sharex=ax)
+plt.plot(brate2[:,0], 100*brate2[:,1]/brate2[:,2], lw=1, color=up.custom_colors['red'])
+plt.plot(er_trace[:,0], 100*br_trace[:,1]/er_trace[:,1], '--', color=up.custom_colors['red'], lw=1, label='Reference BP')
+plt.xlim(xmin=0)
+plt.ylim([0., 100.])
+plt.ylabel(r'BP [\%]')
+plt.gca().spines['top'].set_visible(False)
+plt.gca().spines['right'].set_visible(False)
+plt.legend(loc='best')
+
+plt.subplot(223, sharex=ax)
+plt.plot(brate1[:,0], brate1[:,2], color=up.custom_colors['blue'])
+plt.xlim(xmin=0)
+plt.ylim([0., 15])
+plt.xlabel('Time [s]')
+plt.ylabel('ER [Hz]')
+plt.gca().spines['top'].set_visible(False)
+plt.gca().spines['right'].set_visible(False)
+plt.legend(loc='best')
+
+plt.subplot(224, sharex=ax)
+plt.plot(brate2[:,0], brate2[:,2], color=up.custom_colors['blue'])
+plt.xlim(xmin=0)
+plt.ylim([0., 15])
+plt.xlabel('Time [s]')
+plt.ylabel('ER [Hz]')
+plt.gca().spines['top'].set_visible(False)
+plt.gca().spines['right'].set_visible(False)
+plt.legend(loc='best')
+
+plt.tight_layout()
+plt.savefig(args.resultdir+'/CreditAssign' + args.filesuffix + '.pdf')
+plt.close()
+
+
+plt.figure(figsize=(2.5, 2.5/1.6))
+plt.plot(wsum[:, 0], wsum[:, 1], color='black', lw=1.5)
+plt.xticks(tics)
+plt.xlabel('Time [s]')
+plt.ylabel('Average weight')
+plt.gca().spines['top'].set_visible(False)
+plt.gca().spines['right'].set_visible(False)
+plt.tight_layout()
+plt.savefig(args.resultdir+'/Weight' + args.filesuffix + '.pdf')
+plt.close()

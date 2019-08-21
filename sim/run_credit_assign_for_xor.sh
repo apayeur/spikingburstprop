@@ -1,7 +1,13 @@
 #!/bin/bash
 
-DIR="../data/credit-assign"
+DIR=../data/credit-assign
+RESULTDIR=../results/credit-assign/for-xor
 mkdir -p $DIR
+mkdir -p $RESULTDIR
+
+cd ../analysis/credit-assign
+python build_current.py
+cd ../../sim
 
 make
 
@@ -11,7 +17,7 @@ for i in 1
 	done
 		
 cd ../analysis/credit-assign
-python plot_creditassign.py
-open ../../results/credit-assign/Pop1.pdf
-open ../../results/credit-assign/Pop2.pdf
+python plot_creditassign.py -resultdir "../"$RESULTDIR 
+open ../../results/credit-assign/for-xor/CreditAssign.pdf
+open ../../results/credit-assign/for-xor/Weight.pdf
 cd ../../sim

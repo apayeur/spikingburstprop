@@ -6,9 +6,9 @@ mkdir -p $DIR
 RESULTDIR="../results/xor"
 mkdir -p $RESULTDIR
 
-DUREX=10
-ALPHA=4
-NUMEX=120
+DUREX=20
+ALPHA=5
+NUMEX=3000
 
 make
 
@@ -16,6 +16,9 @@ make
 		
 cd ../analysis/xor
 python plot_xor.py -durex $DUREX -alpha $ALPHA -numex $NUMEX
-open ../../results/xor/Activity.pdf
+python plot_cost.py
+open ../../results/xor/Activity_Before.pdf
+open ../../results/xor/Activity_DuringLearning.pdf
+open ../../results/xor/Activity_Before.pdf
 open ../../results/xor/Wsum.pdf
 cd ../../sim

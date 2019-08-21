@@ -39,7 +39,7 @@ min_somatic_current = 0.
 
 # simulation blocks
 nb_of_periods = 10
-burnin = 000.e-3 # relaxation time
+burnin = 0.e-3 # relaxation time
 period = 200.e-3
 segtime_maxsoma = period/2
 segtime_minsoma = period/2

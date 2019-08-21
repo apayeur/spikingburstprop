@@ -17,13 +17,29 @@ AdaptiveEBCPConnection::AdaptiveEBCPConnection(
     if ( !name.empty() )
         set_name("AdaptiveEBCPConnection");
     // homeostasis constants (min and max event rate)
-    min_rate = 0.1;
-    max_rate = 15.0;
+    min_rate = 2.;
+    max_rate = 12.;
+    
+    // auxiliary postsyn event trace
+    tr_event_aux = new EulerTrace(src->get_vector_size(), tr_event->get_tau());
+
 }
 
 void AdaptiveEBCPConnection::finalize() {
     EBCPConnection::finalize();
 }
+
+void AdaptiveEBCPConnection::free()
+{
+    delete tr_event_aux;
+}
+
+AdaptiveEBCPConnection::~AdaptiveEBCPConnection()
+{
+    if ( dst->get_post_size() > 0 )
+        free();
+}
+
 
 AurynWeight AdaptiveEBCPConnection::on_pre(NeuronID post)
 {
@@ -35,6 +51,7 @@ AurynWeight AdaptiveEBCPConnection::on_pre(NeuronID post)
         hom = (min_rate-rate);
         // std::cout << "hom event" << std::endl;
     }
+
     AurynDouble dw = eta_*hom;
     return dw;
 }
@@ -44,10 +61,10 @@ void AdaptiveEBCPConnection::propagate_backward(const NeuronID translated_post, 
     if (stdp_active) {
         // compute hom part of local error signal
         double hom_neg = 0.0;
-        const double rate = tr_event->normalized_get(translated_post);
-        if (rate>max_rate) {
+        const double estimated_event_rate = tr_event->normalized_get(translated_post);
+        if (estimated_event_rate>max_rate) {
             // std::cout << "hom dep" << std::endl;
-            hom_neg = -(rate - max_rate);
+            hom_neg = -(estimated_event_rate - max_rate)/estimated_event_rate;
         }
         const NeuronID post = dst->rank2global(translated_post);
         
@@ -57,8 +74,7 @@ void AdaptiveEBCPConnection::propagate_backward(const NeuronID translated_post, 
             AurynWeight * weight = bkw->get_data(c);
             
             const NeuronID pre = *c;
-            *weight += eta_*((valence+hom_neg)*tr_event_pre->get(pre));
-            
+            *weight += eta_*(valence+hom_neg)*tr_event_pre->get(pre);
             // clips weights
             if ( *weight > get_max_weight() ) *weight = get_max_weight();
             else
@@ -78,17 +94,22 @@ void AdaptiveEBCPConnection::compute_burst_rate()
         
         // detect first spike in bursts and non-burst spikes
         if ( tr_post->get(s) < burst_thr ) {
-            tr_event->inc(s);
+            
+            tr_event_aux->set(s, tr_event->get(s));
             burst_state->set(s,0);
-            propagate_backward(s, -tr_burst->normalized_get(s));
+            if (tr_event->get(s) > 0) propagate_backward(s, -tr_burst->normalized_get(s)/tr_event->normalized_get(s));
+            else propagate_backward(s, -1.);
+            // it is preferable to update tr_event after propagate backward
+            tr_event->inc(s);
         }
         
         // detect second spike in burst
         if ( tr_post->get(s) > burst_thr && burst_state->get(s) == 0 ) {
             tr_burst->inc(s);
             burst_state->set(s,1);
-            propagate_backward(s, tr_event->normalized_get(s));
-            //propagate_backward(s, tr_event->normalized_get(s)*exp(10e-3/tr_event->get_tau()) - 1./tr_event->get_tau()); //DEBUG
+            //propagate_backward(s, tr_event_aux->get(s)*exp(10e-3/tr_event->get_tau())/tr_event_aux->get_tau()); //DEBUG
+            propagate_backward(s, 1);
+            
         }
     }
 }
@@ -97,6 +118,14 @@ void AdaptiveEBCPConnection::propagate()
 {
     compute_presyn_event_rate();
     compute_burst_rate();
+}
+
+void AdaptiveEBCPConnection::evolve()
+{
+    tr_event->evolve();
+    tr_burst->evolve();
+    tr_event_pre->evolve();
+    tr_event_aux->evolve();
 }
 
 void AdaptiveEBCPConnection::set_post_trace_event_tau(AurynFloat x){

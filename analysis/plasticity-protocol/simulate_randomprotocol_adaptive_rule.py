@@ -12,7 +12,7 @@ estimates its burst probability.
 """
 
 
-def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre):
+def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_estimate=(5., 0.35*5.)):
     np.random.seed(2)
 
     # select parameters for pairing protocol
@@ -23,7 +23,7 @@ def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre):
     # create synapse
     learning_rate = eta
     syn = AdaptivePreEventSynapse(learning_rate, tau_trace=tau_pre, tau_ma=tau_moving_average, burst_def=burst_threshold,
-                                  starting_estimate=(5., 0.35*5.))
+                                  starting_estimate=starting_estimate)
 
     # integration time step
     dt = 0.001

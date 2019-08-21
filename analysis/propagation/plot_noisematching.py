@@ -52,13 +52,13 @@ A_soma = (max_somatic_current - min_somatic_current)/2.
 nb_of_periods = 10
 burnin = 000.e-3 # relaxation time
 period = 500.e-3
-period_dend = period/np.sqrt(5.)
+period_dend = period*np.sqrt(5.)
 segtime_maxsoma = period/2
 segtime_minsoma = period/2
 segtime_maxdend = 0.7*period
 segtime_mindend = 0.3*period
 small_overlap = 0.1*period
-binSize = 20.e-3
+binSize = 50.e-3
 
 # construct currents
 begins_dendrites = []
@@ -69,7 +69,7 @@ for i in range(10):
 begins_dendrites = np.array(begins_dendrites)
 begins_soma = np.array(begins_soma)
 
-times = np.arange(0, 3., binSize)
+times = np.arange(0, 4., binSize)
 current_dend = mean_dendritic_current + A_dend*np.sin(2*np.pi*times/period_dend)
 current_soma = mean_somatic_current + A_soma*np.sin(2*np.pi*times/period)
 

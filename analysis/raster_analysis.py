@@ -424,7 +424,7 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
     std_BR = std['BR']
     std_BP = 100*std['BP']
 
-    min_BP = np.min(BP[int(1/binsize):])
+    min_BP = np.min(BP[int(1/binsize):]) # start at 1s to avoid the transient surge of activity
     max_BP = np.max(BP[int(1/binsize):])
 
     min_ER = np.min(ER[int(1/binsize):])
@@ -451,7 +451,7 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
     ax1.fill_between(t, BP - 2 * std_BP, BP + 2 * std_BP, color=custom_colors['red'], alpha=0.5)
     ax1.set_xlim([pre_stim_burn, inputs['times'][-1]])
     #ax1.set_ylim([0., min(max_BP + 2*np.max(std_BP[int(inputs['times'][0]/binsize):]) + 5, 100.)])
-    ax1.set_ylim([0., 100.])
+    ax1.set_ylim([0., 65])
     ax1.set_ylabel(r'BP [\%]', fontsize=9)
     ax1.legend(loc='upper right', frameon=True, bbox_to_anchor=(1.05, 1.3), framealpha=1)
     remove_xticklabel(ax1)
@@ -460,7 +460,7 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
     plt.plot(t, BR, color=custom_colors['orange'], label='BR')
     plt.fill_between(t, BR - 2 * std_BR, BR + 2 * std_BR, color=custom_colors['orange'], alpha=0.5)
     plt.xlim([pre_stim_burn, inputs['times'][-1]])
-    plt.ylim([0., 10.])
+    plt.ylim([0., 5])
     plt.ylabel('BR [Hz]', fontsize=9)
     remove_xticklabel(plt.gca())
 
@@ -472,13 +472,14 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
     ax3.plot(inputs['times'], rescaled_input, '--', color=custom_colors['blue'], label='$I_\mathrm{s}$ (scaled)')
     ax3.fill_between(t, ER - 2 * std_ER, ER + 2 * std_ER, color=custom_colors['blue'], alpha=0.5)
     ax3.set_xlim([pre_stim_burn, inputs['times'][-1]])
-    ax3.set_ylim([0., 15.])
+    ax3.set_ylim([0., 13.])
     ax3.set_xlabel('Time [s]', fontsize=9)
     ax3.set_ylabel('ER [Hz]', fontsize=9)
     ax3.legend(loc='upper right', frameon=True, bbox_to_anchor=(1.05, 1.3), framealpha=1)
     plt.tight_layout()
     plt.savefig(outfile)
     plt.close()
+
     return BR
 
 

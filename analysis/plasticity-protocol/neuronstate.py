@@ -36,6 +36,13 @@ class NeuronState(object):
         self.trace['event'] += -self.trace['event']*(timestep/self.tau_trace) + self.train['event'][timeindex]
         self.trace['burst'] += -self.trace['burst']*(timestep/self.tau_trace) + self.train['burst'][timeindex]
 
+    def evolve_traces_except_event_trace(self, timeindex, timestep):
+        self.trace['spike'] += -self.trace['spike']*(timestep/self.tau_trace) + self.train['spike'][timeindex]
+        self.trace['burst'] += -self.trace['burst']*(timestep/self.tau_trace) + self.train['burst'][timeindex]
+
+    def evolve_event_trace(self, timeindex, timestep):
+        self.trace['event'] += -self.trace['event']*(timestep/self.tau_trace) + self.train['event'][timeindex]
+
     def reset(self):
         self.train = {'event': None, 'burst': None, 'spike': None}
         self.trace = {'event': 0., 'burst': 0, 'spike': 0.}

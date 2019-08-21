@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NUM_REAL=1
+NUM_REAL=5
 DIR="../data/noise-matching/private-noise"
 mkdir -p $DIR
 DATADIR="../../data/noise-matching/private-noise/"
@@ -8,9 +8,9 @@ RESULTDIR="../results/noise-matching/private-noise/"
 mkdir -p $RESULTDIR
 
 make
-for W12 in 0.6
+for W12 in 0.37
 do
-	for W1SOM in 0.05
+	for W1SOM in 0.035
 	do	
 		for (( i=1; i<=$NUM_REAL; i++ ))
 		do

@@ -28,7 +28,7 @@ def example_credit_assign(params, binsize=5.e-3):
     assert nb_of_ex == len(amplitudes_soma)
     assert nb_of_ex == len(amplitudes_dend)
 
-    # Construct time array (initial relaxation = 2*relaxation_period
+    # Construct time array (initial relaxation = relaxation_period)
     total_duration = relaxation_period + nb_of_ex * example_duration
     t = binsize * np.arange(0, total_duration)
 
@@ -40,10 +40,10 @@ def example_credit_assign(params, binsize=5.e-3):
 
     current_dend = baseline_dend*np.ones(t.shape)
     for i in range(nb_of_ex):
-        ra.add_soft_step(current_dend, relaxation_period + example_duration//2 + i*example_duration,
-                         example_duration//2, amplitudes_dend[i], slope_duration_dend)
+        ra.add_soft_step(current_dend, relaxation_period + int(0.5*example_duration) + i*example_duration,
+                         int(0.5*example_duration), amplitudes_dend[i], slope_duration_dend)
 
-    # Need to divide by membrane capacitance to produce currents of the correct amplitude
+    # Need to divide by membrane capacitance to produce currents of the correct amplitude (todo: do not hard-code this)
     current_soma /= 370e-12
     current_dend /= 170e-12
 
@@ -58,15 +58,15 @@ if __name__ == '__main__':
     # Testing function example_credit_assign
     params = {'baseline_soma': 50.e-12,
               'baseline_dend': 75.e-12,
-              'example_duration': 1.,
-              'relaxation_period': 0.5,
+              'example_duration': 15.,
+              'relaxation_period': 10.,
               'number_of_examples': 3,
-              'amplitudes_soma': [200.e-12, 100.e-12, -200.e-12],
-              'amplitudes_dend': [200.e-12, -200.e-12, 200.e-12], #  previously +100
-              'slope_duration_soma': 0. * 500.e-3,
-              'slope_duration_dend': 0. * 500.e-3}
+              'amplitudes_soma': [300.e-12, 0.e-12, -300.e-12],
+              'amplitudes_dend': [200.e-12, -200.e-12, 200.e-12],  # previously +100
+              'slope_duration_soma': 0 * 500.e-3,
+              'slope_duration_dend': 0 * 500.e-3}
 
-    t, current_soma, current_dend = example_credit_assign(params, binsize=20.e-3)
+    t, current_soma, current_dend = example_credit_assign(params, binsize=0.5)
 ''' 
     plt.figure(figsize=(5,5/1.6))
     plt.plot(t, current_soma/1.e-12, '--', color=custom_colors['blue'], label='soma current')

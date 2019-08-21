@@ -48,16 +48,17 @@ class AdaptivePreEventSynapse(EBSynapse):
 
         # note that learning rate is actually rescaled here because
         # event_state_post and burst_state_post should be divided by the size of the timestep
-        return self.learning_rate*(-burst_moving_avg*event_state_post + event_moving_avg*burst_state_post)*event_trace_pre
+        return self.learning_rate*(burst_state_post - burst_moving_avg*event_state_post/event_moving_avg)*event_trace_pre
 
     def evolve(self, t_int, timestep):
         """
         Value of weight at next time step
         """
         self.pre.evolve_traces(t_int, timestep)
-        self.post_ma.evolve_traces(t_int, timestep)
+        self.post_ma.evolve_traces_except_event_trace(t_int, timestep)
         if self.plasticity_on:
             self.weight += self.rule(t_int)*timestep
+        self.post_ma.evolve_event_trace(t_int, timestep)
 
     def reset(self):
         self.weight = 0.

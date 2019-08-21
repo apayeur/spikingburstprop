@@ -176,7 +176,7 @@ int main(int ac, char* av[])
     //-- Connect input group to main group's somata with plastic synapses
     const double we_soma = w0;
     const double sparseness = 0.05;
-    const double learning_rate = 1e-3;
+    const double learning_rate = 40e-3;
     const double max_weight = 1.0;
     
     BCPConnection * con_ext_soma;
@@ -252,8 +252,16 @@ int main(int ac, char* av[])
     
     WeightSumMonitor * wsmon = new WeightSumMonitor( con_ext_soma, sys->fn("wsum") );
     
-    StateMonitor * smon_tr_post_ev  = new StateMonitor( con_ext_soma->get_tr_event(), 0, sys->fn("trevent"), binsize);
-    StateMonitor * smon_tr_post_b   = new StateMonitor( con_ext_soma->get_tr_burst(), 0, sys->fn("trburst"), binsize);
+    std::vector< StateMonitor* > smon_tr_post_ev;
+    std::vector< StateMonitor* > smon_tr_post_b;
+    
+    for (int i=0;i<50;i++){
+        StateMonitor * ev = new StateMonitor( con_ext_soma->get_tr_event(), i, sys->fn(simname,i,"trevent"), binsize);
+        smon_tr_post_ev.push_back(ev);
+        StateMonitor * b = new StateMonitor( con_ext_soma->get_tr_burst(), i, sys->fn(simname,i,"trburst"), binsize);
+        smon_tr_post_b.push_back(b);
+
+    }
     
     /**************************************************/
     /******         CURRENT INJECTORS         *********/
@@ -262,23 +270,30 @@ int main(int ac, char* av[])
     CurrentInjector *curr_dend_exc = new CurrentInjector(main_neurons, "Vd");
     const double bkg_dend_curr = 400e-12;
     curr_dend_exc->set_all_currents(bkg_dend_curr/main_neurons[0].get_Cd());
-    
+    curr_input_pop->set_all_currents(200.e-12/input[0].get_Cd());
+
     /**************************************************/
     /******             SIMULATION            *********/
     /**************************************************/
     logger->msg("Running ...",PROGRESS);
     
     // simulate
+    /*
     double testtime = 10;
-    sys->run(5000.);
+    con_ext_soma->stdp_active = false;
+    sys->run(5*moving_average_time_constant);
+    con_ext_soma->stdp_active = true;
+    sys->run(4000.);
+    */
+    
     //con_ext_soma->set_all(0.25);
     //curr_dend_exc->set_all_currents(1.5*bkg_dend_curr/main_neurons[0].get_Cd());
     //sys->run(10.);
     //curr_dend_exc->set_all_currents(bkg_dend_curr/main_neurons[0].get_Cd());
     //sys->run(200.);
 
-    /*
-    //con_ext_soma->stdp_active = false;
+    
+    con_ext_soma->stdp_active = false;
     sys->run(moving_average_time_constant*3);
     
     con_ext_soma->stdp_active = true;
@@ -297,9 +312,9 @@ int main(int ac, char* av[])
     sys->run(simtime);
     
     // test that plasticity is not affected by burst prob in input population
-    curr_input_pop->set_all_currents(30.e-12/input[0].get_Cd());
+    curr_input_pop->set_all_currents(300.e-12/input[0].get_Cd());
     sys->run(simtime);
-    */
+    
     
     if (errcode)
         auryn_abort(errcode);

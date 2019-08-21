@@ -31,7 +31,7 @@ int main(int ac, char* av[])
     string dir = "./";
     string simname = "noise_matching";
     float w_pyr1_to_pyr2 = 0.05; //0.05
-    float w_pv_to_pyr2   = 0.05; //0.
+    float w_pv_to_pyr2   = 0.07; //0.
     float w_pyr2_to_pyr1 = 0.05;//0.6;
     float w_som_to_pyr1  = 0.0;//0.025;
     
@@ -113,11 +113,11 @@ int main(int ac, char* av[])
     
     // First layer of 2-comp pyramidal neurons
     NeuronID number_of_neurons = 4000;
-    BurstPoissonGroup* pyr1 = new BurstPoissonGroup(number_of_neurons);
+    NaudGroup* pyr1 = new NaudGroup(number_of_neurons);
     initialize_pyr_neurons(pyr1);
     
     // Second layer of 2-comp pyramidal neurons
-    BurstPoissonGroup* pyr2 = new BurstPoissonGroup(number_of_neurons);
+    NaudGroup* pyr2 = new NaudGroup(number_of_neurons);
     initialize_pyr_neurons(pyr2);
     
     // PV neurons
@@ -235,7 +235,7 @@ int main(int ac, char* av[])
     
     
     // -- OTHER CONNECTIONS
-    /*
+    
     // Pyr to Pyr - fake inh STF
     float w_pyr_to_pyr = 0.1;
     float p_pyr_to_pyr = 0.05*4000/number_of_neurons;
@@ -246,7 +246,7 @@ int main(int ac, char* av[])
     STPeTMConnection * pyr2_to_pyr2 = new STPeTMConnection(pyr2, pyr2, w_pyr_to_pyr, p_pyr_to_pyr, GABA);
     set_Facilitating_connection(pyr2_to_pyr2);
     pyr2_to_pyr2->set_target("g_gaba_dend");
-    */
+    
     
     /**************************************************/
     /******         CURRENT INJECTORS         *********/
@@ -262,7 +262,7 @@ int main(int ac, char* av[])
     /**************************************************/
     /******              MONITORS             *********/
     /**************************************************/
-    double binSize_rate = 20.e-3; // ms
+    double binSize_rate = 50.e-3; // ms
     
     // Voltage monitors
     if (seed == 1) {
@@ -302,48 +302,45 @@ int main(int ac, char* av[])
     logger->msg("Running ...",PROGRESS);
     
     // The alternating currents switched between a maximum and a minimum in both the dendrites and the somas.
-    const double max_dendritic_current = 300e-12;//90e-12;
-    const double min_dendritic_current = 150e-12;
+    const double max_dendritic_current = 200e-12;//90e-12;
+    const double min_dendritic_current = 00e-12;
     const double max_somatic_current = 200e-12;
-    const double min_somatic_current = -100.e-12; //50e-12;
+    const double min_somatic_current = -200.e-12; //50e-12;
     const double mean_dendritic_current = (max_dendritic_current + min_dendritic_current)/2.;
     const double mean_somatic_current = (max_somatic_current + min_somatic_current)/2.;
     
     
     const double simtime = 1000e-3;
     const double period  = 500e-3;
-    const double period_dend = period/sqrt(5.);
+    const double period_dend = period*sqrt(5.);
     const double segtime_maxsoma = period/2.;
     const double segtime_minsoma = period/2;
     const double segtime_maxdend = 0.7*period;
     const double segtime_mindend = 0.3*period;
     const double small_overlap = 0.1*period;
     
-    // Burn-in period (i.e. relaxation) before alternating stimuation
-    curr_inject_soma1->set_all_currents(mean_somatic_current/pyr1[0].get_Cs());
-    /////////////DEBUG///////////////
-    curr_inject_soma2->set_all_currents(-100.e-12/pyr2[0].get_Cs());
-    /////////////DEBUG///////////////
-    curr_inject_dend1->set_all_currents(min_dendritic_current/pyr1[0].get_Cd());
+    // Set based current for populations
     
+    curr_inject_soma1->set_all_currents(mean_somatic_current/pyr1[0].get_Cs());
+    curr_inject_dend1->set_all_currents(50.e-12/pyr1[0].get_Cd());
+    
+    curr_inject_soma2->set_all_currents(-100.e-12/pyr2[0].get_Cs());
     curr_inject_dend2->set_all_currents(mean_dendritic_current/pyr2[0].get_Cd());
     
     curr_inject_som->set_all_currents(0e-12/som[0].get_c_mem());
-    
     curr_inject_pv->set_all_currents(205e-12/pv[0].get_c_mem());
     
-    
-    SineCurrentInjector * sine_inject_dend2 = new SineCurrentInjector(pyr2, 0, 1./period_dend, 0., "Vd"); //amplitude is set to a nonzero value after a small delay
+    // Construct the sine current injectors; amplitude is set to a nonzero value after a small delay
+    SineCurrentInjector * sine_inject_dend2 = new SineCurrentInjector(pyr2, 0, 1./period_dend, 0., "Vd");
     SineCurrentInjector * sine_inject_soma1 = new SineCurrentInjector(pyr1, 0, 1./period, 0., "mem");
     
+    // Burn-in period (i.e. relaxation) before alternating stimuation
     sys->run(simtime);
     
     // Main simulation
-    ////////////DEBUG//////////////////
     sine_inject_dend2->set_amplitude(0.5*(max_dendritic_current - min_dendritic_current)/pyr2[0].get_Cd());
-    ////////////DEBUG//////////////////
-    sine_inject_soma1->set_amplitude(0.5*(max_somatic_current - min_somatic_current)/pyr1[0].get_Cs()); //////CORRECT THIS!!!!
-    sys->run(2*simtime);
+    sine_inject_soma1->set_amplitude(0.5*(max_somatic_current - min_somatic_current)/pyr1[0].get_Cs());
+    sys->run(3*simtime);
     
     /*
      for (int i=0;i<10;i++)

@@ -1,13 +1,13 @@
 #!/bin/bash
 
 CONNECT_TYPE="AdaptiveEBCP"
-TAU_PRE=20.e-3
+TAU_PRE=50.e-3
 PARENT_DIR="../data/learning-rule/$CONNECT_TYPE/tau_pre$TAU_PRE"
 mkdir -p $PARENT_DIR
-EXAMPLE_DURATION=10
+EXAMPLE_DURATION=50
 SIM_NAME="plasticity_rule"
-#W0=0.04
-ALPHA=4
+#W0=0.05
+ALPHA=10
 
 make
 function run {
@@ -35,7 +35,7 @@ function run {
 
 for D in 0.25
 do
-	for W0 in 0.02 0.04 0.06 0.08
+	for W0 in 0.1
 	do
 		run $D $W0
 	done
