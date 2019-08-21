@@ -31,7 +31,7 @@ void fix_plastic_connections_parameters(AdaptiveEBCPConnection * connect, double
 void generate_random_permutation(std::vector<int> &v);
 
 // definition of global constants
-const NeuronID number_of_neurons = 500;
+const NeuronID number_of_neurons = 2000;
 const NeuronID number_inh_neurons = number_of_neurons/4;
 const AurynFloat e_max = 10.; // maximum event rate
 const AurynFloat e_min = 2.; // minimum event rate (for error gen and cost function)
@@ -133,8 +133,8 @@ int main(int ac, char* av[])
     double moving_average_time_constant = 4.;
     int number_of_training_examples = 1;
     
-    const double learning_rate_hid_to_out = 2e-3; // was 5e-3
-    const double learning_rate_in_to_hid = 2e-3;  // was 5e-3
+    const double learning_rate_hid_to_out = 5e-3; // was 5e-3
+    const double learning_rate_in_to_hid = 10e-3;  // was 5e-3
     const double max_weight    = 1.0;
     const double tau_pre       = 20.e-3; //////   DEBUG   ///////////
     std::ofstream outfile_cost;
@@ -339,9 +339,9 @@ int main(int ac, char* av[])
 
     //-- CONNECT FeedFORWARD
     const float p_ff = 0.05; //0.05
-    float w_in_to_hid_exc  = 0.07*4000/number_of_neurons*0.8;  ///  DEBUG   ///
+    float w_in_to_hid_exc  = 0.07*4000/number_of_neurons;
     float w_in_to_hid_inh  = 0.03*4000/number_of_neurons;
-    float w_hid_to_out_exc = 0.09*4000/number_of_neurons*0.8;  ///  DEBUG   ///
+    float w_hid_to_out_exc = 0.09*4000/number_of_neurons;
     float w_hid_to_out_inh = 0.05*4000/number_of_neurons;
     
         // (1) Connect input layer to hidden layer
@@ -490,7 +490,7 @@ int main(int ac, char* av[])
 
     const float prediction_time = 0.9*durex;
     const float learning_time = durex - prediction_time;
-    const int number_of_error_recomputing = int(learning_time/1.);
+    const int number_of_error_recomputing = 1; //int(learning_time/1.); ////////   DEBUG   /////////
 
     sys->run(3*moving_average_time_constant);
     
