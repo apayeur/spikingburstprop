@@ -45,7 +45,7 @@ def e2_oversimplified(x, p1, p2):
 def power_law_fit(x, p1, p2):
     return p2[0]*(x/p1[0])**(p2[1]/p1[1])
 
-currents = np.arange(-200, 500, 100)
+currents = np.arange(-200, 400, 100)
 
 # BP, ER, BR for population 1, 2, 3
 #filenames1 = args.datadir + '/fftransfer.0.ras1'
@@ -80,7 +80,6 @@ if perform_fit:
     # Fit PV rates
     # popt_pv, pcov_pv = curve_fit(sigmoid_fit, currents, rate_pv, p0=[0., 30., 0.1, 200.])
     #  popt_pv_exp, pcov_pv_exp = curve_fit(exp_fit, er1, rate_pv, p0=[5., 0.01])
-
 
     print('fit parameters for er1: {}'.format(popt1))
     print('fit parameters for er2: {}'.format(popt2))

@@ -10,7 +10,7 @@ sim/sim_*
 !sim/sim_*.cpp
 
 *.xml
-*.pyc
+*.ipynb
 
 # DS_Store
 .DS_Store

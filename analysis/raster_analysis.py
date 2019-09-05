@@ -44,9 +44,9 @@ def BRER_from_raster(filename_raster, binsize=20.e-3, tau=16.e-3):
                     event_rate[int(spiketimes[s]/binsize)] += 1.
                 else:
                     if burst_state < 0:
-                        bursts.append(spiketimes[s-1]) # s-1 to correct for the fact that bursts are detected on the second spike
+                        bursts.append(spiketimes[s])
                         burst_state=1
-                        burst_rate[int(spiketimes[s-1] / binsize)] += 1.
+                        burst_rate[int(spiketimes[s] / binsize)] += 1.
 
     event_rate = event_rate/(nb_of_neurons * binsize)
     burst_rate = burst_rate/(nb_of_neurons * binsize)
@@ -288,13 +288,13 @@ def get_eventtrains(rasterfile, discard=1, binsize=5e-3, burst_detection_thr=16.
     N_neurons = int(max(raster[:, 1]))+1
     eventtrains = np.zeros((N_neurons, N_bins + 1))
     bursttrains = np.zeros((N_neurons, N_bins + 1))
+    otherspiketrains = np.zeros((N_neurons, N_bins + 1))
 
     for n in range(N_neurons):
         spiketimes = raster[np.where(raster[:, 1] == n)[0], 0]
         spiketimes = spiketimes[spiketimes >= discard]
         if len(spiketimes) > 0:
             eventtrains[n, int((spiketimes[0]-discard)/binsize)] += 1.
-
             burst_state = -1
             for s in range(1, len(spiketimes)):
                 if spiketimes[s] - spiketimes[s - 1] > burst_detection_thr:
@@ -303,9 +303,56 @@ def get_eventtrains(rasterfile, discard=1, binsize=5e-3, burst_detection_thr=16.
                 else:
                     if burst_state < 0:
                         burst_state = 1
-                        bursttrains[n, int((spiketimes[s-1] - discard) / binsize)] += 1.
+                        bursttrains[n, int((spiketimes[s] - discard) / binsize)] += 1.
+                    else:
+                        otherspiketrains[n, int((spiketimes[s] - discard) / binsize)] += 1
 
-    return eventtrains, bursttrains
+    return eventtrains, bursttrains, otherspiketrains
+
+
+def get_eventtimes(rasterfile, discard=0, burst_detection_thr=16.e-3):
+
+    raster = np.loadtxt(rasterfile)
+    N_neurons = int(max(raster[:, 1]))+1
+    eventtimes = []
+    bursttimes = []
+    otherspiketimes = []
+    isolatedspiketimes = []
+
+    for n in range(N_neurons):
+        single_neuron_bursttimes = []
+        single_neuron_eventtimes = []
+        single_neuron_otherspiketimes = []
+        single_neuron_isolatedspiketimes = []
+
+        spiketimes = raster[np.where(raster[:, 1] == n)[0], 0]
+        spiketimes = spiketimes[spiketimes >= discard]
+
+        if len(spiketimes) > 0:
+            single_neuron_eventtimes.append(spiketimes[0]-discard)
+            burst_state = -1
+            for s in range(1, len(spiketimes)):
+                if spiketimes[s] - spiketimes[s - 1] > burst_detection_thr:
+                    burst_state = -1.
+                    single_neuron_eventtimes.append(spiketimes[s] - discard)
+                    if s + 1 < len(spiketimes):
+                        if spiketimes[s+1] - spiketimes[s] > burst_detection_thr:
+                            single_neuron_isolatedspiketimes.append(spiketimes[s] - discard)
+                    else:
+                        if 4. - spiketimes[s] > burst_detection_thr:
+                            single_neuron_isolatedspiketimes.append(spiketimes[s] - discard)
+                else:
+                    if burst_state < 0:
+                        burst_state = 1
+                        single_neuron_bursttimes.append(spiketimes[s] - discard)
+                    else:
+                        single_neuron_otherspiketimes.append(spiketimes[s] - discard)
+        eventtimes.append(single_neuron_eventtimes)
+        bursttimes.append(single_neuron_bursttimes)
+        otherspiketimes.append(single_neuron_otherspiketimes)
+        isolatedspiketimes.append(single_neuron_isolatedspiketimes)
+
+    return eventtimes, bursttimes, otherspiketimes, isolatedspiketimes
 
 
 def pop_corr(rasterfile, type='spike', discard=1, binsize=5e-3, N_selected_neurons=1000):
@@ -360,6 +407,68 @@ def pop_corr(rasterfile, type='spike', discard=1, binsize=5e-3, N_selected_neuro
 #################################################################
 #                   PLOTTING-RELATED FUNCTIONS                  #
 #################################################################
+def display_raster(rasterfile, outfile, discard=1, binsize=5e-3, burst_detection_thr=16.e-3):
+    eventtrains, bursttrains, otherspiketrains = get_eventtrains(rasterfile, discard, binsize, burst_detection_thr)
+
+    N_neurons = 50
+    n = np.arange(1, N_neurons+1)
+    T = eventtrains.shape[1]*binsize
+    t = discard + binsize*np.arange(0, eventtrains.shape[1])
+
+    plt.figure(figsize=(3, 2.))
+    plt.plot(t*np.ones((N_neurons, 1)), n[:, np.newaxis]*otherspiketrains[:N_neurons], linestyle="None", marker=2, color='black', markersize=4)
+    plt.plot(t*np.ones((N_neurons, 1)), n[:, np.newaxis]*bursttrains[:N_neurons], linestyle="None", marker=2, color=custom_colors['orange'], markersize=4)
+    plt.plot(t*np.ones((N_neurons, 1)), n[:, np.newaxis]*eventtrains[:N_neurons], linestyle="None", marker=2, color=custom_colors['blue'], markersize=4)
+    plt.xlim([discard, discard+T])
+    plt.xticks([1, 1.5, 2, 2.5, 3., 3.5])
+    plt.ylim(ymin=1)
+    plt.yticks([1, N_neurons])
+    # plt.yticks([])
+    plt.gca().spines['top'].set_visible(False)
+    plt.gca().spines['right'].set_visible(False)
+    plt.ylabel('Neuron')
+    plt.xlabel('Time [s]')
+    plt.tight_layout()
+    plt.savefig(outfile)
+    plt.close()
+
+
+def display_raster_with_eventplot(rasterfile, outfile, discard=0, binsize=50e-3, burst_detection_thr=16.e-3):
+    eventtimes, bursttimes, otherspiketimes, isolatedspiketimes = get_eventtimes(rasterfile, discard, burst_detection_thr)
+
+    N_neurons = 25
+    lineoffs = np.arange(1, N_neurons+1)
+    times, ER, BR = BRER_from_raster(rasterfile, binsize=binsize, tau=burst_detection_thr)
+
+    plt.figure(figsize=(3, 2.))
+    #plt.eventplot(otherspiketimes[:N_neurons], colors=['black'], lineoffsets=lineoffs, linelengths=1, lw=0.3)
+    plt.eventplot(eventtimes[:N_neurons], colors=[(0, 0.45, 0.8)], lineoffsets=lineoffs, linelengths=1, lw=0.5)
+    plt.eventplot(bursttimes[:N_neurons], colors=[(0.78, 0, 0)], lineoffsets=lineoffs, linelengths=1, lw=0.5)
+    #plt.eventplot(isolatedspiketimes[:N_neurons], colors=['black'], lineoffsets=lineoffs, linelengths=1, lw=0.3)
+    plt.xlim([1, 3])
+    plt.xticks(list(np.arange(1., 3.1, 1)))
+    #plt.ylim(ymin=0)
+    plt.yticks([1, N_neurons])
+    # plt.yticks([])
+    plt.gca().spines['top'].set_visible(False)
+    plt.gca().spines['right'].set_visible(False)
+    plt.ylabel('Neuron')
+    plt.xlabel('Time [s]')
+
+    ax1_tw = plt.gca().twinx()
+    ax1_tw.plot(times, 100 * BR / ER, color=custom_colors['red'], lw=2, alpha=0.5)
+    ax1_tw.plot(times, ER, color=custom_colors['blue'], lw=2, alpha=0.5)
+    ax1_tw.set_yticks([0, 25, 50])
+    ax1_tw.set_ylim([0, 60])
+    ax1_tw.set_xlim([1, 3])
+    #ax1_tw.legend(loc='upper right', bbox_to_anchor=(1, 1.1))
+    ax1_tw.set_ylabel('BP [\%], ER [Hz]')
+    #ax1_tw.spines['top'].set_visible(False)
+
+    plt.tight_layout()
+    plt.savefig(outfile)
+    plt.close()
+
 def display_BRER(filenames, outfile, binsize=20.e-3, tau=16.e-3):
     """
     Display average rates and burst probability.
@@ -424,30 +533,37 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
     std_BR = std['BR']
     std_BP = 100*std['BP']
 
-    min_BP = np.min(BP[int(1/binsize):]) # start at 1s to avoid the transient surge of activity
-    max_BP = np.max(BP[int(1/binsize):])
+    min_BP = np.min(BP[int(pre_stim_burn/binsize):]) # start at 1s to avoid the transient surge of activity
+    max_BP = np.max(BP[int(pre_stim_burn/binsize):])
 
-    min_ER = np.min(ER[int(1/binsize):])
-    max_ER = np.max(ER[int(1/binsize):])
+    min_ER = np.min(ER[int(pre_stim_burn/binsize):])
+    max_ER = np.max(ER[int(pre_stim_burn/binsize):])
 
     current_into_dendrites = inputs['dendrite']
-    min_current = np.min(current_into_dendrites[int(1/binsize):])
-    max_current = np.max(current_into_dendrites[int(1/binsize):])
+    min_current_dend = np.min(current_into_dendrites[int(pre_stim_burn/binsize):])
+    max_current_dend = np.max(current_into_dendrites[int(pre_stim_burn/binsize):])
+
+    current_into_somas = inputs['soma']
+    min_current_soma = np.min(current_into_somas[int(pre_stim_burn / binsize):])
+    max_current_soma = np.max(current_into_somas[int(pre_stim_burn / binsize):])
 
     if population == '2':
         color_line = custom_colors['red']
-        label = '$I_\mathrm{d}$ (scaled)'
+        label_BP = '$I_\mathrm{d}$ (scaled)'
+        label_ER = 'ER, pop1 (scaled)'
     elif population == '1':
         color_line = custom_colors['orange']
-        label = 'BR, pop2 (scaled)'
+        label_BP = 'BR, pop2 (scaled)'
+        label_ER = '$I_\mathrm{s}$ (scaled)'
+
 
     plt.figure(figsize=(3., 3.))
     ax1 = plt.subplot(311)
     ax1.plot(t, BP, color=custom_colors['red'])
-    rescaled_input = min_BP + (current_into_dendrites - min_current) *\
-                                   (max_BP-min_BP)/(max_current-min_current)
+    rescaled_input = min_BP + (current_into_dendrites - min_current_dend) *\
+                                   (max_BP-min_BP)/(max_current_dend-min_current_dend)
 
-    ax1.plot(inputs['times'], rescaled_input, '--', color=color_line, label=label)
+    ax1.plot(inputs['times'], rescaled_input, '--', color=color_line, label=label_BP)
     ax1.fill_between(t, BP - 2 * std_BP, BP + 2 * std_BP, color=custom_colors['red'], alpha=0.5)
     ax1.set_xlim([pre_stim_burn, inputs['times'][-1]])
     #ax1.set_ylim([0., min(max_BP + 2*np.max(std_BP[int(inputs['times'][0]/binsize):]) + 5, 100.)])
@@ -467,9 +583,9 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
 
     ax3 = plt.subplot(313)
     ax3.plot(t, ER, color=custom_colors['blue'])
-    rescaled_input = min_ER + (inputs['soma'] - np.min(inputs['soma'])) *\
-                                   (max_ER-min_ER)/(np.max(inputs['soma'])-np.min(inputs['soma']))
-    ax3.plot(inputs['times'], rescaled_input, '--', color=custom_colors['blue'], label='$I_\mathrm{s}$ (scaled)')
+    rescaled_input = min_ER + (inputs['soma'] - min_current_soma) *\
+                                   (max_ER-min_ER)/(max_current_soma-min_current_soma)
+    ax3.plot(inputs['times'], rescaled_input, '--', color=custom_colors['blue'], label=label_ER)
     ax3.fill_between(t, ER - 2 * std_ER, ER + 2 * std_ER, color=custom_colors['blue'], alpha=0.5)
     ax3.set_xlim([pre_stim_burn, inputs['times'][-1]])
     ax3.set_ylim([0., 13.])

@@ -73,7 +73,7 @@ legend.fontsize      : x-small
 #legend.markerscale   : 1.0    # the relative size of legend markers vs. original
 # the following dimensions are in axes coords
 legend.labelspacing  : 0.25    # the vertical space between the legend entries in fraction of fontsize
-legend.handlelength  : 1.     # the length of the legend lines in fraction of fontsize
+legend.handlelength  : 2     # the length of the legend lines in fraction of fontsize
 #legend.handleheight  : 0.7     # the height of the legend handle in fraction of fontsize
 legend.handletextpad : 0.5    # the space between the legend line and legend text in fraction of fontsize
 #legend.borderaxespad : 0.5   # the border between the axes and legend edge in fraction of fontsize

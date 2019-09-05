@@ -45,6 +45,8 @@ namespace auryn {
                           TransmitterType transmitter=GLUT,
                           string name = "EBCPConnection" );
         
+            
+        
             virtual ~EBCPConnection();
             virtual void finalize();
             void free();

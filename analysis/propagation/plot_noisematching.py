@@ -100,7 +100,9 @@ plt.show()
 # output figures
 output_file_prefix = args.resultdir
 
-inputs = {'times': times, 'dendrite': current_dend, 'soma': current_soma}
+_, mean, std = ra.std_BRER_over_realizations(filenames1, binsize=binSize)
+
+inputs = {'times': times, 'dendrite': current_dend, 'soma': mean['ER']}
 BR2 = ra.display_BRER_with_inputs(filenames2, output_file_prefix + 'Pop2' + args.filesuffix + '.pdf', inputs,
                             population='2', binsize=binSize)
 inputs = {'times': times, 'dendrite': BR2, 'soma': current_soma}
