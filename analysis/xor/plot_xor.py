@@ -28,11 +28,12 @@ input1_rates = np.loadtxt(data_file_prefix + 'input1')
 input2_rates = np.loadtxt(data_file_prefix + 'input2')
 cost_epoch = np.loadtxt(datadir + 'cost_epoch.dat')
 
-
-after_learning = [output_rates.shape[0]-int(4*args.durex/1.)+1, output_rates.shape[0]+1]
-before_learning = [int(3*args.alpha/1.)+1, int(3*args.alpha/1.)+int(4*args.durex/1.)+1]
-during_learning = [int(3*args.alpha/1.)+int(args.numex//2*args.durex/1.)+1,
-                   int(3*args.alpha/1.)+int(args.numex//2*args.durex/1.)+int(4*args.durex/1.)+1]
+binSize = output_rates[1,0] - output_rates[0,0]
+print(binSize)
+after_learning = [output_rates.shape[0]-int(4*args.durex/binSize)+1, output_rates.shape[0]+1]
+before_learning = [int(3*args.alpha/binSize)+1, int(3*args.alpha/binSize)+int(4*args.durex/binSize)+1]
+during_learning = [int(3*args.alpha/binSize)+int(args.numex//2*args.durex/binSize)+1,
+                   int(3*args.alpha/binSize)+int(args.numex//2*args.durex/binSize)+int(4*args.durex/binSize)+1]
 
 
 er_trace = np.loadtxt(datadir + 'xor0.0.trevent')
@@ -55,6 +56,10 @@ wsum_in2_to_hid2 = np.loadtxt(data_file_prefix + 'in2_to_hid2')
 wsum_hid1_to_out = np.loadtxt(data_file_prefix + 'hid1_to_out')
 wsum_hid2_to_out = np.loadtxt(data_file_prefix + 'hid2_to_out')
 
+e_min = 2.
+e_max = 10.
+e_th = e_min + 0.5*(e_max - e_min)
+
 
 def plot_section(lim_seg, moment):
 
@@ -68,7 +73,8 @@ def plot_section(lim_seg, moment):
     er_est = er_trace[lim_seg[0]:lim_seg[1]+1, :]
     br_est = br_trace[lim_seg[0]:lim_seg[1]+1, :]
 
-    xtik = list(lim_seg[0] + args.durex*np.arange(5)-1)
+    xtik = list((lim_seg[0]-1)*binSize + args.durex*np.arange(5))
+    print(xtik)
 
     # plotting rates and burst probabilities
     fig = plt.figure(1, figsize=(5.5, 6/1.5))
@@ -78,6 +84,9 @@ def plot_section(lim_seg, moment):
     ax1 = fig.add_subplot(gs1[0, 1])
     ax1.plot(r_out[:, 0], r_out[:, 2], color=custom_colors['blue'], lw=1, label='ER')
     ax1.plot(r_out[:, 0], r_out[:, 1], color=custom_colors['orange'], lw=1, label='BR')
+    ax1.plot(r_out[:, 0], e_min*np.ones((r_out.shape)), 'k--', lw=0.5)
+    ax1.plot(r_out[:, 0], e_th*np.ones((r_out.shape)), 'k--', lw=0.5)
+    ax1.plot(r_out[:, 0], e_max*np.ones((r_out.shape)), 'k--', lw=0.5)
     ax1.set_ylabel('Output rates [Hz]')
     ax1.set_ylim([0,10])
     ax1.set_xticks(xtik)
@@ -97,8 +106,11 @@ def plot_section(lim_seg, moment):
     ax2 = fig.add_subplot(gs1[1, 0])
     ax2.plot(r_hid1[:, 0], r_hid1[:, 2], color=custom_colors['blue'], lw=1, label='ER')
     ax2.plot(r_hid1[:, 0], r_hid1[:, 1], color=custom_colors['orange'], lw=1, label='BR')
+    ax2.plot(r_hid1[:, 0], e_min*np.ones((r_hid1.shape)), 'k--', lw=0.5)
+    ax2.plot(r_hid1[:, 0], e_th*np.ones((r_hid1.shape)), 'k--', lw=0.5)
+    ax2.plot(r_hid1[:, 0], e_max*np.ones((r_hid1.shape)), 'k--', lw=0.5)
     ax2.set_ylabel('Hidden1 rates [Hz]')
-    ax2.set_xticks((xtik))
+    ax2.set_xticks(xtik)
     ax2.set_ylim([0,10])
     ax2.spines['top'].set_visible(False)
 
@@ -113,15 +125,19 @@ def plot_section(lim_seg, moment):
     ax3 = fig.add_subplot(gs1[1, 1])
     ax3.plot(r_hid2[:, 0], r_hid2[:, 2], color=custom_colors['blue'], lw=1, label='ER')
     ax3.plot(r_hid2[:, 0], r_hid2[:, 1], color=custom_colors['orange'], lw=1, label='BR')
+    ax3.plot(r_hid2[:, 0], e_min*np.ones((r_hid2.shape)), 'k--', lw=0.5)
+    ax3.plot(r_hid2[:, 0], e_th*np.ones((r_hid2.shape)), 'k--', lw=0.5)
+    ax3.plot(r_hid2[:, 0], e_max*np.ones((r_hid2.shape)), 'k--', lw=0.5)
     ax3.set_ylabel('Hidden2 rates [Hz]')
     ax3.set_ylim([0,10])
-    ax3.set_xticks((xtik))
+    ax3.set_xticks(xtik)
     ax3.spines['top'].set_visible(False)
 
     ax3_tw = ax3.twinx()
     ax3_tw.plot(r_hid2[:, 0], 100*r_hid2[:, 1]/r_hid2[:, 2], color=custom_colors['red'], lw=1)
     ax3_tw.tick_params('y', labelcolor=custom_colors['red'])
     ax3_tw.set_yticks([0, 30, 60, 90])
+    #ax3_tw.set_xticks((xtik))
     ax3_tw.set_ylabel('Postsyn. BP [\%]', color=custom_colors['red'])
     remove_xticklabel(ax3)
 
@@ -129,18 +145,22 @@ def plot_section(lim_seg, moment):
     #  input layer 1
     ax4 = fig.add_subplot(gs1[2, 0])
     ax4.plot(r_inp1[:, 0], r_inp1[:, 2], color=custom_colors['blue'], lw=1, label='ER')
+    ax4.plot(r_inp1[:, 0], e_min*np.ones((r_inp1.shape)), 'k--', lw=0.5)
+    ax4.plot(r_inp1[:, 0], e_max*np.ones((r_inp1.shape)), 'k--', lw=0.5)
+    ax4.set_xticks(xtik)
     ax4.set_xlabel("Time [s]")
     ax4.set_ylabel('ER, input1 [Hz]')
     ax4.set_ylim([0,10])
-    ax4.set_xticks((xtik))
 
     #  input layer 2
     ax5 = fig.add_subplot(gs1[2, 1])
     ax5.plot(r_inp2[:, 0], r_inp2[:, 2], color=custom_colors['blue'], lw=1, label='ER')
+    #ax5.plot(r_hid2[:, 0], e_min*np.ones((r_hid2.shape)), 'k--', lw=0.5)
+    #ax5.plot(r_hid2[:, 0], e_max*np.ones((r_hid2.shape)), 'k--', lw=0.5)
     ax5.set_xlabel("Time [s]")
     ax5.set_ylabel('ER, input2 [Hz]')
     ax5.set_ylim([0,10])
-    ax5.set_xticks((xtik))
+    ax5.set_xticks(xtik)
 
     plt.tight_layout()
     plt.savefig('../../results/xor/Activity_'+moment+'.pdf')

@@ -73,17 +73,26 @@ public:
 
 	bool stdp_active;
 
-	BCPConnection(SpikingGroup * source, NeuronGroup * destination, 
-			TransmitterType transmitter=GLUT);
-
-	BCPConnection(SpikingGroup * source, NeuronGroup * destination, 
-			AurynWeight weight, AurynFloat sparseness=0.05, 
-			AurynFloat eta=1e-3, 
-			AurynFloat maxweight=1.,
-            AurynFloat tau_pre=20.e-3,
-			TransmitterType transmitter=GLUT,
-			string name = "BCPConnection" );
-
+	BCPConnection(SpikingGroup * source,
+                  NeuronGroup * destination,
+                  TransmitterType transmitter=GLUT);
+    
+    BCPConnection(SpikingGroup * source,
+                  NeuronGroup * destination,
+                  TransmitterType transmitter,
+                  AurynFloat eta,
+                  AurynFloat maxweight,
+                  AurynFloat tau_pre);
+	
+    BCPConnection(SpikingGroup * source,
+                  NeuronGroup * destination,
+                  AurynWeight weight,
+                  AurynFloat sparseness=0.05,
+                  AurynFloat eta=1e-3,
+                  AurynFloat maxweight=1.,
+                  AurynFloat tau_pre=20.e-3,
+                  TransmitterType transmitter=GLUT,
+                  string name = "BCPConnection" );
 
 	virtual ~BCPConnection();
 	virtual void finalize();

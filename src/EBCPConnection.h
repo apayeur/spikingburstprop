@@ -37,15 +37,27 @@ namespace auryn {
             void compute_presyn_event_rate();
 
         public:
-            EBCPConnection(SpikingGroup * source, NeuronGroup * destination,
-                          AurynWeight weight, AurynFloat sparseness=0.05,
-                          AurynFloat eta=1e-3,
-                          AurynFloat maxweight=1.,
-                          AurynFloat tau_pre=20.e-3,
-                          TransmitterType transmitter=GLUT,
-                          string name = "EBCPConnection" );
         
-            
+            EBCPConnection(SpikingGroup * source,
+                           NeuronGroup * destination,
+                           TransmitterType transmitter=GLUT);
+        
+            EBCPConnection(SpikingGroup * source,
+                           NeuronGroup * destination,
+                           TransmitterType transmitter,
+                           AurynFloat eta,
+                           AurynFloat maxweight,
+                           AurynFloat tau_pre);
+        
+            EBCPConnection(SpikingGroup * source,
+                           NeuronGroup * destination,
+                           AurynWeight weight,
+                           AurynFloat sparseness=0.05,
+                           AurynFloat eta=1e-3,
+                           AurynFloat maxweight=1.,
+                           AurynFloat tau_pre=20.e-3,
+                           TransmitterType transmitter=GLUT,
+                           string name = "EBCPConnection" );
         
             virtual ~EBCPConnection();
             virtual void finalize();

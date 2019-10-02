@@ -19,9 +19,9 @@ LDFLAGS=$(BUILDDIR)/src/libauryn.a \
 #         -I$(AURYNDIR)/src -I$(AURYNDIR)/dev/src
 
 
-OBJECTS=BurstPoissonGroup.o AdaptiveEBCPConnection.o EBCPConnection.o BCPConnection.o
+OBJECTS=BiasIdentityConnection.o BiasConnection.o BurstPoissonGroup.o AdaptiveEBCPConnection.o EBCPConnection.o BCPConnection.o
 
-SIMULATIONS=test_burstpoisson test_burstpoisson_simple test_ficurve_burstpoisson test_adaptive_ebcp
+SIMULATIONS=test_bias_ident_conn test_bias_conn test_burstpoisson test_burstpoisson_simple test_ficurve_burstpoisson test_adaptive_ebcp
 
 .SECONDARY:
 

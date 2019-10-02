@@ -17,7 +17,8 @@
 #include "TransmitBurstConnection.h"
 #include "TransmitEventConnection.h"
 #include "AdaptiveEBCPConnection.h"
-
+#include "BiasConnection.h"
+#include "BiasIdentityConnection.h"
 
 using namespace auryn;
 
@@ -29,11 +30,12 @@ void generate_error(AdaptiveEBCPConnection * connect,  CurrentInjector * inject_
 double compute_cost(AdaptiveEBCPConnection * connect, int output);
 void fix_plastic_connections_parameters(AdaptiveEBCPConnection * connect, double alpha);
 void generate_random_permutation(std::vector<int> &v);
+void fix_bias_connections_parameters(BiasIdentityConnection * connect, double alpha);
 
 // definition of global constants
-const NeuronID number_of_neurons = 2000;
+NeuronID number_of_neurons = 2000;
 const NeuronID number_inh_neurons = number_of_neurons/4;
-const AurynFloat e_max = 12.; // maximum event rate
+const AurynFloat e_max = 10.; // maximum event rate
 const AurynFloat e_min = 2.; // minimum event rate (for error gen and cost function)
 
 // definition of global variables
@@ -137,10 +139,11 @@ int main(int ac, char* av[])
     double moving_average_time_constant = 4.;
     int number_of_training_examples = 1;
     
-    const double learning_rate_hid_to_out = 5e-3; // was 5e-3
-    const double learning_rate_in_to_hid = 5e-3;  // was 5e-3
+    const double learning_rate_hid_to_out = 2e-3;
+    const double learning_rate_in_to_hid  = 4e-3;
+    const double learning_rate_bias       = 0.1e-3;
     const double max_weight    = 1.0;
-    const double tau_pre       = 20.e-3; //////   DEBUG   ///////////
+    const double tau_pre       = 20.e-3;
     std::ofstream outfile_cost;
     std::ofstream outfile_cost_epoch;
     srand (1);
@@ -157,6 +160,7 @@ int main(int ac, char* av[])
         ("dir", po::value<string>(), "output directory")
         ("seed", po::value<int>(), "random seed")
         ("numex", po::value<int>(), "number of training examples")
+        ("N", po::value<int>(), "number of neurons per population")
         ("durex", po::value<double>(), "duration of an example")
         ("alpha", po::value<double>(), "moving average time constant")
         ;
@@ -187,6 +191,12 @@ int main(int ac, char* av[])
             number_of_training_examples = vm["numex"].as<int>();
         }
 
+        if (vm.count("N")) {
+            std::cout << "number of neurons set to "
+            << vm["N"].as<int>() << ".\n";
+            number_of_neurons = vm["N"].as<int>();
+        }
+        
         if (vm.count("durex")) {
             std::cout << "example duration set to "
             << vm["durex"].as<double>() << ".\n";
@@ -239,20 +249,20 @@ int main(int ac, char* av[])
     float poisson_rate = 5.;
     //- Output layer
     // Pyr
-    PoissonGroup* exc_Poisson_output_pyr       = new PoissonGroup(number_of_neurons, 50*poisson_rate);
-    PoissonGroup* inh_Poisson_output_pyr       = new PoissonGroup(number_of_neurons, 50*poisson_rate);
+    PoissonGroup* exc_Poisson_output_pyr       = new PoissonGroup(number_of_neurons, 30*poisson_rate);
+    PoissonGroup* inh_Poisson_output_pyr       = new PoissonGroup(number_of_neurons, 30*poisson_rate);
     PoissonGroup* exc_Poisson_dend_output_pyr  = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     PoissonGroup* inh_Poisson_dend_output_pyr  = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     
     //- Hidden layer
     // Pyr1
-    PoissonGroup* exc_Poisson_hidden_pyr1      = new PoissonGroup(number_of_neurons, 30*poisson_rate);
+    PoissonGroup* exc_Poisson_hidden_pyr1      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
     PoissonGroup* inh_Poisson_hidden_pyr1      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
     PoissonGroup* exc_Poisson_dend_hidden_pyr1 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     PoissonGroup* inh_Poisson_dend_hidden_pyr1 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
 
     // Pyr2
-    PoissonGroup* exc_Poisson_hidden_pyr2      = new PoissonGroup(number_of_neurons, 30*poisson_rate); // was 25
+    PoissonGroup* exc_Poisson_hidden_pyr2      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
     PoissonGroup* inh_Poisson_hidden_pyr2      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
     PoissonGroup* exc_Poisson_dend_hidden_pyr2 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     PoissonGroup* inh_Poisson_dend_hidden_pyr2 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
@@ -308,9 +318,11 @@ int main(int ac, char* av[])
 
         // b - Hidden layer pyramidal neurons
             // population 1
-    IdentityConnection * epois_to_soma_hidden_pyr1 = new IdentityConnection(exc_Poisson_hidden_pyr1, hidden_pyr1, w_epois_to_soma, GLUT);
-    epois_to_soma_hidden_pyr1->set_target("g_ampa");
-    IdentityConnection * ipois_to_soma_hidden_pyr1 = new IdentityConnection(inh_Poisson_hidden_pyr1, hidden_pyr1, ratio_ie_soma*w_epois_to_soma, GABA);
+    double w_bias = 0.1*w_epois_to_soma;
+    BiasIdentityConnection * epois_to_soma_hidden_pyr1 = new BiasIdentityConnection(exc_Poisson_hidden_pyr1, hidden_pyr1, 1.1*w_epois_to_soma, learning_rate_bias, GLUT);
+    fix_bias_connections_parameters(epois_to_soma_hidden_pyr1, moving_average_time_constant);
+
+    IdentityConnection * ipois_to_soma_hidden_pyr1 = new IdentityConnection(inh_Poisson_hidden_pyr1, hidden_pyr1, 1.4*ratio_ie_soma*w_epois_to_soma, GABA);
     ipois_to_soma_hidden_pyr1->set_target("g_gaba");
     
     IdentityConnection * epois_to_dend_hidden_pyr1 = new IdentityConnection(exc_Poisson_dend_hidden_pyr1, hidden_pyr1, w_epois_to_dend, GLUT);
@@ -319,9 +331,10 @@ int main(int ac, char* av[])
     ipois_to_dend_hidden_pyr1->set_target("g_gaba_dend");
     
             // population 2
-    IdentityConnection * epois_to_soma_hidden_pyr2 = new IdentityConnection(exc_Poisson_hidden_pyr2, hidden_pyr2, w_epois_to_soma, GLUT);
-    epois_to_soma_hidden_pyr2->set_target("g_ampa");
-    IdentityConnection * ipois_to_soma_hidden_pyr2 = new IdentityConnection(inh_Poisson_hidden_pyr2, hidden_pyr2, ratio_ie_soma*w_epois_to_soma, GABA);
+    BiasIdentityConnection * epois_to_soma_hidden_pyr2 = new BiasIdentityConnection(exc_Poisson_hidden_pyr2, hidden_pyr2, 1.1*w_epois_to_soma, learning_rate_bias, GLUT);
+    fix_bias_connections_parameters(epois_to_soma_hidden_pyr2, moving_average_time_constant);
+
+    IdentityConnection * ipois_to_soma_hidden_pyr2 = new IdentityConnection(inh_Poisson_hidden_pyr2, hidden_pyr2, 1.4*ratio_ie_soma*w_epois_to_soma, GABA);
     ipois_to_soma_hidden_pyr2->set_target("g_gaba");
     
     IdentityConnection * epois_to_dend_hidden_pyr2 = new IdentityConnection(exc_Poisson_dend_hidden_pyr2, hidden_pyr2, w_epois_to_dend, GLUT);
@@ -330,8 +343,9 @@ int main(int ac, char* av[])
     ipois_to_dend_hidden_pyr2->set_target("g_gaba_dend");
 
         // c - Output layer pyramidal neurons
-    IdentityConnection * epois_to_soma_output_pyr = new IdentityConnection(exc_Poisson_output_pyr, output_pyr, w_epois_to_soma, GLUT);
-    epois_to_soma_output_pyr->set_target("g_ampa");
+    BiasIdentityConnection * epois_to_soma_output_pyr = new BiasIdentityConnection(exc_Poisson_output_pyr, output_pyr, w_epois_to_soma, learning_rate_bias, GLUT);
+    fix_bias_connections_parameters(epois_to_soma_output_pyr, moving_average_time_constant);
+
     IdentityConnection * ipois_to_soma_output_pyr = new IdentityConnection(inh_Poisson_output_pyr, output_pyr, ratio_ie_soma*w_epois_to_soma, GABA);
     ipois_to_soma_output_pyr->set_target("g_gaba");
     
@@ -345,55 +359,55 @@ int main(int ac, char* av[])
     const float p_ff = 0.05; //0.05
     float w_in_to_hid_exc  = 0.07*4000/number_of_neurons;
     float w_in_to_hid_inh  = 0.03*4000/number_of_neurons;
-    float w_hid_to_out_exc = 0.1*4000/number_of_neurons;
+    float w_hid_to_out_exc = 0.09*4000/number_of_neurons;
     float w_hid_to_out_inh = 0.05*4000/number_of_neurons;
     
         // (1) Connect input layer to hidden layer
             // Excitation
-    AdaptiveEBCPConnection * con_input1_to_hidden1_exc = new AdaptiveEBCPConnection(input_pyr1, hidden_pyr1, 1*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre); //was 0.8
+    AdaptiveEBCPConnection * con_input1_to_hidden1_exc = new AdaptiveEBCPConnection(input_pyr1, hidden_pyr1, 0.8*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_input1_to_hidden1_exc, moving_average_time_constant);
     
-    AdaptiveEBCPConnection * con_input2_to_hidden1_exc = new AdaptiveEBCPConnection(input_pyr2, hidden_pyr1, 1*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre); //was 0.8
+    AdaptiveEBCPConnection * con_input2_to_hidden1_exc = new AdaptiveEBCPConnection(input_pyr2, hidden_pyr1, 0.8*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_input2_to_hidden1_exc, moving_average_time_constant);
     
-    AdaptiveEBCPConnection * con_input1_to_hidden2_exc = new AdaptiveEBCPConnection(input_pyr1, hidden_pyr2, 1*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre); //was 1.2
+    AdaptiveEBCPConnection * con_input1_to_hidden2_exc = new AdaptiveEBCPConnection(input_pyr1, hidden_pyr2, 0.8*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_input1_to_hidden2_exc, moving_average_time_constant);
     
-    AdaptiveEBCPConnection * con_input2_to_hidden2_exc = new AdaptiveEBCPConnection(input_pyr2, hidden_pyr2, 1*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre); //was 1.2
+    AdaptiveEBCPConnection * con_input2_to_hidden2_exc = new AdaptiveEBCPConnection(input_pyr2, hidden_pyr2, 0.8*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_input2_to_hidden2_exc, moving_average_time_constant);
 
             // Inhibition
-    TransmitEventConnection * con_input1_to_hidden1_inh = new TransmitEventConnection(input_pyr1, hidden_pyr1, w_in_to_hid_inh, p_ff, GABA); // 1
+    TransmitEventConnection * con_input1_to_hidden1_inh = new TransmitEventConnection(input_pyr1, hidden_pyr1, w_in_to_hid_inh, p_ff, GABA);
     con_input1_to_hidden1_inh->set_target("g_gaba");
     
-    TransmitEventConnection * con_input2_to_hidden1_inh = new TransmitEventConnection(input_pyr2, hidden_pyr1, w_in_to_hid_inh, p_ff, GABA); //DEBUG; 1
+    TransmitEventConnection * con_input2_to_hidden1_inh = new TransmitEventConnection(input_pyr2, hidden_pyr1, w_in_to_hid_inh, p_ff, GABA);
     con_input2_to_hidden1_inh->set_target("g_gaba");
     
-    TransmitEventConnection * con_input1_to_hidden2_inh = new TransmitEventConnection(input_pyr1, hidden_pyr2, 1.*w_in_to_hid_inh, p_ff, GABA);//DEBUG; 1.5
+    TransmitEventConnection * con_input1_to_hidden2_inh = new TransmitEventConnection(input_pyr1, hidden_pyr2, w_in_to_hid_inh, p_ff, GABA);
     con_input1_to_hidden2_inh->set_target("g_gaba");
     
-    TransmitEventConnection * con_input2_to_hidden2_inh = new TransmitEventConnection(input_pyr2, hidden_pyr2, 1.*w_in_to_hid_inh, p_ff, GABA); //1.5
+    TransmitEventConnection * con_input2_to_hidden2_inh = new TransmitEventConnection(input_pyr2, hidden_pyr2, w_in_to_hid_inh, p_ff, GABA);
     con_input2_to_hidden2_inh->set_target("g_gaba");
     
     
     // (2) Connect hidden layer to output layer
     // Excitation
-    AdaptiveEBCPConnection * con_hidden1_to_output_exc = new AdaptiveEBCPConnection(hidden_pyr1, output_pyr, 1*w_hid_to_out_exc, p_ff, learning_rate_hid_to_out, max_weight, tau_pre); //was 1
+    AdaptiveEBCPConnection * con_hidden1_to_output_exc = new AdaptiveEBCPConnection(hidden_pyr1, output_pyr, 1.4*w_hid_to_out_exc, p_ff, learning_rate_hid_to_out, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_hidden1_to_output_exc, moving_average_time_constant);
     
-    AdaptiveEBCPConnection * con_hidden2_to_output_exc = new AdaptiveEBCPConnection(hidden_pyr2, output_pyr, 1*w_hid_to_out_exc, p_ff, learning_rate_hid_to_out, max_weight, tau_pre); // was 0.7
+    AdaptiveEBCPConnection * con_hidden2_to_output_exc = new AdaptiveEBCPConnection(hidden_pyr2, output_pyr, 1.05*w_hid_to_out_exc, p_ff, learning_rate_hid_to_out, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_hidden2_to_output_exc, moving_average_time_constant);
 
     // Inhibition
-    TransmitEventConnection * con_hidden1_to_output_inh = new TransmitEventConnection(hidden_pyr1, output_pyr, 0.3*w_hid_to_out_inh, p_ff, GABA); // was 0.5
+    TransmitEventConnection * con_hidden1_to_output_inh = new TransmitEventConnection(hidden_pyr1, output_pyr, 0.3*w_hid_to_out_inh, p_ff, GABA);
     con_hidden1_to_output_inh->set_target("g_gaba");
     
-    TransmitEventConnection * con_hidden2_to_output_inh = new TransmitEventConnection(hidden_pyr2, output_pyr, 4.*w_hid_to_out_inh, p_ff, GABA); // was 3
+    TransmitEventConnection * con_hidden2_to_output_inh = new TransmitEventConnection(hidden_pyr2, output_pyr, 5.*w_hid_to_out_inh, p_ff, GABA);
     con_hidden2_to_output_inh->set_target("g_gaba");
     
 
     //-- CONNECT FeedBACK
-    float w_fb_exc = 0.13*4000/number_of_neurons; // was 0.12
+    float w_fb_exc = 0.13*4000/number_of_neurons;
     float w_fb_inh = 0.03*4000/number_of_neurons;
     float p_fb = p_ff;
     
@@ -413,36 +427,39 @@ int main(int ac, char* av[])
     /**************************************************/
     /******         CURRENT INJECTORS         *********/
     /**************************************************/
-    CurrentInjector * baseline_curr_output_pyr_dend  = new CurrentInjector(output_pyr, "Vd");
-    CurrentInjector * curr_inject_output_pyr_dend  = new CurrentInjector(output_pyr, "Vd");
-    CurrentInjector * curr_inject_hidden_pyr1_dend = new CurrentInjector(hidden_pyr1, "Vd");
-    CurrentInjector * curr_inject_hidden_pyr2_dend = new CurrentInjector(hidden_pyr2, "Vd");
+    CurrentInjector * baseline_curr_output_pyr_dend   = new CurrentInjector(output_pyr, "Vd");
     CurrentInjector * baseline_curr_hidden_pyr2_dend  = new CurrentInjector(hidden_pyr2, "Vd");
+    CurrentInjector * curr_inject_output_pyr_dend     = new CurrentInjector(output_pyr, "Vd");
+    CurrentInjector * curr_inject_hidden_pyr1_dend    = new CurrentInjector(hidden_pyr1, "Vd");
+    CurrentInjector * curr_inject_hidden_pyr2_dend    = new CurrentInjector(hidden_pyr2, "Vd");
 
-    
     CurrentInjector * curr_inject_output_pyr_soma  = new CurrentInjector(output_pyr, "mem");
     CurrentInjector * curr_inject_hidden_pyr1_soma = new CurrentInjector(hidden_pyr1, "mem");
     CurrentInjector * curr_inject_hidden_pyr2_soma = new CurrentInjector(hidden_pyr2, "mem");
     CurrentInjector * curr_inject_input_pyr1_soma  = new CurrentInjector(input_pyr1, "mem");
     CurrentInjector * curr_inject_input_pyr2_soma  = new CurrentInjector(input_pyr2, "mem");
     
+    // constant currents injected in dendrites (mostly to shift dendritic transfer function)
     baseline_curr_output_pyr_dend->set_all_currents(400.e-12/output_pyr[0].get_Cd());
     baseline_curr_hidden_pyr2_dend->set_all_currents(500.e-12/hidden_pyr2[0].get_Cd());
-
-    curr_inject_hidden_pyr1_soma->set_all_currents(-300.e-12/hidden_pyr1[0].get_Cs());
-    curr_inject_hidden_pyr2_soma->set_all_currents(-300.e-12/hidden_pyr2[0].get_Cs());
-    curr_inject_output_pyr_soma->set_all_currents(-100.e-12/output_pyr[0].get_Cs());
+    
+    // constant currents injected in somata (adjust gain; equivalent to changing leak reversal)
+    curr_inject_hidden_pyr1_soma->set_all_currents(-200.e-12/hidden_pyr1[0].get_Cs());
+    curr_inject_hidden_pyr2_soma->set_all_currents(-200.e-12/hidden_pyr2[0].get_Cs());
+    curr_inject_output_pyr_soma->set_all_currents(0.e-12/output_pyr[0].get_Cs());
+    
+    // error-encoding current
     curr_inject_output_pyr_dend->set_all_currents(0.);
     
     
     /**************************************************/
     /******              MONITORS             *********/
     /**************************************************/
-    double binSize_rate = 1./2;
+    double binSize_rate = 1;
     double binSize_wsum = binSize_rate;
     
     // Online monitor
-    //sys->set_online_rate_monitor_target(output_pyr);
+    //sys->set_online_rate_monitor_target(hidden_pyr1);
     //sys->set_online_rate_monitor_tau(binSize_rate);
 
     // Burst/event rate monitors
@@ -460,7 +477,11 @@ int main(int ac, char* av[])
     WeightSumMonitor * wsmon_hid1_to_out = new WeightSumMonitor( con_hidden1_to_output_exc, sys->fn("wsum_hid1_to_out"), binSize_wsum );
     WeightSumMonitor * wsmon_hid2_to_out = new WeightSumMonitor( con_hidden2_to_output_exc, sys->fn("wsum_hid2_to_out"), binSize_wsum );
     
-    // Monitors for  estimating burst probability
+    WeightSumMonitor * wsmon_noise_to_out = new WeightSumMonitor( epois_to_soma_output_pyr, sys->fn("wsum_noise_to_out"), binSize_wsum );
+    WeightSumMonitor * wsmon_noise_to_hid1 = new WeightSumMonitor( epois_to_soma_hidden_pyr1, sys->fn("wsum_noise_to_hid1"), binSize_wsum );
+    WeightSumMonitor * wsmon_noise_to_hid2 = new WeightSumMonitor( epois_to_soma_hidden_pyr2, sys->fn("wsum_noise_to_hid2"), binSize_wsum );
+
+    // Monitors for  estimating burst probability (a sample of 50 neurons)
     std::vector< StateMonitor* > smon_tr_post_ev;
     std::vector< StateMonitor* > smon_tr_post_b;
     
@@ -474,12 +495,10 @@ int main(int ac, char* av[])
     //**********************************************************************/
     //***                          SIMULATIONS                           ***/
     //**********************************************************************/
-    const double max_input_current = 200e-12;
-    const double min_input_current = -300e-12;
+    const double max_input_current = 150e-12;
+    const double min_input_current = -350e-12;
     
     input_output_XOR example(max_input_current, min_input_current);
-    const int number_of_examples_before_test = 25;
-    const int number_of_examples_before_cost = 4;
     const int number_of_epochs = number_of_training_examples/4;
     
     double Cs_input_pyr1 = input_pyr1[0].get_Cs();
@@ -488,7 +507,7 @@ int main(int ac, char* av[])
     
     double cost = 0;
     double cost_epoch = 0;
-    std::vector<int> permutation;
+    std::vector<int> permutation; // when the examples are presented in random order
     
     // burn-in period (plasticity is off)
     con_input1_to_hidden1_exc->stdp_active = false;
@@ -499,26 +518,30 @@ int main(int ac, char* av[])
     con_hidden1_to_output_exc->stdp_active = false;
     con_hidden2_to_output_exc->stdp_active = false;
 
+    epois_to_soma_hidden_pyr1->stdp_active = false;
+    epois_to_soma_hidden_pyr2->stdp_active = false;
+    epois_to_soma_output_pyr->stdp_active =  false;
+    
     const float prediction_time = 0.9*durex;
     const float learning_time = durex - prediction_time;
-    const int number_of_error_recomputing = 1; //int(learning_time/1.); ////////   DEBUG   /////////
+    const int number_of_error_recomputing = 1;
 
     sys->run(3*moving_average_time_constant);
-    
+
     // test set before learning
     // input (0,0)
     curr_inject_input_pyr1_soma->set_all_currents(min_input_current/Cs_input_pyr1);
     curr_inject_input_pyr2_soma->set_all_currents(min_input_current/Cs_input_pyr2);
     sys->run(durex);
     
-    // input (0,1)
-    curr_inject_input_pyr1_soma->set_all_currents(min_input_current/Cs_input_pyr1);
-    curr_inject_input_pyr2_soma->set_all_currents(max_input_current/Cs_input_pyr2);
-    sys->run(durex);
-    
     // input (1,0)
     curr_inject_input_pyr1_soma->set_all_currents(max_input_current/Cs_input_pyr1);
     curr_inject_input_pyr2_soma->set_all_currents(min_input_current/Cs_input_pyr2);
+    sys->run(durex);
+    
+    // input (0,1)
+    curr_inject_input_pyr1_soma->set_all_currents(min_input_current/Cs_input_pyr1);
+    curr_inject_input_pyr2_soma->set_all_currents(max_input_current/Cs_input_pyr2);
     sys->run(durex);
     
     // input (1,1)
@@ -530,13 +553,13 @@ int main(int ac, char* av[])
     // loop over set of training examples
     count_example = 1;
     for (int epoch=1;epoch<=number_of_epochs;epoch++){
+        // Uncomment the following line if the examples are randomly selected.
         //generate_random_permutation(permutation);
         cost_epoch = 0;
         for (int i=0;i<4;i++){
             // select example (random or deterministic)
-            //if (i % 2 == 0) example.select_XOR_example_specific(1,0);
-            //else example.select_XOR_example_specific(0,1);
             example.select_XOR_example_deterministic(i);
+            // Uncomment the following line and comment the previous one if the examples are randomly selected.
             //example.apply(permutation[i]);
             
             // inject input currents according to the selected example
@@ -552,8 +575,14 @@ int main(int ac, char* av[])
             con_hidden1_to_output_exc->stdp_active = false;
             con_hidden2_to_output_exc->stdp_active = false;
             
+            epois_to_soma_hidden_pyr1->stdp_active = false;
+            epois_to_soma_hidden_pyr2->stdp_active = false;
+            epois_to_soma_output_pyr->stdp_active  = false;
+            
             // run for the prediction time
             sys->run(prediction_time);
+            
+            // compute cost at the end of the prediction interval
             cost = compute_cost(con_hidden1_to_output_exc, example.output);
             std::cout<<"example #"<< count_example <<": cost (pre) = "<<cost<<std::endl;
             outfile_cost<<count_example<<"\t"<<cost;
@@ -568,6 +597,11 @@ int main(int ac, char* av[])
             
             con_hidden1_to_output_exc->stdp_active = true;
             con_hidden2_to_output_exc->stdp_active = true;
+            
+            // change "false" to "true" to turn ON the plasticity of the noise/bias (default : false)
+            epois_to_soma_hidden_pyr1->stdp_active = false;
+            epois_to_soma_hidden_pyr2->stdp_active = false;
+            epois_to_soma_output_pyr->stdp_active  = false;
 
             for (int k=0;k<number_of_error_recomputing;k++){
                 // inject current in output pyramids' dendrites to generate error
@@ -577,6 +611,7 @@ int main(int ac, char* av[])
                 sys->run(learning_time/number_of_error_recomputing);
             }
             
+            // compute cost after learning interval for reference
             cost = compute_cost(con_hidden1_to_output_exc, example.output);
             std::cout<<"example #"<< count_example <<": cost (post) = "<<cost<<std::endl;
             outfile_cost<<"\t"<<cost<<std::endl;
@@ -585,49 +620,6 @@ int main(int ac, char* av[])
             curr_inject_output_pyr_dend->set_all_currents(0.);
             
             count_example++;
-            /*
-            // compute cost
-            if ( i % number_of_examples_before_cost == 0 ){
-                cost = 0;
-                con_input1_to_hidden1_exc->stdp_active = false;
-                con_input1_to_hidden2_exc->stdp_active = false;
-                con_input2_to_hidden1_exc->stdp_active = false;
-                con_input2_to_hidden2_exc->stdp_active = false;
-             
-                con_hidden1_to_output_exc->stdp_active = false;
-                con_hidden2_to_output_exc->stdp_active = false;
-             
-                // input (0,0)
-                curr_inject_input_pyr1_soma->set_all_currents(min_input_current/Cs_input_pyr1);
-                curr_inject_input_pyr2_soma->set_all_currents(min_input_current/Cs_input_pyr2);
-             
-                cost += compute_cost(con_hidden1_to_output_exc, 0);
-                sys->run(durex/2.);
-             
-                // input (0,1)
-                curr_inject_input_pyr1_soma->set_all_currents(min_input_current/Cs_input_pyr1);
-                curr_inject_input_pyr2_soma->set_all_currents(max_input_current/Cs_input_pyr2);
-             
-                cost += compute_cost(con_hidden1_to_output_exc, 1);
-                sys->run(durex/2.);
-             
-                // input (1,0)
-                curr_inject_input_pyr1_soma->set_all_currents(max_input_current/Cs_input_pyr1);
-                curr_inject_input_pyr2_soma->set_all_currents(min_input_current/Cs_input_pyr2);
-             
-                cost += compute_cost(con_hidden1_to_output_exc, 1);
-                sys->run(durex/2.);
-             
-                // input (1,1)
-                curr_inject_input_pyr1_soma->set_all_currents(max_input_current/Cs_input_pyr1);
-                curr_inject_input_pyr2_soma->set_all_currents(max_input_current/Cs_input_pyr2);
-             
-                cost += compute_cost(con_hidden1_to_output_exc, 0);
-                sys->run(durex/2.);
-             
-                std::cout<<"example #"<<i <<": cost = "<<cost<<std::endl;
-
-            }*/
         }
         std::cout << "**** Cost epoch " << epoch << " = " << cost_epoch << std::endl;
         outfile_cost_epoch<<epoch<<"\t"<<cost_epoch<<std::endl;
@@ -641,26 +633,29 @@ int main(int ac, char* av[])
     con_hidden1_to_output_exc->stdp_active = false;
     con_hidden2_to_output_exc->stdp_active = false;
     
+    epois_to_soma_hidden_pyr1->stdp_active = false;
+    epois_to_soma_hidden_pyr2->stdp_active = false;
+    epois_to_soma_output_pyr->stdp_active =  false;
+    
     // input (0,0)
     curr_inject_input_pyr1_soma->set_all_currents(min_input_current/Cs_input_pyr1);
     curr_inject_input_pyr2_soma->set_all_currents(min_input_current/Cs_input_pyr2);
         sys->run(durex);
-    
-    // input (0,1)
-    curr_inject_input_pyr1_soma->set_all_currents(min_input_current/Cs_input_pyr1);
-    curr_inject_input_pyr2_soma->set_all_currents(max_input_current/Cs_input_pyr2);
-    sys->run(durex);
     
     // input (1,0)
     curr_inject_input_pyr1_soma->set_all_currents(max_input_current/Cs_input_pyr1);
     curr_inject_input_pyr2_soma->set_all_currents(min_input_current/Cs_input_pyr2);
     sys->run(durex);
     
+    // input (0,1)
+    curr_inject_input_pyr1_soma->set_all_currents(min_input_current/Cs_input_pyr1);
+    curr_inject_input_pyr2_soma->set_all_currents(max_input_current/Cs_input_pyr2);
+    sys->run(durex);
+    
     // input (1,1)
     curr_inject_input_pyr1_soma->set_all_currents(max_input_current/Cs_input_pyr1);
     curr_inject_input_pyr2_soma->set_all_currents(max_input_current/Cs_input_pyr2);
     sys->run(durex);
-    
     
     if (errcode)
         auryn_abort(errcode);
@@ -738,6 +733,16 @@ void fix_plastic_connections_parameters(AdaptiveEBCPConnection * connect, double
     connect->set_post_trace_burst_tau(alpha);
     connect->set_target("g_ampa");
     connect->max_rate = e_max;
+    connect->min_rate = e_min;
+}
+
+void fix_bias_connections_parameters(BiasIdentityConnection * connect, double alpha){
+    connect->set_target("g_ampa");
+    connect->set_post_trace_event_tau(alpha);
+    connect->set_post_trace_burst_tau(alpha);
+    connect->max_rate = e_max;
+    connect->min_rate = e_min;
+    connect->stdp_active = false;
 }
 
 

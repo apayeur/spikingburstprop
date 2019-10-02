@@ -25,6 +25,30 @@ AdaptiveEBCPConnection::AdaptiveEBCPConnection(
 
 }
 
+AdaptiveEBCPConnection::AdaptiveEBCPConnection(SpikingGroup * source,
+                                               NeuronGroup * destination,
+                                               TransmitterType transmitter,
+                                               AurynFloat eta,
+                                               AurynFloat maxweight,
+                                               AurynFloat tau_pre)
+: EBCPConnection(source, destination, transmitter, eta, maxweight, tau_pre)
+{
+    // homeostasis constants (min and max event rate)
+    min_rate = 2.;
+    max_rate = 12.;
+    
+    // auxiliary postsyn event trace
+    tr_event_aux = new EulerTrace(src->get_vector_size(), tr_event->get_tau());
+}
+
+AdaptiveEBCPConnection::AdaptiveEBCPConnection(SpikingGroup * source,
+                                               NeuronGroup * destination,
+                                               TransmitterType transmitter)
+: EBCPConnection(source, destination, transmitter)
+{
+}
+
+
 void AdaptiveEBCPConnection::finalize() {
     EBCPConnection::finalize();
 }
@@ -97,7 +121,11 @@ void AdaptiveEBCPConnection::compute_burst_rate()
             
             tr_event_aux->set(s, tr_event->get(s));
             burst_state->set(s,0);
-            if (tr_event->get(s) > 0) propagate_backward(s, -tr_burst->normalized_get(s)/tr_event->normalized_get(s));
+            AurynFloat BP_estimate = tr_burst->normalized_get(s)/tr_event->normalized_get(s);
+            if (BP_estimate < 1.)
+            {
+                propagate_backward(s, -BP_estimate);
+            }
             else propagate_backward(s, -1.);
             // it is preferable to update tr_event after propagate backward
             tr_event->inc(s);

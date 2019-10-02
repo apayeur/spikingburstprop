@@ -36,13 +36,26 @@ namespace auryn {
             void propagate_backward(const NeuronID translated_post, const AurynState valence);
 
         public:
-            AdaptiveEBCPConnection(SpikingGroup * source, NeuronGroup * destination,
-                          AurynWeight weight, AurynFloat sparseness=0.05,
-                          AurynFloat eta=1e-3,
-                          AurynFloat maxweight=1.,
-                          AurynFloat tau_pre=20.e-3,
-                          TransmitterType transmitter=GLUT,
-                          string name = "AdaptiveEBCPConnection" );
+            AdaptiveEBCPConnection(SpikingGroup * source,
+                                   NeuronGroup * destination,
+                                   TransmitterType transmitter=GLUT);
+        
+            AdaptiveEBCPConnection(SpikingGroup * source,
+                                   NeuronGroup * destination,
+                                   TransmitterType transmitter,
+                                   AurynFloat eta,
+                                   AurynFloat maxweight,
+                                   AurynFloat tau_pre);
+        
+            AdaptiveEBCPConnection(SpikingGroup * source,
+                                   NeuronGroup * destination,
+                                   AurynWeight weight,
+                                   AurynFloat sparseness=0.05,
+                                   AurynFloat eta=1e-3,
+                                   AurynFloat maxweight=1.,
+                                   AurynFloat tau_pre=20.e-3,
+                                   TransmitterType transmitter=GLUT,
+                                   string name = "AdaptiveEBCPConnection" );
         
             virtual ~AdaptiveEBCPConnection();
             virtual void finalize();

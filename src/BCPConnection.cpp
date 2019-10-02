@@ -31,7 +31,6 @@ void BCPConnection::init(AurynFloat eta, AurynFloat maxweight, AurynFloat tau_pr
 	Aplus = 1.0; // TODO set to something more meaningful
 	Aminus = -0.15;
 
-
 	// homeostasis constants
 	min_rate = 0.1;
 	max_rate = 20.0;
@@ -44,11 +43,11 @@ void BCPConnection::init(AurynFloat eta, AurynFloat maxweight, AurynFloat tau_pr
 	// burst detector
 	const double default_tau = 16e-3;
 	tr_post = dst->get_post_trace(default_tau);
-	burst_state = new AurynVector<unsigned short>(dst->get_vector_size() );
+	burst_state = new AurynVector<unsigned short>( dst->get_vector_size() );
 	burst_state->set_all(0);
 	burst_thr = std::exp(-1.0);
 
-	
+	// other traces
 	tr_event = new EulerTrace(dst->get_vector_size(), 5.5); //!< event rate average
 	tr_burst = new EulerTrace(dst->get_vector_size(), 5.5); //!< burst rate average (currently not needed)
 	tr_hom = dst->get_post_trace(30.0); //!< homeostatic firing rate average
@@ -73,27 +72,44 @@ void BCPConnection::free()
 	delete tr_burst;
 }
 
-BCPConnection::BCPConnection(SpikingGroup * source, NeuronGroup * destination, TransmitterType transmitter) : DuplexConnection(source, destination, transmitter)
+BCPConnection::BCPConnection(SpikingGroup * source,
+                             NeuronGroup * destination,
+                             TransmitterType transmitter)
+: DuplexConnection(source,
+                   destination,
+                   transmitter)
 {
 }
 
+BCPConnection::BCPConnection(SpikingGroup * source,
+                             NeuronGroup * destination,
+                             TransmitterType transmitter,
+                             AurynFloat eta,
+                             AurynFloat maxweight,
+                             AurynFloat tau_pre)
+: DuplexConnection(source,
+                   destination,
+                   transmitter)
+{
+    init(eta, maxweight, tau_pre);
+}
 
-BCPConnection::BCPConnection(
-		SpikingGroup * source, 
-		NeuronGroup * destination, 
-		AurynWeight weight, 
-		AurynFloat sparseness, 
-		AurynFloat eta, 
-		AurynFloat maxweight,
-        AurynFloat tau_pre,
-		TransmitterType transmitter,
-		std::string name) 
+
+BCPConnection::BCPConnection(SpikingGroup * source,
+                             NeuronGroup * destination,
+                             AurynWeight weight,
+                             AurynFloat sparseness,
+                             AurynFloat eta,
+                             AurynFloat maxweight,
+                             AurynFloat tau_pre,
+                             TransmitterType transmitter,
+                             std::string name)
 : DuplexConnection(source, 
-		destination, 
-		weight, 
-		sparseness, 
-		transmitter, 
-		name)
+                   destination,
+                   weight,
+                   sparseness,
+                   transmitter,
+                   name)
 {
 	init(eta, maxweight, tau_pre);
 	if ( name.empty() )

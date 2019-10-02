@@ -744,6 +744,8 @@ def add_step(bg, begin, length, amplitude):
     """
     if begin + length < len(bg):
         bg[begin:begin+length+1] += amplitude
+    else:
+        bg[begin:len(bg)] += amplitude
 
 
 def add_soft_step(bg, begin, length, amplitude, slope_duration):

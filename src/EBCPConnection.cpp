@@ -23,15 +23,14 @@
 
 using namespace auryn;
 
-EBCPConnection::EBCPConnection(
-                             SpikingGroup * source,
-                             NeuronGroup * destination,
-                             AurynWeight weight,
-                             AurynFloat sparseness,
-                             AurynFloat eta,
-                             AurynFloat maxweight,
-                             AurynFloat tau_pre,
-                             TransmitterType transmitter,
+EBCPConnection::EBCPConnection(SpikingGroup * source,
+                               NeuronGroup * destination,
+                               AurynWeight weight,
+                               AurynFloat sparseness,
+                               AurynFloat eta,
+                               AurynFloat maxweight,
+                               AurynFloat tau_pre,
+                               TransmitterType transmitter,
                                std::string name)
 : BCPConnection(source, destination, weight, sparseness, eta, maxweight, tau_pre, transmitter, name)
 {
@@ -43,6 +42,28 @@ EBCPConnection::EBCPConnection(
     if ( !name.empty() )
         set_name("EBCPConnection");
 }
+
+EBCPConnection::EBCPConnection(SpikingGroup * source,
+                               NeuronGroup * destination,
+                               TransmitterType transmitter,
+                               AurynFloat eta,
+                               AurynFloat maxweight,
+                               AurynFloat tau_pre)
+: BCPConnection(source, destination, transmitter, eta, maxweight, tau_pre)
+{
+    burst_state_pre = new AurynVector<unsigned short>(src->get_vector_size() );
+    burst_state_pre->set_all(0);
+    
+    tr_event_pre = new EulerTrace(src->get_vector_size(), tau_pre);
+}
+
+EBCPConnection::EBCPConnection(SpikingGroup * source,
+                               NeuronGroup * destination,
+                               TransmitterType transmitter)
+: BCPConnection(source, destination, transmitter)
+{
+}
+
 
 void EBCPConnection::finalize() {
     BCPConnection::finalize();

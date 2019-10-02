@@ -2,6 +2,7 @@
 results/
 figs/
 data/
+deprecated/
 .idea/
 /test/test-output/
 
