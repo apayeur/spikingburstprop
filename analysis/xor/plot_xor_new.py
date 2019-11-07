@@ -109,44 +109,38 @@ ax2.legend(loc='best')
 remove_xticklabel(ax2)
 set_axis_color(ax2, custom_colors['pink'])
 
+
 # error generation at output layer
 ax3 = fig.add_subplot(333)
 r_out = output_rates[during_learning[0]:during_learning[1], :]
 teacher = np.zeros(np.shape(r_out[:,2]))
 er_est = er_trace[during_learning[0]:during_learning[1], 1]/args.alpha
-add_step(teacher, int(0.9*args.durex/binSize), int(0.1*args.durex/binSize), -1./(e_max - er_est[int(0.9*args.durex/binSize)]))
-add_step(teacher, int(1.9*args.durex/binSize), int(0.1*args.durex/binSize), 1./(er_est[int(1.9*args.durex/binSize)] - e_min))
-add_step(teacher, int(2.9*args.durex/binSize), int(0.1*args.durex/binSize), 1./(er_est[int(2.9*args.durex/binSize)] - e_min))
-add_step(teacher, int(3.9*args.durex/binSize), int(0.1*args.durex/binSize), -1./(e_max - er_est[int(3.9*args.durex/binSize)]))
-rescaled_teacher = 20*teacher + 5.
+add_step(teacher, int(0.9*args.durex/binSize), int(0.1*args.durex/binSize)-1, -1./(e_max - er_est[int(0.9*args.durex/binSize)]))
+add_step(teacher, int(1.9*args.durex/binSize), int(0.1*args.durex/binSize)-1, 1./(er_est[int(1.9*args.durex/binSize)] - e_min))
+add_step(teacher, int(2.9*args.durex/binSize), int(0.1*args.durex/binSize)-1, 1./(er_est[int(2.9*args.durex/binSize)] - e_min))
+add_step(teacher, int(3.9*args.durex/binSize), int(0.1*args.durex/binSize)-1, -1./(e_max - er_est[int(3.9*args.durex/binSize)]))
+#rescaled_teacher = 20*teacher + 5.
 
-ax3.plot(r_out[:, 0], r_out[:,2], color=custom_colors['blue'])
-ax3.plot(r_out[:, 0], rescaled_teacher, '--', lw=1, color=custom_colors['teacher_green'], label=r'teaching current')
-ax3.tick_params('y', labelcolor=custom_colors['blue'])
-ax3.text(during_learning[0] + args.durex/2., -0.5, '(0, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax3.text(during_learning[0] + 3*args.durex/2., -0.5, '(1, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax3.text(during_learning[0] + 5*args.durex/2., -0.5, '(0, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax3.text(during_learning[0] + 7*args.durex/2., -0.5, '(1, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
+ax3.plot(r_out[:, 0], 100*r_out[:, 1]/r_out[:, 2], color=custom_colors['red'])
+ax3.text(during_learning[0] + args.durex/2., -4.5, '(0, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
+ax3.text(during_learning[0] + 3*args.durex/2., -4.5, '(1, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
+ax3.text(during_learning[0] + 5*args.durex/2., -4.5, '(0, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
+ax3.text(during_learning[0] + 7*args.durex/2., -4.5, '(1, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
 ax3.set_title('Error generation at output layer', fontdict=None, loc='center', fontsize=9)
-ax3.legend(loc='best')
 remove_xticklabel(ax3)
 set_axis_color(ax3, custom_colors['pink'])
-ax3.vlines(during_learning[0] + args.durex/2., 20*0.1 + 5, 20*0.2 + 5, colors=custom_colors['teacher_green'], linestyles='solid', label='0.1 nA')
-ax3.text(during_learning[0] + args.durex/2. + 3, 20*0.15 + 5, '0.1 nA', horizontalalignment='left', verticalalignment='center', fontsize=8)
-ax3.set_yticks([0, 10])
-ax3.set_ylabel('ER, output [Hz]', color=custom_colors['blue'])
-
+#ax3.vlines(during_learning[0] + args.durex/2., 20*0.1 + 5, 20*0.2 + 5, colors=custom_colors['teacher_green'], linestyles='solid', label='0.1 nA')
+#ax3.text(during_learning[0] + args.durex/2. + 3, 20*0.15 + 5, '0.1 nA', horizontalalignment='left', verticalalignment='center', fontsize=8)
+ax3.set_yticks([0, 30, 60, 90])
+ax3.set_ylabel('BP, output [\%]', color=custom_colors['red'])
 
 ax3_tw = ax3.twinx()
-er_est = er_trace[during_learning[0]:during_learning[1], :]
-br_est = br_trace[during_learning[0]:during_learning[1], :]
-ax3_tw.plot(r_out[:, 0], 100*r_out[:, 1]/r_out[:, 2], color=custom_colors['red'])
-ax3_tw.tick_params('y', labelcolor=custom_colors['red'])
-#ax3_tw.plot(er_est[:, 0], 100*br_est[:, 1]/er_est[:, 1], '--', color=custom_colors['red'], label=r'$\bar{p}$')
+ax3_tw.plot(r_out[:, 0], teacher, '--', lw=1, color=custom_colors['teacher_green'])
+#ax3_tw.tick_params('y', labelcolor=custom_colors['teacher_green'])
 ax3_tw.set_xticks(list(during_learning[0] + args.durex*np.arange(5)-1))
-ax3_tw.set_yticks([0, 30, 60, 90])
+#ax3_tw.set_yticks([0, 30, 60, 90])
 set_axis_color(ax3_tw, custom_colors['pink'])
-ax3_tw.set_ylabel('BP, output [\%]', color=custom_colors['red'])
+ax3_tw.set_ylabel('Teaching current [nA]', color=custom_colors['teacher_green'])
 
 
 # error propagation in hidden layers
