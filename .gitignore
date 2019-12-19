@@ -12,6 +12,7 @@ sim/sim_*
 
 *.xml
 *.ipynb
+*.pyc
 
 # DS_Store
 .DS_Store
