@@ -180,8 +180,9 @@ int main(int ac, char* av[])
     BCPConnection * con_ext_soma;
     
     if (connect_type == "BCP") {
+        std::cout << "WARNING! CHANGING TAU_PRE NOT SUPPORTED!!! tau_pre = 20 ms"<<std::endl;
         con_ext_soma = new BCPConnection(input, neurons_exc, we_soma,
-                                         sparseness, learning_rate, max_weight, tau_pre, GLUT);
+                                         sparseness, learning_rate, max_weight, GLUT);
     }
     else if (connect_type == "EBCP"){
         con_ext_soma = new EBCPConnection(input, neurons_exc, we_soma,

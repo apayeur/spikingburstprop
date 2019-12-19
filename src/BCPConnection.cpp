@@ -22,7 +22,7 @@
 
 using namespace auryn;
 
-void BCPConnection::init(AurynFloat eta, AurynFloat maxweight, AurynFloat tau_pre)
+void BCPConnection::init(AurynFloat eta, AurynFloat maxweight)
 {
 	if ( dst->get_post_size() == 0 ) return;
 
@@ -38,6 +38,7 @@ void BCPConnection::init(AurynFloat eta, AurynFloat maxweight, AurynFloat tau_pr
 	auryn::logger->parameter("eta",eta);
 
 	// presynaptic trace
+    const double tau_pre = 20e-3;
 	tr_pre  = src->get_pre_trace(tau_pre);
 
 	// burst detector
@@ -85,13 +86,12 @@ BCPConnection::BCPConnection(SpikingGroup * source,
                              NeuronGroup * destination,
                              TransmitterType transmitter,
                              AurynFloat eta,
-                             AurynFloat maxweight,
-                             AurynFloat tau_pre)
+                             AurynFloat maxweight)
 : DuplexConnection(source,
                    destination,
                    transmitter)
 {
-    init(eta, maxweight, tau_pre);
+    init(eta, maxweight);
 }
 
 
@@ -101,7 +101,6 @@ BCPConnection::BCPConnection(SpikingGroup * source,
                              AurynFloat sparseness,
                              AurynFloat eta,
                              AurynFloat maxweight,
-                             AurynFloat tau_pre,
                              TransmitterType transmitter,
                              std::string name)
 : DuplexConnection(source, 
@@ -111,7 +110,7 @@ BCPConnection::BCPConnection(SpikingGroup * source,
                    transmitter,
                    name)
 {
-	init(eta, maxweight, tau_pre);
+	init(eta, maxweight);
 	if ( name.empty() )
 		set_name("BCPConnection");
 }

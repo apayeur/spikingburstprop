@@ -32,11 +32,15 @@ EBCPConnection::EBCPConnection(SpikingGroup * source,
                                AurynFloat tau_pre,
                                TransmitterType transmitter,
                                std::string name)
-: BCPConnection(source, destination, weight, sparseness, eta, maxweight, tau_pre, transmitter, name)
+: BCPConnection(source, destination, weight, sparseness, eta, maxweight, transmitter, name)
 {
+    // burst detection pre
+    const double default_tau = 16e-3; //default burst detection threshold
+    tr_pre->set_timeconstant(default_tau);
     burst_state_pre = new AurynVector<unsigned short>(src->get_vector_size() );
     burst_state_pre->set_all(0);
-
+    
+    // event-evoked presynaptic trace
     tr_event_pre = new EulerTrace(src->get_vector_size(), tau_pre);
     
     if ( !name.empty() )
@@ -49,11 +53,15 @@ EBCPConnection::EBCPConnection(SpikingGroup * source,
                                AurynFloat eta,
                                AurynFloat maxweight,
                                AurynFloat tau_pre)
-: BCPConnection(source, destination, transmitter, eta, maxweight, tau_pre)
+: BCPConnection(source, destination, transmitter, eta, maxweight)
 {
+    // burst detection pre
+    const double default_tau = 16e-3; //default burst detection threshold
+    tr_pre->set_timeconstant(default_tau);
     burst_state_pre = new AurynVector<unsigned short>(src->get_vector_size() );
     burst_state_pre->set_all(0);
     
+    // event-evoked presynaptic trace
     tr_event_pre = new EulerTrace(src->get_vector_size(), tau_pre);
 }
 
@@ -72,10 +80,7 @@ void EBCPConnection::finalize() {
 
 void EBCPConnection::free()
 {
-    //delete burst_state;
     delete burst_state_pre;
-    //delete tr_event;
-    //delete tr_burst;
     delete tr_event_pre;
 }
 

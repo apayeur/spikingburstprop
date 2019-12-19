@@ -41,11 +41,11 @@ class BCPConnection : public DuplexConnection
 {
 
 private:
-	void init(AurynFloat eta, AurynFloat maxweight, AurynFloat tau_pre);
+	void init(AurynFloat eta, AurynFloat maxweight);
 
 protected:
-	Trace * tr_pre;
-	Trace * tr_post;
+	Trace * tr_pre; // presynaptic eligibility trace
+	Trace * tr_post;// for postsynaptic burst and event detection
 
 	Trace * tr_event;
 	Trace * tr_hom;
@@ -81,8 +81,7 @@ public:
                   NeuronGroup * destination,
                   TransmitterType transmitter,
                   AurynFloat eta,
-                  AurynFloat maxweight,
-                  AurynFloat tau_pre);
+                  AurynFloat maxweight);
 	
     BCPConnection(SpikingGroup * source,
                   NeuronGroup * destination,
@@ -90,7 +89,6 @@ public:
                   AurynFloat sparseness=0.05,
                   AurynFloat eta=1e-3,
                   AurynFloat maxweight=1.,
-                  AurynFloat tau_pre=20.e-3,
                   TransmitterType transmitter=GLUT,
                   string name = "BCPConnection" );
 
