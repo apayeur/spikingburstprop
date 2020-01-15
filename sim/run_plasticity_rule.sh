@@ -35,7 +35,7 @@ function run {
 
 for D in 0.25
 do
-	for W0 in 0.1
+	for W0 in 0.095
 	do
 		run $D $W0
 	done
