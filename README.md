@@ -10,10 +10,10 @@ To reproduce Figs. 2-3-4 of our paper "*Burst-dependent synaptic plasticity can 
 * Figure 2B-D:
 From folder `./analysis/plasticity-protocol`, run the Python script `plot_all_adaptive_rule.py`. This code produces a `.pdf` in folder `../../results/learning-rule`, so make sure that the latter exists before running the code.  
 This code works with the following Python packages:
-* python 3.6.2
-* numpy 1.13.1
-* scipy 0.19.1
-* matplotlib 2.0.2
+** python 3.6.2
+** numpy 1.13.1
+** scipy 0.19.1
+** matplotlib 2.0.2
 Equivalently, create a conda environment from `./analysis/plasticity-protocol/env_py3.yml`.  
 
 * Figure 2E-G:
