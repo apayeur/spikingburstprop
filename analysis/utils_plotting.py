@@ -5,9 +5,9 @@ custom_colors = {'blue': (0, 0.45, 0.7),
                  'red': (0.57, 0, 0),
                  'orange': (0.9, 0.6, 0),
                  'vermilion': (0.8, 0.4, 0),
-                 'bluish_green': (0, 0.6, 0.5),
+                 'bluish_green': (0, 158./255, 115./255),
                  'yellow': (0.95, 0.9, 0.25),
-                 'sky_blue': (0.35, 0.7, 0.9),
+                 'sky_blue': (86./255, 180./255, 233./255),
                  'pink': (0.8, 0.6, 0.7),
                  'light_blue': (109./255, 182./255, 1.),
                  'special_green': (88./255, 180./255, 109./255),
@@ -22,6 +22,7 @@ def remove_xticklabel(axis):
     empty_string_labels = [''] * len(labels)
     axis.set_xticklabels(empty_string_labels)
 
+
 def set_axis_color(axis, color):
     """
     Set color of all axis
@@ -32,6 +33,7 @@ def set_axis_color(axis, color):
     axis.spines['left'].set_color(color)
     axis.tick_params(axis='x', colors=color)
     axis.tick_params(axis='y', colors=color)
+
 
 def adjust_range(x, y):
     """

@@ -16,13 +16,14 @@ def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_est
     np.random.seed(2)
 
     # select parameters for pairing protocol
-    tau_moving_average = alpha         # time constant for moving average
-    burnin = 0*tau_moving_average    # seconds, relaxation of moving averages
     nb_reals = 10
+    burnin = 0.
 
     # create synapse
-    learning_rate = eta
-    syn = AdaptivePreEventSynapse(learning_rate, tau_trace=tau_pre, tau_ma=tau_moving_average, burst_def=burst_threshold,
+    syn = AdaptivePreEventSynapse(eta,
+                                  burst_def=burst_threshold,
+                                  tau_trace=tau_pre,
+                                  tau_ma=alpha,
                                   starting_estimate=starting_estimate)
 
     # integration time step
@@ -40,29 +41,17 @@ def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_est
             protocol = RandomProtocol(duration=duration+burnin, rate=r)
             syn.pre.compute_trains(protocol.spiketimes_pre, dt, duration+burnin)
             syn.post_ma.compute_trains(protocol.spiketimes_post, dt, duration+burnin)
-            #bp_loc = np.sum(syn.pre.train['burst'])/np.sum(syn.pre.train['event'])
-            #bp.append(bp_loc)
-            #plot_cov(syn, r, dt, burst_threshold)
+            meanER = len(np.where(syn.post_ma.train['event']>0)[0])/duration
+            syn.post_ma.set_starting_estimate((meanER, (starting_estimate[1]/starting_estimate[0])*meanER))
 
-            syn.plasticity_on = False
-            for t in range(int(burnin/dt)):
-                syn.evolve(t, dt)
-                weight_trace.append(syn.weight/dt)
-                if syn.post_ma.moving_average['event'] > 0:
-                    bp_est.append(syn.post_ma.moving_average['burst']/syn.post_ma.moving_average['event'])
-
-            syn.plasticity_on = True
             count = 0
             for x in range(int(burnin/dt), int((burnin+duration)/dt)):
                 count += 1
                 syn.evolve(x, dt)
                 weight_trace.append(syn.weight/dt)
                 bp_est.append(syn.post_ma.moving_average['burst']/syn.post_ma.moving_average['event'])
-            #print('real bp = {:4.3f}, estimated bp = {4.3f}'.format(bp_loc, bp_est/count))
-            #print(r, syn)
-            weights[idx] += syn.weight/dt
-            #  division by dt is because event and burst trains are not divided
-            #  by dt in the rule (see preeventsynapse.py)
+            weights[idx] += syn.weight/dt   # division by dt is because event and burst trains are not divided
+                                            # by dt in the rule (see preeventsynapse.py)
     weights /= nb_reals
 
     return rates, weights, weight_trace, bp_est
@@ -119,7 +108,6 @@ def burst_fraction(rates, burst_threshold):
     return 1-np.exp(-burst_threshold*rates)
 
 
-
 if __name__ == '__main__':
     import sys
     sys.path.append('../')
@@ -127,23 +115,18 @@ if __name__ == '__main__':
     import seaborn as sns
 
     tau = np.arange(0., 0.050, 0.0001)
-    rates = np.linspace(1, 50, 10)
+    rates = np.linspace(1., 50., 10)
     duration = 60.
-    #r, w, w_trace, bp_est = simulate(rates, 0.1, duration, 10., 0.016, 0.020)
-    # plt.plot(1000*tau, cov_anal(tau, 10., 0.016))
-    # print(burst_fraction(np.linspace(1., 30., 10), 0.016))
-    for alpha in np.logspace(0, 2, 5):
-        r, w, w_trace, bp_est = simulate(rates, 0.1, duration, alpha, 0.016, 0.020)
-        #r_anal, w_anal = analytical(rates, 0.1, duration, alpha, 0.016, 0.020)
 
-        plt.figure(figsize=(3,3/1.6))
-        plt.plot(r, w, color='black', label='simulation')
-        #plt.plot(r_anal, w_anal, color='grey', lw=1, label='theory')
-        sns.despine()
-        plt.plot(r, np.zeros(r.shape), 'k--', lw=1)
-        plt.xlabel('Rate [Hz]')
-        plt.ylabel('$\Delta W$')
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig('../../results/learning-rule/DeltaW_AdaptiveLearningRule_Alpha'+str(alpha)+'.pdf')
-        plt.close()
+    for pbar0 in [0.1, 0.3, 0.5]:
+        for alpha in [1, 5, 10, 30]:
+            r, w, _, _ = simulate(rates, 0.1, duration, alpha, 0.016, 0.020, starting_estimate=(1., pbar0*1.))
+            plt.figure(figsize=(3, 3/1.6))
+            plt.plot(r, w, color='black')
+            sns.despine()
+            plt.plot(r, np.zeros(r.shape), 'k--', lw=1)
+            plt.xlabel('Rate [Hz]')
+            plt.ylabel('$\Delta W$')
+            plt.tight_layout()
+            plt.savefig('../../results/learning-rule/DeltaW_AdaptiveLearningRule_Alpha'+str(alpha)+'_Pbar0'+str(pbar0)+'.pdf')
+            plt.close()

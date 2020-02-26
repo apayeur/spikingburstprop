@@ -10,7 +10,8 @@ time in between bursts. This way, we can simply consider 5 pairings
 and multiply the weight change by 15 at the end (since there is no weight decay).
 """
 
-def simulate(freqs, alpha):
+
+def simulate(freqs, eta, alpha, burst_threshold, tau_pre):
     np.random.seed(1)
 
     # select parameters for pairing protocol
@@ -33,7 +34,7 @@ def simulate(freqs, alpha):
         last_estimated_BR = starting_estimate[1]
 
         for epoch in range(number_of_epochs):
-            syn = AdaptivePreEventSynapse(0.1, tau_trace=0.020, tau_ma=alpha, burst_def=0.016,
+            syn = AdaptivePreEventSynapse(eta, tau_trace=tau_pre, tau_ma=alpha, burst_def=burst_threshold,
                                           starting_estimate=(last_estimated_ER, last_estimated_BR))
 
             protocol = PeriodicPairing(f, Delta, pairing_number=number_of_pairings)
@@ -54,23 +55,10 @@ def simulate(freqs, alpha):
 
             last_estimated_BR = syn.post_ma.moving_average['burst']
             last_estimated_BR = last_estimated_BR*np.exp(-interepoch_interval/alpha)
-            #print("estimated BP = {}".format(last_estimated_BR/last_estimated_ER))
 
     return freqs, weights
 
 
-def analytical(eta, A_plus, A_minus, burst_threshold):
-    freqs = np.arange(2, 150., 2.)  # frequency in Hz
-    Delta = 0.000  # t_post - t_pre
-    tau_pre = 0.005
-    assert(np.all(np.floor(freqs*Delta)) == 0)
-
-    a = np.exp(-1./(freqs*tau_pre))
-
-    weights = (freqs < 1/burst_threshold)*15.*eta*\
-              (A_minus/A_plus)*( np.exp(-Delta/tau_pre)/(a-1.) )*( a*(a**5-1)/(a-1.) - 5. ) + (freqs > 1 / burst_threshold)*15*eta*(a + A_minus/A_plus)
-
-    return freqs, weights
 
 
 if __name__ == '__main__':
@@ -79,19 +67,17 @@ if __name__ == '__main__':
     plt.style.use('../thesis_mplrc.dms')
     import seaborn as sns
 
-    freqs = np.arange(2, 80., 2.)  # frequency in Hz
-    alpha = 10.
-    f, w = simulate(freqs, alpha)
-    #f_anal, w_anal = analytical(0.1, 1., -0.15, 0.016)
+    freqs = np.arange(10, 100., 10)  # frequency in Hz
+    alpha = 15.
+
+    f, w = simulate(freqs, 0.1, alpha, 0.016, 0.050)
 
     plt.figure(figsize=(3, 3 / 1.6))
-    plt.plot(f,w, color='black', label='simul.')
-    #plt.plot(f_anal, w_anal, label='anal.')
+    plt.plot(f, w, color='black', label='simul.')
     plt.plot(f, np.zeros(f.shape), '--k', lw=0.5)
     sns.despine()
     plt.xlabel('Pairing frequency [Hz]')
     plt.ylabel('$\Delta W$')
-    #plt.legend()
     plt.tight_layout()
     plt.savefig('../../results/learning-rule/Periodic/DeltaW_AdaptiveLearningRule_Alpha' + str(alpha) + '.pdf')
     plt.close()

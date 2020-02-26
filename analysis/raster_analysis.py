@@ -551,10 +551,12 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
         color_line = custom_colors['red']
         label_BP = '$I_\mathrm{d}$ (scaled)'
         label_ER = 'ER, pop1 (scaled)'
+        color_frame = custom_colors['sky_blue']
     elif population == '1':
         color_line = custom_colors['orange']
         label_BP = 'BR, pop2 (scaled)'
         label_ER = '$I_\mathrm{s}$ (scaled)'
+        color_frame = custom_colors['bluish_green']
 
 
     plt.figure(figsize=(3., 3.))
@@ -569,6 +571,7 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
     #ax1.set_ylim([0., min(max_BP + 2*np.max(std_BP[int(inputs['times'][0]/binsize):]) + 5, 100.)])
     ax1.set_ylim([0., 65])
     ax1.set_ylabel(r'BP [\%]', fontsize=9)
+    set_axis_color(ax1, custom_colors[color_frame])
     ax1.legend(loc='upper right', frameon=True, bbox_to_anchor=(1.05, 1.3), framealpha=1)
     remove_xticklabel(ax1)
 
@@ -591,6 +594,7 @@ def display_BRER_with_inputs(filenames, outfile, inputs, binsize=20.e-3, tau=16.
     ax3.set_ylim([0., 13.])
     ax3.set_xlabel('Time [s]', fontsize=9)
     ax3.set_ylabel('ER [Hz]', fontsize=9)
+    ax3.tick_params('y', labelcolor=custom_colors[color_frame])
     ax3.legend(loc='upper right', frameon=True, bbox_to_anchor=(1.05, 1.3), framealpha=1)
     plt.tight_layout()
     plt.savefig(outfile)

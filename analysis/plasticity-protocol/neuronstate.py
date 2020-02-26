@@ -67,38 +67,22 @@ class NeuronState(object):
 
 
 class NeuronStateWithMovingAverage(NeuronState):
-    def __init__(self, burst_def=0.016, tau_trace=0.020, tau_ma=10., starting_estimate=(5, 0.15*5)):
+    def __init__(self, burst_def=0.016, tau_trace=0.020, tau_ma=20., starting_estimate=(5, 0.15*5)):
         super().__init__(burst_def=burst_def, tau_trace=tau_trace)
         self.tau_moving_average = tau_ma
         self.starting_estimate = starting_estimate
         self.moving_average = {'event': starting_estimate[0], 'burst': starting_estimate[1]}
 
-    def evolve_traces(self, timeindex, timestep):
-        super().evolve_traces(timeindex, timestep)
+    def evolve_moving_averages(self, timeindex, timestep):
         self.moving_average['event'] += -self.moving_average['event'] * (timestep / self.tau_moving_average) \
-                                        + self.train['event'][timeindex]/self.tau_moving_average
+                                        + self.train['event'][timeindex] / self.tau_moving_average
         self.moving_average['burst'] += -self.moving_average['burst'] * (timestep / self.tau_moving_average) \
-                                        + self.train['burst'][timeindex]/self.tau_moving_average
+                                        + self.train['burst'][timeindex] / self.tau_moving_average
 
     def reset(self):
         super().reset()
         self.moving_average = {'event': self.starting_estimate[0], 'burst': self.starting_estimate[1]}
 
-
-class NeuronStateWithTwoMovingAverages(NeuronState):
-    def __init__(self, burst_def=0.016, tau_trace=0.020, alpha=10., gamma=10.):
-        super().__init__(burst_def=burst_def, tau_trace=tau_trace)
-        self.alpha = alpha
-        self.gamma = gamma
-        self.moving_average = {'event': 0, 'burst': 0}
-
-    def evolve_traces(self, timeindex, timestep):
-        super().evolve_traces(timeindex, timestep)
-        self.moving_average['event'] += -self.moving_average['event'] * (timestep / self.alpha) \
-                                        + self.train['event'][timeindex]/self.alpha
-        self.moving_average['burst'] += -self.moving_average['burst'] * (timestep / self.gamma) \
-                                        + self.train['burst'][timeindex]/self.gamma
-
-    def reset(self):
-        super().reset()
-        self.moving_average = {'event': 0, 'burst': 0}
+    def set_starting_estimate(self, s_est):
+        self.starting_estimate = s_est
+        self.moving_average = {'event': s_est[0], 'burst': s_est[1]}

@@ -11,6 +11,7 @@ lines.color       : black    # has no affect on plot(); see axes.prop_cycle
 ### FONT
 font.family         : sans-serif
 font.style          : normal
+font.sans-serif     : Helvetica Neue
 #font.variant        : normal
 #font.weight         : medium
 #font.stretch        : normal
@@ -19,20 +20,20 @@ font.style          : normal
 # settings for axes and ticks. Special text sizes can be defined
 # relative to font.size, using the following values: xx-small, x-small,
 # small, medium, large, x-large, xx-large, larger, or smaller
-font.size           : 10
+font.size           : 9
 
 ### TEXT
 # text properties used by text.Text.  See
 
 #text.color          : black
-text.usetex         : True
+text.usetex         : False
 
 
 ### AXES
 #axes.linewidth      : 1.5     # edge linewidth
 axes.titlesize      :  medium # fontsize of the axes title
 axes.labelsize      :  small  # fontsize of the x any y labels
-axes.labelpad       : 5.0     # space between label and axis
+axes.labelpad       : 3.0     # space between label and axis
 #axes.labelweight    : normal  # weight of the x and y labels
 #axes.labelcolor     : black
 
@@ -68,7 +69,7 @@ ytick.labelsize      : small # fontsize of the tick labels
 
 
 ### Legend
-legend.fontsize      : x-small
+legend.fontsize      : small
 #legend.borderpad     : 0.5    # border whitespace in fontsize units
 #legend.markerscale   : 1.0    # the relative size of legend markers vs. original
 # the following dimensions are in axes coords
@@ -86,7 +87,7 @@ legend.frameon       : False   # whether or not to draw a frame around legend
 figure.titlesize : medium     # size of the figure title
 figure.titleweight : bold   # weight of the figure title
 figure.figsize   : 5, 4    # figure size in inches
-figure.dpi       : 120      # figure dots per inch
+figure.dpi       : 300      # figure dots per inch
 
 
 
@@ -107,7 +108,7 @@ savefig.dpi         : 600      # figure dots per inch
 # pdf backend params
 #pdf.compression   : 6 # integer from 0 to 9
                        # 0 disables compression (good for debugging)
-#pdf.fonttype       : 3         # Output Type 3 (Type3) or Type 42 (TrueType)
+pdf.fonttype       : 42         # Output Type 3 (Type3) or Type 42 (TrueType)
 
 # svg backend params
 #svg.image_inline : True       # write raster image data directly into the svg file

@@ -25,7 +25,7 @@ function run {
         --sim_name $SIM_NAME \
 	--alpha $ALPHA
 	cd ../analysis/learning-rule
-	OUTFILE_NAME="../../results/learning-rule/Wsum/Wsum_vs_Time_"$CONNECT_TYPE"_taupre"$TAU_PRE"_w0"$W0"_alpha"$ALPHA"_durex"$EXAMPLE_DURATION".pdf"
+	OUTFILE_NAME="../../results/learning-rule/Wsum/Wsum_vs_Time.pdf"
 	python plot_all.py -datadir "../"$DATADIR -connect_type $CONNECT_TYPE -outfile_name $OUTFILE_NAME -durex $EXAMPLE_DURATION -alpha $ALPHA
 	open $OUTFILE_NAME
 	cd ../../sim

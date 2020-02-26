@@ -39,10 +39,15 @@ def simulate(bps, eta, duration, alpha, burst_threshold, tau_pre, event_rate):
         if (n+1) % 2 == 0:
             print('realization #{}'.format(n+1))
         for i, p in enumerate(bps):
-            syn = AdaptivePreEventSynapse(eta, tau_trace=tau_pre, tau_ma=alpha, burst_def=burst_threshold,
+            syn = AdaptivePreEventSynapse(eta,
+                                          tau_trace=tau_pre,
+                                          tau_ma=alpha,
+                                          burst_def=burst_threshold,
                                           starting_estimate=(ER, bp_protocol*ER))
 
-            protocol = PoissonBurstProtocol(p=p, duration=duration, rate_event=ER/(1 - ER*0.020))
+            protocol = PoissonBurstProtocol(p=p,
+                                            duration=duration,
+                                            rate_event=ER/(1 - ER*0.020))
             # Note: rate_event is equal to ER/(1 - ER*abs_ref_event) to yield the event rate = ER in
             # the protocol. This is not essential a priori.
 
@@ -74,15 +79,11 @@ if __name__ == '__main__':
 
     # simulate
     w = simulate(bps, 0.1, duration, alpha, 0.016, 0.020)
-    #bp_anal, w_anal = analytical(0.1, 400, 5., 1, -0.15, 0.016, 0.020, 0.020)
-    #print(burst_fraction(np.linspace(1., 30., 10), 0.016))
 
     # plotting
     plt.figure(figsize=(3, 3 / 1.6))
-    plt.plot(100*bps, w, 'k', label='simul.')
-    #plt.plot(bp_anal, w_anal, label='anal.', color='grey')
+    plt.plot(100*bps, w, 'k')
     plt.plot(100*bps, np.zeros(bps.shape), 'k--', lw=1)
-    #plt.legend()
     sns.despine()
     plt.xlabel('Initial BP [\%]')
     plt.ylabel('$\Delta W$')
