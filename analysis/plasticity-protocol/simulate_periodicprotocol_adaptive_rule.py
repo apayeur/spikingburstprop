@@ -69,8 +69,8 @@ if __name__ == '__main__':
 
     freqs = np.arange(10, 100., 10)  # frequency in Hz
     alpha = 15.
-
-    f, w = simulate(freqs, 0.1, alpha, 0.016, 0.050)
+    tau_pre = 0.1
+    f, w = simulate(freqs, 0.1, alpha, 0.016, tau_pre)
 
     plt.figure(figsize=(3, 3 / 1.6))
     plt.plot(f, w, color='black', label='simul.')
@@ -79,5 +79,5 @@ if __name__ == '__main__':
     plt.xlabel('Pairing frequency [Hz]')
     plt.ylabel('$\Delta W$')
     plt.tight_layout()
-    plt.savefig('../../results/learning-rule/Periodic/DeltaW_AdaptiveLearningRule_Alpha' + str(alpha) + '.pdf')
+    plt.savefig('../../results/learning-rule/Periodic/DeltaW_AdaptiveLearningRule_Alpha'+str(alpha)+'_Taupre'+str(tau_pre)+'.pdf')
     plt.close()

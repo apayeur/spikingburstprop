@@ -30,6 +30,7 @@ def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_est
     dt = 0.001
 
     weights = np.zeros(rates.shape)
+    dwdtdivr2 = np.zeros(rates.shape)
     weight_trace = []
     bp_est = []
     bp = []
@@ -41,8 +42,8 @@ def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_est
             protocol = RandomProtocol(duration=duration+burnin, rate=r)
             syn.pre.compute_trains(protocol.spiketimes_pre, dt, duration+burnin)
             syn.post_ma.compute_trains(protocol.spiketimes_post, dt, duration+burnin)
-            meanER = len(np.where(syn.post_ma.train['event']>0)[0])/duration
-            syn.post_ma.set_starting_estimate((meanER, (starting_estimate[1]/starting_estimate[0])*meanER))
+            #meanER = len(np.where(syn.post_ma.train['event']>0)[0])/duration
+            #syn.post_ma.set_starting_estimate((meanER, (starting_estimate[1]/starting_estimate[0])*meanER))
 
             count = 0
             for x in range(int(burnin/dt), int((burnin+duration)/dt)):
@@ -54,7 +55,7 @@ def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_est
                                             # by dt in the rule (see preeventsynapse.py)
     weights /= nb_reals
 
-    return rates, weights, weight_trace, bp_est
+    return rates, weights, weight_trace, dwdtdivr2
 
 
 def analytical(rates, eta, duration, alpha, burst_threshold, tau_pre):
@@ -114,19 +115,20 @@ if __name__ == '__main__':
     plt.style.use('../thesis_mplrc.dms')
     import seaborn as sns
 
-    tau = np.arange(0., 0.050, 0.0001)
     rates = np.linspace(1., 50., 10)
     duration = 60.
+    pbar0 = 0.3
+    alpha = 15
 
-    for pbar0 in [0.1, 0.3, 0.5]:
-        for alpha in [1, 5, 10, 30]:
-            r, w, _, _ = simulate(rates, 0.1, duration, alpha, 0.016, 0.020, starting_estimate=(1., pbar0*1.))
-            plt.figure(figsize=(3, 3/1.6))
-            plt.plot(r, w, color='black')
-            sns.despine()
-            plt.plot(r, np.zeros(r.shape), 'k--', lw=1)
-            plt.xlabel('Rate [Hz]')
-            plt.ylabel('$\Delta W$')
-            plt.tight_layout()
-            plt.savefig('../../results/learning-rule/DeltaW_AdaptiveLearningRule_Alpha'+str(alpha)+'_Pbar0'+str(pbar0)+'.pdf')
-            plt.close()
+    for initial_er in np.arange(1, 2, 5):
+        print('simulate initial ER = {}....'.format(initial_er))
+        r, w, _, _ = simulate(rates, 0.1, duration, alpha, 0.016, 0.050, starting_estimate=(initial_er, pbar0*initial_er))
+        plt.figure(figsize=(3, 3/1.6))
+        plt.plot(r, w, color='black')
+        sns.despine()
+        plt.plot(r, np.zeros(r.shape), 'k--', lw=1)
+        plt.xlabel('Rate [Hz]')
+        plt.ylabel('$\Delta W$')
+        plt.tight_layout()
+        plt.savefig('../../results/learning-rule/DeltaW_AdaptiveLearningRule_InitialER'+str(initial_er)+'.pdf')
+        plt.close()

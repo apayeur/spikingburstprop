@@ -32,13 +32,13 @@ class PairingProtocol(object):
         try:
             assert(len(self.spiketimes_pre)>0 and len(self.spiketimes_post)>0) # check if spiketimes list are non-empty
             plt.figure(figsize=(5,2))
-            plt.eventplot(self.spiketimes_pre, colors=[custom_colors['red']], lineoffsets=1, linelengths=2, lw=0.5, label='pre')
-            plt.eventplot(self.spiketimes_post, colors=[custom_colors['blue']], lineoffsets=2, linelengths=2, lw=0.5, label='post')
-            plt.plot([0.5, 0.510], [3.5, 3.5], lw=0.5)
-            plt.xlim([0,min(5, max(self.spiketimes_post[-1], self.spiketimes_pre[-1]))])
+            plt.eventplot(self.spiketimes_pre[:5], colors=[custom_colors['bluish_green']], lineoffsets=1, linelengths=1, lw=0.5, label='pre')
+            plt.eventplot(self.spiketimes_post[:5], colors=[custom_colors['sky_blue']], lineoffsets=2, linelengths=1, lw=0.5, label='post')
+            #plt.plot([0.5, 0.510], [3.5, 3.5], lw=0.5)
+            #plt.xlim([0,min(5, max(self.spiketimes_post[-1], self.spiketimes_pre[-1]))])
             #plt.xticks([])
             #plt.yticks([])
-            sns.despine(left=True, bottom=True)
+            #sns.despine(left=True, bottom=True)
             plt.savefig(filename)
             plt.close()
         except:
@@ -187,38 +187,34 @@ class RandomProtocol(PairingProtocol):
 
 class SjostromProtocol(PairingProtocol):
     """
-       15 bursts of 5 pre- and post-synaptic neurons spikes with Poisson rate.
+       15 bursts of 5 pre- and post-synaptic neurons spikes with Gaussian jitter.
+       As per Sjostrom et al., 2001.
     """
 
-    def __init__(self, duration=10., p=0.15, rate=5.):
-        """Return a pairing protocol with Poisson events at rate *rate*.
-        """
+    def __init__(self, frequency, pairing_number=75, delay=0.1):
         super().__init__()
-        self.duration = duration
-        self.p = p
-        self.rate = rate
+        self.frequency = frequency
+        self.pairing_number = pairing_number
+        self.delay = delay  # delay before first pairing
         self.get_spiketimes()
 
     def get_spiketimes(self):
         """
         Compute the pre and post spike times and put them in lists.
         """
-        if len(self.spiketimes_pre) > 0 and len(self.spiketimes_post) > 0:
+        if len(self.spiketimes_pre)>0 and len(self.spiketimes_post)>0:
             self.spiketimes_pre = []
             self.spiketimes_post = []
 
-        last_spike = 0.
-        while True:
-            interval = np.random.exponential(1./self.rate)
-            last_spike = last_spike + interval
-            if last_spike > self.duration:
-                break
-            self.spiketimes_pre.append(last_spike)
+        random_deltat = 0.007*np.random.randn(self.pairing_number)
+        count = 0
+        for epoch in range(int(self.pairing_number/5)):
+            isis = np.random.exponential(1./self.frequency, 5)
+            st_pre = isis.cumsum()
+            for i in range(5):
+                self.spiketimes_pre.append(self.delay + 10*epoch + st_pre[i])
+                self.spiketimes_post.append(self.delay + 10*epoch + st_pre[i] + random_deltat[count])
+                count += 1
 
-        last_spike = 0.
-        while True:
-            interval = np.random.exponential(1. / self.rate)
-            last_spike = last_spike + interval
-            if last_spike > self.duration:
-                break
-            self.spiketimes_post.append(last_spike)
+    def get_delay(self):
+        return self.delay
