@@ -1,67 +1,131 @@
 from pairingprotocols import RandomProtocol
-from preeventsynapse import PreEventSynapse
+from preeventsynapse import AdaptivePreEventSynapse
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import fsolve
 
 """
-Description:
-The plasticity protocol consists in pre- and post-synaptic Poisson processes.
+This plasticity protocol consists in pre and postsynaptic Poisson processes.
 """
 
-def simulate():
-    np.random.seed(1)
+
+def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_estimate=(5., 0.35*5.)):
+    np.random.seed(2)
 
     # select parameters for pairing protocol
-    rates = np.linspace(1., 20., 10)
-    duration = 400 # seconds
+    nb_reals = 10
+    burnin = 0.
 
     # create synapse
-    learning_rate = 0.1
-    syn = PreEventSynapse(learning_rate, tau_trace=20.e-3, A_minus=-0.15)
+    syn = AdaptivePreEventSynapse(eta,
+                                  burst_def=burst_threshold,
+                                  tau_trace=tau_pre,
+                                  tau_ma=alpha,
+                                  starting_estimate=starting_estimate)
 
     # integration time step
     dt = 0.001
 
-    weights = []
+    weights = np.zeros(rates.shape)
+    dwdtdivr2 = np.zeros(rates.shape)
+    weight_trace = []
+    bp_est = []
     bp = []
-    for r in rates:
-        syn.reset()
-        protocol = RandomProtocol(duration=duration, rate=r)
-        #protocol.display('../../results/learning-rule/Poisson/protocolRandom_r'+str(r)[:2]+'.pdf')
-        syn.pre.compute_trains(protocol.spiketimes_pre, dt, duration)
-        syn.post.compute_trains(protocol.spiketimes_post, dt, duration)
-        bp.append(np.sum(syn.pre.train['burst'])/np.sum(syn.pre.train['event']))
-        print(r, bp[-1])
+    for n in range(nb_reals):
+        if n % 10 == 0:
+            print('realization #{}'.format(n+1))
+        for idx, r in enumerate(rates):
+            syn.reset()
+            protocol = RandomProtocol(duration=duration+burnin, rate=r)
+            syn.pre.compute_trains(protocol.spiketimes_pre, dt, duration+burnin)
+            syn.post_ma.compute_trains(protocol.spiketimes_post, dt, duration+burnin)
+            #meanER = len(np.where(syn.post_ma.train['event']>0)[0])/duration
+            #syn.post_ma.set_starting_estimate((meanER, (starting_estimate[1]/starting_estimate[0])*meanER))
 
-        for t in range(int(duration/dt)):
-            syn.evolve(t, dt)
-        #print(syn)
-        weights.append(syn.weight/dt)
-        #  division by dt is because event and burst trains are not divided
-        #  by dt in the rule (see preeventsynapse.py)
-    return rates, weights
+            count = 0
+            for x in range(int(burnin/dt), int((burnin+duration)/dt)):
+                count += 1
+                syn.evolve(x, dt)
+                weight_trace.append(syn.weight/dt)
+                bp_est.append(syn.post_ma.moving_average['burst']/syn.post_ma.moving_average['event'])
+            weights[idx] += syn.weight/dt   # division by dt is because event and burst trains are not divided
+                                            # by dt in the rule (see preeventsynapse.py)
+    weights /= nb_reals
 
-def analytical(eta, duration, A_plus, A_minus, burst_threshold, tau_pre):
+    return rates, weights, weight_trace, dwdtdivr2
+
+
+def analytical(rates, eta, duration, alpha, burst_threshold, tau_pre):
     # select parameters for pairing protocol
-    rates = np.linspace(1., 20., 50)
-    p_0 = -A_minus/A_plus
-    a = np.exp(-burst_threshold*rates)
-    event_rates = rates*a
-    weights = duration*eta*event_rates**2*tau_pre*(1. - a - p_0)
+    r = rates
+    P_greater = np.exp(-r*burst_threshold)
+    E = r*P_greater
+    B = E*(1-P_greater)
+    term1 = (alpha/(1. + alpha*r))\
+            *( 1 - np.exp(-burst_threshold*(r + 1./alpha)) )\
+            *( E*r - E**2*np.exp(-burst_threshold/alpha) )
 
-    return rates, weights
+    term2 = alpha*E*(E-B)*np.exp(-burst_threshold/alpha)*(1.-np.exp(-burst_threshold/alpha))
+
+    weights = duration*(eta/alpha)*tau_pre*E*(term1 + term2)
+
+    return r, weights
+
+
+def plot_cov(synapse, rate, timestep, burst_threshold):
+    k, cov_be, cov_eb = synapse.post_ma.compute_eb_corr(timestep)
+    tau = np.arange(-0.100, 0.100, 0.0001)
+    c_anal = corr_anal(tau, rate, burst_threshold)
+    L = int((len(k) + 1) / 2.)
+    plt.plot(1000 * timestep * k[L - 1 - int(10. / timestep):L - 1 + int(10. / timestep)],
+             cov_be[L - 1 - int(10. / timestep):L - 1 + int(10. / timestep)], label=r'$\langle E(t) B(t+\tau) \rangle$')
+    plt.plot(1000 * timestep * k[L - 1 - int(10. / timestep):L - 1 + int(10. / timestep)],
+             cov_eb[L - 1 - int(10. / timestep):L - 1 + int(10. / timestep)], label=r'$\langle B(t) E(t+\tau) \rangle$')
+    plt.plot(1000*tau, c_anal, label='anal')
+    plt.xlim([-100, 100])
+    #plt.ylim([np.min(cov_be), 0.0005])
+    plt.ylabel("Cross-covariance")
+    plt.xlabel("Lag [ms]")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def corr_anal(tau, rate, burst_threshold):
+    P = rate*np.exp(-tau*rate)
+    P_greater = np.exp(-rate*burst_threshold)
+    E = rate*P_greater
+    B = E*(1-P_greater)
+    return (tau>0)*(burst_threshold > tau)*E*P + \
+           (tau>burst_threshold)*(tau<2*burst_threshold)*E**2*(1-np.exp(rate*(burst_threshold-tau))) + \
+           (tau > 2 * burst_threshold) *E*B + \
+           (tau<0)*(tau<-burst_threshold)*B*E + (tau<0)*(tau>-burst_threshold)*0.
 
 
 def burst_fraction(rates, burst_threshold):
     return 1-np.exp(-burst_threshold*rates)
 
+
 if __name__ == '__main__':
-    r, w = simulate()
-    r_anal, w_anal = analytical(0.1, 400, 1., -0.15, 0.016, 0.020)
-    #print(burst_fraction(np.linspace(1., 30., 10), 0.016))
-    plt.plot(r,w, label='simul.')
-    plt.plot(r_anal, w_anal, label='anal.')
-    plt.plot(r, np.zeros(r.shape), 'k--', lw=1)
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+    import sys
+    sys.path.append('../')
+    plt.style.use('../thesis_mplrc.dms')
+    import seaborn as sns
+
+    rates = np.linspace(1., 50., 10)
+    duration = 60.
+    pbar0 = 0.3
+    alpha = 15
+
+    for initial_er in np.arange(1, 2, 5):
+        print('simulate initial ER = {}....'.format(initial_er))
+        r, w, _, _ = simulate(rates, 0.1, duration, alpha, 0.016, 0.050, starting_estimate=(initial_er, pbar0*initial_er))
+        plt.figure(figsize=(3, 3/1.6))
+        plt.plot(r, w, color='black')
+        sns.despine()
+        plt.plot(r, np.zeros(r.shape), 'k--', lw=1)
+        plt.xlabel('Rate [Hz]')
+        plt.ylabel('$\Delta W$')
+        plt.tight_layout()
+        plt.savefig('../../results/learning-rule/DeltaW_AdaptiveLearningRule_InitialER'+str(initial_er)+'.pdf')
+        plt.close()

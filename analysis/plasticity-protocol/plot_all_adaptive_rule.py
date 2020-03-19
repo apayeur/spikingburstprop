@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
-import simulate_burstpoissonprotocol_adaptive_rule as bpp
-import simulate_periodicprotocol_adaptive_rule as pp
-import simulate_randomprotocol_adaptive_rule as rp
+import simulate_burstpoissonprotocol as bpp
+import simulate_periodicprotocol as pp
+import simulate_randomprotocol as rp
 
 plt.style.use('../thesis_mplrc.dms')
 

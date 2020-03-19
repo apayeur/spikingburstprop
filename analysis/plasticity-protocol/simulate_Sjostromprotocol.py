@@ -2,11 +2,11 @@ from pairingprotocols import SjostromProtocol
 from preeventsynapse import AdaptivePreEventSynapse
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import fsolve
 
 """
 Description:
-The plasticity protocol consists in pre- and post-synaptic Poisson processes.
+This plasticity protocol is described in Sjostrom et al. Neuron (2001).
+It consists in 15 bursts of 5 pre and postsynaptic neurons spikes with Gaussian jitter.
 Here, the plasticity rule is adaptive, i.e., the postsynaptic neuron
 estimates its burst probability.
 """
