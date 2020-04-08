@@ -21,11 +21,5 @@ make
 ./sim_xor --dir $DIR --durex $DUREX --alpha $ALPHA --numex $NUMEX --N $NUMBERofNEURONS
 		
 cd ../analysis/xor
-python plot_xor.py -durex $DUREX -alpha $ALPHA -numex $NUMEX
-python plot_bias.py -durex $DUREX -alpha $ALPHA -numex $NUMEX
-python plot_cost.py
-open ../../results/xor/Activity_Before.pdf
-open ../../results/xor/Activity_DuringLearning.pdf
-open ../../results/xor/Activity_After.pdf
-open ../../results/xor/Wsum.pdf
-cd ../../sim
+python plot_xor_new.py -durex $DUREX -alpha $ALPHA -numex $NUMEX
+open ../../results/xor/XOR_NEW.pdf

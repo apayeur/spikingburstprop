@@ -2,12 +2,17 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import os
 
 import simulate_burstpoissonprotocol as bpp
 import simulate_periodicprotocol as pp
 import simulate_randomprotocol as rp
 
 plt.style.use('../thesis_mplrc.dms')
+
+PLOTPATH = os.path.join('..', '..', 'results', 'learning-rule')
+if not os.path.exists(PLOTPATH):
+    os.makedirs(PLOTPATH)
 
 # --- simulate all pairing protocols --- #
 # Parameters shared by all protocols
@@ -76,5 +81,5 @@ sns.despine(ax=axs[1, 1])
 fig.align_ylabels(axs[:, 1])
 
 plt.tight_layout()
-plt.savefig('../../results/learning-rule/WeightALLProtocols_AdaptiveRule.pdf')
+plt.savefig(PLOTPATH + '/WeightALLProtocols_AdaptiveRuleTest.pdf')
 plt.close()

@@ -13,7 +13,7 @@ def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_est
     np.random.seed(2)
 
     # select parameters for pairing protocol
-    nb_reals = 10
+    nb_reals = 1
     burnin = 0.
 
     # create synapse
@@ -108,9 +108,15 @@ def burst_fraction(rates, burst_threshold):
 
 if __name__ == '__main__':
     import sys
-    sys.path.append('../')
-    plt.style.use('../thesis_mplrc.dms')
     import seaborn as sns
+    import os
+    sys.path.append('../')
+
+    PLOTPATH = os.path.join('..', '..', 'results', 'learning-rule', 'test')
+    if not os.path.exists(PLOTPATH):
+        os.makedirs(PLOTPATH)
+
+    plt.style.use('../thesis_mplrc.dms')
 
     rates = np.linspace(1., 50., 10)
     duration = 60.
@@ -127,5 +133,5 @@ if __name__ == '__main__':
         plt.xlabel('Rate [Hz]')
         plt.ylabel('$\Delta W$')
         plt.tight_layout()
-        plt.savefig('../../results/learning-rule/DeltaW_AdaptiveLearningRule_InitialER'+str(initial_er)+'.pdf')
+        plt.savefig(PLOTPATH + '/DeltaW_AdaptiveLearningRule_InitialER'+str(initial_er)+'.pdf')
         plt.close()

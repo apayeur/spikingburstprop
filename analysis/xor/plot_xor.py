@@ -167,10 +167,11 @@ def plot_section(lim_seg, moment):
     plt.close()
 
 
+
+
 plot_section(before_learning, 'Before')
 plot_section(during_learning, 'DuringLearning')
 plot_section(after_learning, 'After')
-
 
 # plotting sum of weights
 fig = plt.figure(2, figsize=(5, 5/1.5))

@@ -1,14 +1,14 @@
 # spikingburstprop
 This repository contains code to simulate spiking networks with burst-mediated plasticity and multiplexing, using the Auryn simulator (creator: Friedemann Zenke https://github.com/fzenke/auryn/).
 
-To compile this code, first compile the auryn library from 
+To compile this code, first compile the Auryn library from 
 https://github.com/apayeur/auryn
 and follow the instructions.
 
-To reproduce Figs. 2-3-4 of our paper "*Burst-dependent synaptic plasticity can coordinate learning in hierarchical circuits*", do the following once you have cloned the present repositiory and with Auryn installed as described above:
+To reproduce Figs. 2-4 of our paper "*Burst-dependent synaptic plasticity can coordinate learning in hierarchical circuits*", do the following once you have cloned the present repository and with Auryn installed as described above:
 
 * Figure 2B-D:
-From folder `./analysis/plasticity-protocol`, run the Python script `plot_all_adaptive_rule.py`. This code produces a `.pdf` in folder `../../results/learning-rule`, so make sure that the latter exists before running the code.  
+From folder `./analysis/plasticity-protocol`, run the Python script `plot_all_adaptive_rule.py`.  
 This code works with the following Python packages:
 	* python 3.6.2
 	* numpy 1.13.1

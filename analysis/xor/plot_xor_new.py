@@ -18,6 +18,30 @@ parser.add_argument("-numex", type=int, help="number of training examples")
 args = parser.parse_args()
 
 
+def mean_output(segment):
+    # select data segments
+    r_out = output_rates[segment[0]:segment[1]+1, 2]
+    durex_in_bins = int(args.durex/binSize)
+    discard = 1 #  discard data points near transitions from one example to the other
+    r00 = np.mean(r_out[discard:durex_in_bins-discard])
+    r10 = np.mean(r_out[durex_in_bins+discard:2*durex_in_bins-discard])
+    r01 = np.mean(r_out[2*durex_in_bins+discard:3*durex_in_bins-discard])
+    r11 = np.mean(r_out[3*durex_in_bins+discard:-discard])
+    return r00, r10, r01, r11
+
+
+def std_output(segment):
+    # select data segments
+    r_out = output_rates[segment[0]:segment[1]+1, 2]
+    durex_in_bins = int(args.durex/binSize)
+    discard = 1
+    r00 = np.std(r_out[discard:durex_in_bins - discard])
+    r10 = np.std(r_out[durex_in_bins + discard:2 * durex_in_bins - discard])
+    r01 = np.std(r_out[2 * durex_in_bins + discard:3 * durex_in_bins - discard])
+    r11 = np.std(r_out[3 * durex_in_bins + discard:-discard])
+    return r00, r10, r01, r11
+
+
 # import data
 data_file_prefix = '../../data/xor/very-good-xor-corrected/xor.0.brate_'
 datadir = '../../data/xor/very-good-xor-corrected/'
@@ -62,6 +86,23 @@ xtik = list(lim_seg[0] + args.durex*np.arange(5)-1)
 e_min = 2.
 e_max = 10.
 e_th = e_min + 0.5*(e_max - e_min)
+
+# compute mean +/- SD
+m = mean_output(before_learning)
+s = std_output(before_learning)
+print('Before learning:')
+print('(0,0): {:1.2} +/- {:1.1}'.format(m[0], 2*s[0]))
+print('(1,0): {:1.2} +/- {:1.1}'.format(m[1], 2*s[1]))
+print('(0,1): {:1.2} +/- {:1.1}'.format(m[2], 2*s[2]))
+print('(1,1): {:1.2} +/- {:1.1}'.format(m[3], 2*s[3]))
+
+m = mean_output(after_learning)
+s = std_output(after_learning)
+print('After learning:')
+print('(0,0): {:1.2} +/- {:1.1}'.format(m[0], 2*s[0]))
+print('(1,0): {:1.2} +/- {:1.1}'.format(m[1], 2*s[1]))
+print('(0,1): {:1.2} +/- {:1.1}'.format(m[2], 2*s[2]))
+print('(1,1): {:1.2} +/- {:1.1}'.format(m[3], 2*s[3]))
 
 
 fig = plt.figure(figsize=(183/25.4, 4.5/7.5*183/25.4))
