@@ -356,11 +356,11 @@ int main(int ac, char* av[])
     
 
     //-- CONNECT FeedFORWARD
-    const float p_ff = 0.05; //0.05
-    float w_in_to_hid_exc  = 0.07*4000/number_of_neurons;
-    float w_in_to_hid_inh  = 0.03*4000/number_of_neurons;
-    float w_hid_to_out_exc = 0.09*4000/number_of_neurons;
-    float w_hid_to_out_inh = 0.05*4000/number_of_neurons;
+    const float p_ff = 0.05*2000/number_of_neurons;
+    float w_in_to_hid_exc  = 0.14;
+    float w_in_to_hid_inh  = 0.06;
+    float w_hid_to_out_exc = 0.18;
+    float w_hid_to_out_inh = 0.1;
     
         // (1) Connect input layer to hidden layer
             // Excitation
@@ -407,8 +407,8 @@ int main(int ac, char* av[])
     
 
     //-- CONNECT FeedBACK
-    float w_fb_exc = 0.13*4000/number_of_neurons;
-    float w_fb_inh = 0.03*4000/number_of_neurons;
+    float w_fb_exc = 0.26;
+    float w_fb_inh = 0.06;
     float p_fb = p_ff;
     
     // Excitation
