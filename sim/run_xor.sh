@@ -1,25 +1,23 @@
 #!/bin/bash
 
+# Create directories for data and results if they don't exist already
 DIR="../data/xor"
 mkdir -p $DIR
 
 RESULTDIR="../results/xor"
 mkdir -p $RESULTDIR
 
-DUREX=20
-ALPHA=5
-NUMEX=2000
-NUMBERofNEURONS=2000
-POISSONWEIGHT=0.35
+# Parameters
+DUREX=20 # duration of each example
+ALPHA=5 # moving average time constant
+NUMEX=2000 # total number of training examples
+NUMBERofNEURONS=2000 # number of neurons/population
 
-#cd ../analysis/xor
-#python construct_identity_connection.py -weight $POISSONWEIGHT -numberofneuron $NUMBERofNEURONS
-
-#cd ../../sim
+# Compilation
 make
-
 ./sim_xor --dir $DIR --durex $DUREX --alpha $ALPHA --numex $NUMEX --N $NUMBERofNEURONS
-		
+
+# Analysis
 cd ../analysis/xor
 python plot_xor_new.py -durex $DUREX -alpha $ALPHA -numex $NUMEX
 open ../../results/xor/XOR_NEW.pdf
