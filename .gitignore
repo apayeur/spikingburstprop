@@ -5,6 +5,9 @@ data/
 deprecated/
 .idea/
 /test/test-output/
+supplementary-figures/sup-figs/
+supplementary-figures/sup-results/
+supplementary-figures/sup-data/
 
 # simulation executable, but not the .cpp files
 sim/sim_*
