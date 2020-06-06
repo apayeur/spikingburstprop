@@ -143,7 +143,7 @@ int main(int ac, char* av[])
     const double learning_rate_in_to_hid  = 4e-3;
     const double learning_rate_bias       = 0.1e-3;
     const double max_weight    = 1.0;
-    const double tau_pre       = 20.e-3;
+    const double tau_pre       = 50.e-3;
     std::ofstream outfile_cost;
     std::ofstream outfile_cost_epoch;
     srand (1);
@@ -219,6 +219,7 @@ int main(int ac, char* av[])
     }
     
     auryn_init( ac, av, dir, simname );
+    sys->set_master_seed(seed);
     outfile_cost.open(dir+"/cost2.dat");
     outfile_cost_epoch.open(dir+"/cost_epoch.dat");
 
@@ -457,38 +458,39 @@ int main(int ac, char* av[])
     /**************************************************/
     double binSize_rate = 1;
     double binSize_wsum = binSize_rate;
-    
+    auto seed_str = std::to_string(seed);
+
     // Online monitor
     //sys->set_online_rate_monitor_target(hidden_pyr1);
     //sys->set_online_rate_monitor_tau(binSize_rate);
 
     // Burst/event rate monitors
-    BurstRateMonitor * brmon_input1  = new BurstRateMonitor( input_pyr1, sys->fn("brate_input1"), binSize_rate);
-    BurstRateMonitor * brmon_input2  = new BurstRateMonitor( input_pyr2, sys->fn("brate_input2"), binSize_rate);
-    BurstRateMonitor * brmon_hidden1 = new BurstRateMonitor( hidden_pyr1, sys->fn("brate_hidden1"), binSize_rate);
-    BurstRateMonitor * brmon_hidden2 = new BurstRateMonitor( hidden_pyr2, sys->fn("brate_hidden2"), binSize_rate);
-    BurstRateMonitor * brmon_output  = new BurstRateMonitor( output_pyr, sys->fn("brate_output"), binSize_rate);
+    BurstRateMonitor * brmon_input1  = new BurstRateMonitor( input_pyr1, sys->fn("brate_input1_seed"+seed_str), binSize_rate);
+    BurstRateMonitor * brmon_input2  = new BurstRateMonitor( input_pyr2, sys->fn("brate_input2_seed"+seed_str), binSize_rate);
+    BurstRateMonitor * brmon_hidden1 = new BurstRateMonitor( hidden_pyr1, sys->fn("brate_hidden1_seed"+seed_str), binSize_rate);
+    BurstRateMonitor * brmon_hidden2 = new BurstRateMonitor( hidden_pyr2, sys->fn("brate_hidden2_seed"+seed_str), binSize_rate);
+    BurstRateMonitor * brmon_output  = new BurstRateMonitor( output_pyr, sys->fn("brate_output_seed"+seed_str), binSize_rate);
 
     // Weight sum monitors
-    WeightSumMonitor * wsmon_in1_to_hid1 = new WeightSumMonitor( con_input1_to_hidden1_exc, sys->fn("wsum_in1_to_hid1"), binSize_wsum );
-    WeightSumMonitor * wsmon_in1_to_hid2 = new WeightSumMonitor( con_input1_to_hidden2_exc, sys->fn("wsum_in1_to_hid2"), binSize_wsum );
-    WeightSumMonitor * wsmon_in2_to_hid1 = new WeightSumMonitor( con_input2_to_hidden1_exc, sys->fn("wsum_in2_to_hid1"), binSize_wsum );
-    WeightSumMonitor * wsmon_in2_to_hid2 = new WeightSumMonitor( con_input2_to_hidden2_exc, sys->fn("wsum_in2_to_hid2"), binSize_wsum );
-    WeightSumMonitor * wsmon_hid1_to_out = new WeightSumMonitor( con_hidden1_to_output_exc, sys->fn("wsum_hid1_to_out"), binSize_wsum );
-    WeightSumMonitor * wsmon_hid2_to_out = new WeightSumMonitor( con_hidden2_to_output_exc, sys->fn("wsum_hid2_to_out"), binSize_wsum );
+    WeightSumMonitor * wsmon_in1_to_hid1 = new WeightSumMonitor( con_input1_to_hidden1_exc, sys->fn("wsum_in1_to_hid1_seed"+seed_str), binSize_wsum );
+    WeightSumMonitor * wsmon_in1_to_hid2 = new WeightSumMonitor( con_input1_to_hidden2_exc, sys->fn("wsum_in1_to_hid2_seed"+seed_str), binSize_wsum );
+    WeightSumMonitor * wsmon_in2_to_hid1 = new WeightSumMonitor( con_input2_to_hidden1_exc, sys->fn("wsum_in2_to_hid1_seed"+seed_str), binSize_wsum );
+    WeightSumMonitor * wsmon_in2_to_hid2 = new WeightSumMonitor( con_input2_to_hidden2_exc, sys->fn("wsum_in2_to_hid2_seed"+seed_str), binSize_wsum );
+    WeightSumMonitor * wsmon_hid1_to_out = new WeightSumMonitor( con_hidden1_to_output_exc, sys->fn("wsum_hid1_to_out_seed"+seed_str), binSize_wsum );
+    WeightSumMonitor * wsmon_hid2_to_out = new WeightSumMonitor( con_hidden2_to_output_exc, sys->fn("wsum_hid2_to_out_seed"+seed_str), binSize_wsum );
     
-    WeightSumMonitor * wsmon_noise_to_out = new WeightSumMonitor( epois_to_soma_output_pyr, sys->fn("wsum_noise_to_out"), binSize_wsum );
-    WeightSumMonitor * wsmon_noise_to_hid1 = new WeightSumMonitor( epois_to_soma_hidden_pyr1, sys->fn("wsum_noise_to_hid1"), binSize_wsum );
-    WeightSumMonitor * wsmon_noise_to_hid2 = new WeightSumMonitor( epois_to_soma_hidden_pyr2, sys->fn("wsum_noise_to_hid2"), binSize_wsum );
+    WeightSumMonitor * wsmon_noise_to_out = new WeightSumMonitor( epois_to_soma_output_pyr, sys->fn("wsum_noise_to_out_seed"+seed_str), binSize_wsum );
+    WeightSumMonitor * wsmon_noise_to_hid1 = new WeightSumMonitor( epois_to_soma_hidden_pyr1, sys->fn("wsum_noise_to_hid1_seed"+seed_str), binSize_wsum );
+    WeightSumMonitor * wsmon_noise_to_hid2 = new WeightSumMonitor( epois_to_soma_hidden_pyr2, sys->fn("wsum_noise_to_hid2_seed"+seed_str), binSize_wsum );
 
     // Monitors for  estimating burst probability (a sample of 50 neurons)
     std::vector< StateMonitor* > smon_tr_post_ev;
     std::vector< StateMonitor* > smon_tr_post_b;
     
     for (int i=0;i<50;i++){
-        StateMonitor * ev = new StateMonitor( con_hidden1_to_output_exc->get_tr_event(), i, sys->fn(simname,i,"trevent"), binSize_rate);
+        StateMonitor * ev = new StateMonitor( con_hidden1_to_output_exc->get_tr_event(), i, sys->fn(simname,i,"trevent_seed"+seed_str), binSize_rate);
         smon_tr_post_ev.push_back(ev);
-        StateMonitor * b = new StateMonitor( con_hidden1_to_output_exc->get_tr_burst(), i, sys->fn(simname,i,"trburst"), binSize_rate);
+        StateMonitor * b = new StateMonitor( con_hidden1_to_output_exc->get_tr_burst(), i, sys->fn(simname,i,"trburst_seed"+seed_str), binSize_rate);
         smon_tr_post_b.push_back(b);
     }
      

@@ -1,6 +1,5 @@
 /***********************************************************
- Description: Trying to match spiking noise in populations
- 1 and 2.
+ Description: Code for Figure 3.
  ************************************************************/
 
 #include "auryn.h"
