@@ -10,6 +10,10 @@ supplementary-figures/supp-results/
 supplementary-figures/supp-data/
 supplementary-figures/coarse-grained-model/results/
 supplementary-figures/coarse-grained-model/mnist/*.dat
+supplementary-figures/coarse-grained-model/mnist/t10k-images-idx3-ubyte
+supplementary-figures/coarse-grained-model/mnist/t10k-labels-idx1-ubyte
+supplementary-figures/coarse-grained-model/mnist/train-images-idx3-ubyte
+supplementary-figures/coarse-grained-model/mnist/train-labels-idx1-ubyte
 
 # simulation executable, but not the .cpp files
 sim/sim_*
