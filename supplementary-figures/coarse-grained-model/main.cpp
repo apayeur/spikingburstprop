@@ -39,7 +39,7 @@ const double tau_W = 100.;  // was 30
 const double tau_moving_avg = 5.;
 const double e_max = 5.;
 
-const string PATH_TO_MNIST_DATA = "./mnist/";
+const string PATH_TO_MNIST_DATA = "./data/";
 const string PATH_TO_MNIST_RESULTS = "./results/";
 
 

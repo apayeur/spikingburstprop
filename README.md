@@ -48,4 +48,4 @@ From folder `supplementary-figures/supp-sim/`, do: `bash run_dendritic_modulatio
 
 * Figure S8:
 
-From folder `supplementary-figures/coarse-grained-model/`, compile using `make`, and then run `./rateMNIST`. The MNIST data are in folder `supplementary-figures/coarse-grained-model/mnist` and are provided for convenience. Code to read that data was made by Eric Yuan (see license in file `readMNIST.cpp`). 
+From folder `supplementary-figures/coarse-grained-model/`, do: `bash run_coarse_grained.sh`. The MNIST data are in folder `supplementary-figures/coarse-grained-model/mnist` and are provided for convenience. Code to read that data was made by Eric Yuan (see license in file `readMNIST.cpp`). 

@@ -5,11 +5,11 @@ data/
 deprecated/
 .idea/
 /test/test-output/
-supplementary-figures/sup-figs/
-supplementary-figures/sup-results/
-supplementary-figures/sup-data/
+supplementary-figures/supp-figs/
+supplementary-figures/supp-results/
+supplementary-figures/supp-data/
 coarse-grained-model/results/
-coarse-grained-model/data/*.dat
+coarse-grained-model/mnist/*.dat
 
 # simulation executable, but not the .cpp files
 sim/sim_*
