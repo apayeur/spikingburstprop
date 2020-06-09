@@ -22,7 +22,7 @@ This code works with the following Python packages:
 * Figure 3: From folder `./sim`, do: `bash run_propagation.sh`
 
 * Figure 4: From folder `./sim`, do: `bash run_xor.sh`
-(Warning!!! This can a **long** simulation (at least on a Macbook Air, 1.6 GHz Intel Core i5). There is no support for parallel simulations at this point.)
+(Warning!!! This can be a **long** simulation (at least on a Macbook Air, 1.6 GHz Intel Core i5). There is no support for parallel simulations at this point.)
 
 ## Supplementary figures
 Codes for the supplementatry figures are more raw than the codes for the main figures. Folder `supplementary-figures/coarse-grained-model` contains the code and data to simulate the rate model of Figure S8. Folder `supplementary-figures/supp-sim` contains the simulations for Figures S1, S2 and S4. Figure S3 can be reproduced by slightly modifying the XOR program.
