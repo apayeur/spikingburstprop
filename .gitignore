@@ -8,8 +8,8 @@ deprecated/
 supplementary-figures/supp-figs/
 supplementary-figures/supp-results/
 supplementary-figures/supp-data/
-coarse-grained-model/results/
-coarse-grained-model/mnist/*.dat
+supplementary-figures/coarse-grained-model/results/
+supplementary-figures/coarse-grained-model/mnist/*.dat
 
 # simulation executable, but not the .cpp files
 sim/sim_*
