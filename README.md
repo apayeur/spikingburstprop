@@ -14,6 +14,7 @@ This code works with the following Python packages:
 	* numpy 1.13.1
 	* scipy 0.19.1
 	* matplotlib 2.0.2
+
  Equivalently, create a conda environment from `./analysis/plasticity-protocol/env_py3.yml`.  
 
 * Figure 2E-G: From folder `./sim`, do: `bash run_plasticity.sh`
