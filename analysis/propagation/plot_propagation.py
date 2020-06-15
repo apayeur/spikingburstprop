@@ -219,7 +219,7 @@ ax_pop1_soma.annotate('c3', (-0.25, 1.05), xycoords='axes fraction', weight='bol
 ax_pop1_soma.set_xlabel('Time [s]')
 
 plt.tight_layout()
-#plt.savefig(args.resultdir + 'fig_propagation_prelim.pdf')
+plt.savefig(args.resultdir + 'fig_propagation_prelim.pdf')
 plt.close()
 
 '''
