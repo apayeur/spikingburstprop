@@ -10,10 +10,10 @@ This plasticity protocol consists in pre and postsynaptic Poisson processes.
 
 
 def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_estimate=(5., 0.35*5.)):
-    np.random.seed(2)
+    np.random.seed(3)
 
     # select parameters for pairing protocol
-    nb_reals = 1
+    nb_reals = 10
     burnin = 0.
 
     # create synapse
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     pbar0 = 0.3
     alpha = 15
 
-    for initial_er in np.arange(1, 2, 5):
+    for initial_er in [5.]:
         print('simulate initial ER = {}....'.format(initial_er))
         r, w, _, _ = simulate(rates, 0.1, duration, alpha, 0.016, 0.050, starting_estimate=(initial_er, pbar0*initial_er))
         plt.figure(figsize=(3, 3/1.6))
