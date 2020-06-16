@@ -13,7 +13,7 @@ def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_est
     np.random.seed(2)
 
     # select parameters for pairing protocol
-    nb_reals = 1
+    nb_reals = 10
     burnin = 0.
 
     # create synapse
