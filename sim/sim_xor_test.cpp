@@ -135,12 +135,12 @@ int main(int ac, char* av[])
     unsigned int seed = 1;
     double durex = 10.;
     string dir = "./";
-    string simname = "xor";
+    string simname = "xor-test";
     double moving_average_time_constant = 4.;
     int number_of_training_examples = 1;
     
-    const double learning_rate_hid_to_out = 2e-3;
-    const double learning_rate_in_to_hid  = 4e-3;
+    const double learning_rate_hid_to_out = 2.*2.e-3;
+    const double learning_rate_in_to_hid  = 2.*4.e-3;
     const double learning_rate_bias       = 0.1e-3;
     const double max_weight    = 1.0;
     const double tau_pre       = 100.e-3;
@@ -257,14 +257,14 @@ int main(int ac, char* av[])
     
     //- Hidden layer
     // Pyr1
-    PoissonGroup* exc_Poisson_hidden_pyr1      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
-    PoissonGroup* inh_Poisson_hidden_pyr1      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
+    PoissonGroup* exc_Poisson_hidden_pyr1      = new PoissonGroup(number_of_neurons, 30*poisson_rate);
+    PoissonGroup* inh_Poisson_hidden_pyr1      = new PoissonGroup(number_of_neurons, 30*poisson_rate);
     PoissonGroup* exc_Poisson_dend_hidden_pyr1 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     PoissonGroup* inh_Poisson_dend_hidden_pyr1 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
 
     // Pyr2
-    PoissonGroup* exc_Poisson_hidden_pyr2      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
-    PoissonGroup* inh_Poisson_hidden_pyr2      = new PoissonGroup(number_of_neurons, 50*poisson_rate);
+    PoissonGroup* exc_Poisson_hidden_pyr2      = new PoissonGroup(number_of_neurons, 30*poisson_rate);
+    PoissonGroup* inh_Poisson_hidden_pyr2      = new PoissonGroup(number_of_neurons, 30*poisson_rate);
     PoissonGroup* exc_Poisson_dend_hidden_pyr2 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     PoissonGroup* inh_Poisson_dend_hidden_pyr2 = new PoissonGroup(number_of_neurons, 100*poisson_rate);
     
@@ -358,52 +358,52 @@ int main(int ac, char* av[])
 
     //-- CONNECT FeedFORWARD
     const float p_ff = 0.05*2000/number_of_neurons;
-    float w_in_to_hid_exc  = 0.14;
-    float w_in_to_hid_inh  = 0.06;
+    float w_in_to_hid_exc  = 0.18;
+    float w_in_to_hid_inh  = 0.1;
     float w_hid_to_out_exc = 0.18;
     float w_hid_to_out_inh = 0.1;
     
         // (1) Connect input layer to hidden layer
             // Excitation
-    AdaptiveEBCPConnection * con_input1_to_hidden1_exc = new AdaptiveEBCPConnection(input_pyr1, hidden_pyr1, 0.8*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
+    AdaptiveEBCPConnection * con_input1_to_hidden1_exc = new AdaptiveEBCPConnection(input_pyr1, hidden_pyr1, 1.3*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_input1_to_hidden1_exc, moving_average_time_constant);
     
-    AdaptiveEBCPConnection * con_input2_to_hidden1_exc = new AdaptiveEBCPConnection(input_pyr2, hidden_pyr1, 0.8*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
+    AdaptiveEBCPConnection * con_input2_to_hidden1_exc = new AdaptiveEBCPConnection(input_pyr2, hidden_pyr1, 1.3*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_input2_to_hidden1_exc, moving_average_time_constant);
     
-    AdaptiveEBCPConnection * con_input1_to_hidden2_exc = new AdaptiveEBCPConnection(input_pyr1, hidden_pyr2, 0.8*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
+    AdaptiveEBCPConnection * con_input1_to_hidden2_exc = new AdaptiveEBCPConnection(input_pyr1, hidden_pyr2, 1.3*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_input1_to_hidden2_exc, moving_average_time_constant);
     
-    AdaptiveEBCPConnection * con_input2_to_hidden2_exc = new AdaptiveEBCPConnection(input_pyr2, hidden_pyr2, 0.8*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
+    AdaptiveEBCPConnection * con_input2_to_hidden2_exc = new AdaptiveEBCPConnection(input_pyr2, hidden_pyr2, 1.3*w_in_to_hid_exc, p_ff, learning_rate_in_to_hid, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_input2_to_hidden2_exc, moving_average_time_constant);
 
             // Inhibition
-    TransmitEventConnection * con_input1_to_hidden1_inh = new TransmitEventConnection(input_pyr1, hidden_pyr1, w_in_to_hid_inh, p_ff, GABA);
+    TransmitEventConnection * con_input1_to_hidden1_inh = new TransmitEventConnection(input_pyr1, hidden_pyr1, 2.5*w_in_to_hid_inh, p_ff, GABA);
     con_input1_to_hidden1_inh->set_target("g_gaba");
     
-    TransmitEventConnection * con_input2_to_hidden1_inh = new TransmitEventConnection(input_pyr2, hidden_pyr1, w_in_to_hid_inh, p_ff, GABA);
+    TransmitEventConnection * con_input2_to_hidden1_inh = new TransmitEventConnection(input_pyr2, hidden_pyr1, 2.5*w_in_to_hid_inh, p_ff, GABA);
     con_input2_to_hidden1_inh->set_target("g_gaba");
     
-    TransmitEventConnection * con_input1_to_hidden2_inh = new TransmitEventConnection(input_pyr1, hidden_pyr2, w_in_to_hid_inh, p_ff, GABA);
+    TransmitEventConnection * con_input1_to_hidden2_inh = new TransmitEventConnection(input_pyr1, hidden_pyr2, 2.5*w_in_to_hid_inh, p_ff, GABA);
     con_input1_to_hidden2_inh->set_target("g_gaba");
     
-    TransmitEventConnection * con_input2_to_hidden2_inh = new TransmitEventConnection(input_pyr2, hidden_pyr2, w_in_to_hid_inh, p_ff, GABA);
+    TransmitEventConnection * con_input2_to_hidden2_inh = new TransmitEventConnection(input_pyr2, hidden_pyr2, 2.5*w_in_to_hid_inh, p_ff, GABA);
     con_input2_to_hidden2_inh->set_target("g_gaba");
     
     
     // (2) Connect hidden layer to output layer
     // Excitation
-    AdaptiveEBCPConnection * con_hidden1_to_output_exc = new AdaptiveEBCPConnection(hidden_pyr1, output_pyr, 1.4*w_hid_to_out_exc, p_ff, learning_rate_hid_to_out, max_weight, tau_pre);
+    AdaptiveEBCPConnection * con_hidden1_to_output_exc = new AdaptiveEBCPConnection(hidden_pyr1, output_pyr, 1.3*w_hid_to_out_exc, p_ff, learning_rate_hid_to_out, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_hidden1_to_output_exc, moving_average_time_constant);
     
-    AdaptiveEBCPConnection * con_hidden2_to_output_exc = new AdaptiveEBCPConnection(hidden_pyr2, output_pyr, 1.05*w_hid_to_out_exc, p_ff, learning_rate_hid_to_out, max_weight, tau_pre);
+    AdaptiveEBCPConnection * con_hidden2_to_output_exc = new AdaptiveEBCPConnection(hidden_pyr2, output_pyr, 1.3*w_hid_to_out_exc, p_ff, learning_rate_hid_to_out, max_weight, tau_pre);
     fix_plastic_connections_parameters(con_hidden2_to_output_exc, moving_average_time_constant);
 
     // Inhibition
-    TransmitEventConnection * con_hidden1_to_output_inh = new TransmitEventConnection(hidden_pyr1, output_pyr, 0.3*w_hid_to_out_inh, p_ff, GABA);
+    TransmitEventConnection * con_hidden1_to_output_inh = new TransmitEventConnection(hidden_pyr1, output_pyr, 2.5*w_hid_to_out_inh, p_ff, GABA);
     con_hidden1_to_output_inh->set_target("g_gaba");
     
-    TransmitEventConnection * con_hidden2_to_output_inh = new TransmitEventConnection(hidden_pyr2, output_pyr, 5.*w_hid_to_out_inh, p_ff, GABA);
+    TransmitEventConnection * con_hidden2_to_output_inh = new TransmitEventConnection(hidden_pyr2, output_pyr, 2.5*w_hid_to_out_inh, p_ff, GABA);
     con_hidden2_to_output_inh->set_target("g_gaba");
     
 
@@ -445,8 +445,8 @@ int main(int ac, char* av[])
     baseline_curr_hidden_pyr2_dend->set_all_currents(500.e-12/hidden_pyr2[0].get_Cd());
     
     // constant currents injected in somata (adjust gain; equivalent to changing leak reversal)
-    curr_inject_hidden_pyr1_soma->set_all_currents(-200.e-12/hidden_pyr1[0].get_Cs());
-    curr_inject_hidden_pyr2_soma->set_all_currents(-200.e-12/hidden_pyr2[0].get_Cs());
+    curr_inject_hidden_pyr1_soma->set_all_currents(-00.e-12/hidden_pyr1[0].get_Cs());
+    curr_inject_hidden_pyr2_soma->set_all_currents(-00.e-12/hidden_pyr2[0].get_Cs());
     curr_inject_output_pyr_soma->set_all_currents(0.e-12/output_pyr[0].get_Cs());
     
     // error-encoding current
@@ -592,10 +592,10 @@ int main(int ac, char* av[])
             cost_epoch += cost;
             
             // turn plasticity on
-            con_input1_to_hidden1_exc->stdp_active = true;
-            con_input1_to_hidden2_exc->stdp_active = true;
-            con_input2_to_hidden1_exc->stdp_active = true;
-            con_input2_to_hidden2_exc->stdp_active = true;
+            con_input1_to_hidden1_exc->stdp_active = false;
+            con_input1_to_hidden2_exc->stdp_active = false;
+            con_input2_to_hidden1_exc->stdp_active = false;
+            con_input2_to_hidden2_exc->stdp_active = false;
             
             con_hidden1_to_output_exc->stdp_active = true;
             con_hidden2_to_output_exc->stdp_active = true;

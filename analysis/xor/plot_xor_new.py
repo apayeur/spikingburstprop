@@ -43,14 +43,14 @@ def std_output(segment):
 
 
 # import data
-data_file_prefix = '../../data/xor/very-good-xor-corrected/xor.0.brate_'
-datadir = '../../data/xor/very-good-xor-corrected/'
+data_file_prefix = '../../data/xor-test/xor-test.0.brate_'
+datadir = '../../data/xor-test/'
 
-output_rates = np.loadtxt(data_file_prefix + 'output')
-hidden1_rates = np.loadtxt(data_file_prefix + 'hidden1')
-hidden2_rates = np.loadtxt(data_file_prefix + 'hidden2')
-input1_rates = np.loadtxt(data_file_prefix + 'input1')
-input2_rates = np.loadtxt(data_file_prefix + 'input2')
+output_rates = np.loadtxt(data_file_prefix + 'output_seed1')
+hidden1_rates = np.loadtxt(data_file_prefix + 'hidden1_seed1')
+hidden2_rates = np.loadtxt(data_file_prefix + 'hidden2_seed1')
+input1_rates = np.loadtxt(data_file_prefix + 'input1_seed1')
+input2_rates = np.loadtxt(data_file_prefix + 'input2_seed1')
 cost_epoch = np.loadtxt(datadir + 'cost_epoch.dat')
 
 binSize = output_rates[1,0] - output_rates[0,0]
@@ -59,18 +59,18 @@ before_learning = [int(3*args.alpha/binSize)+1, int(3*args.alpha/binSize)+int(4*
 during_learning = [int(3*args.alpha/binSize)+int(args.numex//2*args.durex/binSize)+1,
                    int(3*args.alpha/binSize)+int(args.numex//2*args.durex/binSize)+int(4*args.durex/binSize)+1]
 
-er_trace = np.loadtxt(datadir + 'xor0.0.trevent')
-br_trace = np.loadtxt(datadir + 'xor0.0.trburst')
+er_trace = np.loadtxt(datadir + 'xor-test0.0.trevent_seed1')
+br_trace = np.loadtxt(datadir + 'xor-test0.0.trburst_seed1')
 for i in range(1,50):
-    er_tmp = np.loadtxt(datadir + 'xor'+str(i)+'.0.trevent')
-    br_tmp = np.loadtxt(datadir + 'xor'+str(i)+'.0.trburst')
+    er_tmp = np.loadtxt(datadir + 'xor-test'+str(i)+'.0.trevent_seed1')
+    br_tmp = np.loadtxt(datadir + 'xor-test'+str(i)+'.0.trburst_seed1')
     er_trace[:,1] += er_tmp[:,1]
     br_trace[:,1] += br_tmp[:,1]
 er_trace[:,1] /= 50.
 br_trace[:,1] /= 50.
 er_trace = er_trace
 br_trace = br_trace
-er_trace_ex = np.loadtxt(datadir + 'xor0.0.trevent')
+er_trace_ex = np.loadtxt(datadir + 'xor-test0.0.trevent_seed1')
 
 lim_seg = after_learning
 r_out = output_rates[lim_seg[0]:lim_seg[1], :]

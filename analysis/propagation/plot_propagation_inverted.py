@@ -161,7 +161,7 @@ set_axis_color(ax_raster1_tw, custom_colors['bluish_green'])
 # right column: population activities
 ax_pop2_dend = fig.add_subplot(gs[0, 2])
 ax_pop2_dend.plot(t, 100*mean2['BP'], color=custom_colors['red'])
-ax_pop2_dend.plot(t, rescaled_input_pop2_dend, '--', color=custom_colors['red'], label='$I_d$ (scaled)')
+#ax_pop2_dend.plot(t, rescaled_input_pop2_dend, '--', color=custom_colors['red'], label='$I_d$ (scaled)')
 ax_pop2_dend.fill_between(t, 100*(mean2['BP'] - 2*std2['BP']), 100*(mean2['BP'] + 2*std2['BP']),
                           color=custom_colors['red'], alpha=0.5)
 ax_pop2_dend.set_xlim([pre_stim_burn, 3])
@@ -176,7 +176,7 @@ ax_pop2_dend.annotate('b2', (-0.3, 1.05), xycoords='axes fraction')
 
 ax_pop2_soma = fig.add_subplot(gs[1, 2])
 ax_pop2_soma.plot(t, mean2['ER'], color=custom_colors['blue'])
-ax_pop2_soma.plot(t, rescaled_input_pop2_soma, '--', color=custom_colors['blue'], label='ER, pop1 (scaled)')
+#ax_pop2_soma.plot(t, rescaled_input_pop2_soma, '--', color=custom_colors['blue'], label='ER, pop1 (scaled)')
 ax_pop2_soma.fill_between(t, mean2['ER'] - 2*std2['ER'], mean2['ER'] + 2*std2['ER'], color=custom_colors['blue'], alpha=0.5)
 ax_pop2_soma.set_xlim([pre_stim_burn, 3])
 ax_pop2_soma.set_ylim([0., 13.])
@@ -190,7 +190,7 @@ ax_pop2_soma.annotate('b3', (-0.3, 1.05), xycoords='axes fraction')
 
 ax_pop1_dend = fig.add_subplot(gs[2, 2])
 ax_pop1_dend.plot(t, 100*mean1['BP'], color=custom_colors['red'])
-ax_pop1_dend.plot(t, rescaled_input_pop1_dend, '--', color=custom_colors['orange'], label='BR, pop2 (scaled)')
+#ax_pop1_dend.plot(t, rescaled_input_pop1_dend, '--', color=custom_colors['orange'], label='BR, pop2 (scaled)')
 ax_pop1_dend.fill_between(t, 100*(mean1['BP'] - 2*std1['BP']), 100*(mean1['BP'] + 2*std1['BP']),
                           color=custom_colors['red'], alpha=0.5)
 ax_pop1_dend.set_xlim([pre_stim_burn, 3])
@@ -206,7 +206,7 @@ ax_pop1_dend.annotate('c2', (-0.3, 1.05), xycoords='axes fraction')
 
 ax_pop1_soma = fig.add_subplot(gs[3, 2])
 ax_pop1_soma.plot(t, mean1['ER'], color=custom_colors['blue'])
-ax_pop1_soma.plot(t, rescaled_input_pop1_soma, '--', color=custom_colors['blue'], label='$I_s$ (scaled)')
+#ax_pop1_soma.plot(t, rescaled_input_pop1_soma, '--', color=custom_colors['blue'], label='$I_s$ (scaled)')
 ax_pop1_soma.fill_between(t, mean1['ER'] - 2*std1['ER'], mean1['ER'] + 2*std1['ER'], color=custom_colors['blue'], alpha=0.5)
 ax_pop1_soma.set_xlim([pre_stim_burn, 3])
 ax_pop1_soma.set_ylim([0., 13.])
@@ -220,7 +220,7 @@ ax_pop1_soma.annotate('c3', (-0.3, 1.05), xycoords='axes fraction', weight='bold
 ax_pop1_soma.set_xlabel('Time [s]')
 
 plt.tight_layout()
-plt.savefig(args.resultdir + 'fig_propagation_prelim.pdf')
+plt.savefig(args.resultdir + 'fig_propagation_inverted.pdf')
 plt.close()
 
 '''

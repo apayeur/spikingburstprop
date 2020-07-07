@@ -13,7 +13,7 @@ def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_est
     np.random.seed(3)
 
     # select parameters for pairing protocol
-    nb_reals = 10
+    nb_reals = 20
     burnin = 0.
 
     # create synapse
@@ -55,21 +55,21 @@ def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_est
     return rates, weights, weight_trace, dwdtdivr2
 
 
-def analytical(rates, eta, duration, alpha, burst_threshold, tau_pre):
-    # select parameters for pairing protocol
+def analytical(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_estimates=(5, 0.35*5), tau_ref=0.):
     r = rates
-    P_greater = np.exp(-r*burst_threshold)
-    E = r*P_greater
-    B = E*(1-P_greater)
-    term1 = (alpha/(1. + alpha*r))\
-            *( 1 - np.exp(-burst_threshold*(r + 1./alpha)) )\
-            *( E*r - E**2*np.exp(-burst_threshold/alpha) )
+    lambda_ = r/(1. - tau_ref*r)
+    P_greater = np.exp(-lambda_ * (burst_threshold - tau_ref))
+    E = r * P_greater
+    B = E * (1 - P_greater)
+    E_pre = E
+    integrated_Pbar = (B/E)*(aux_fun(duration, starting_estimates[1]/B - 1., starting_estimates[0]/E - 1., alpha)
+                             - aux_fun(0, starting_estimates[1]/B - 1., starting_estimates[0]/E - 1., alpha))
+    w = eta*tau_pre*E_pre*(B*duration - E*integrated_Pbar)
+    return r, w
 
-    term2 = alpha*E*(E-B)*np.exp(-burst_threshold/alpha)*(1.-np.exp(-burst_threshold/alpha))
 
-    weights = duration*(eta/alpha)*tau_pre*E*(term1 + term2)
-
-    return r, weights
+def aux_fun(x, A, B, alpha):
+    return (alpha*(B-A)*np.log(B + np.exp(x/alpha)) + A*x)/B
 
 
 def plot_cov(synapse, rate, timestep, burst_threshold):
@@ -119,15 +119,18 @@ if __name__ == '__main__':
     plt.style.use('../thesis_mplrc.dms')
 
     rates = np.linspace(1., 50., 10)
-    duration = 60.
+    duration = 100.
     pbar0 = 0.3
     alpha = 15
 
     for initial_er in [5.]:
         print('simulate initial ER = {}....'.format(initial_er))
         r, w, _, _ = simulate(rates, 0.1, duration, alpha, 0.016, 0.050, starting_estimate=(initial_er, pbar0*initial_er))
+        r, w5, _, _ = simulate(rates, 0.1, duration, alpha, 0.016, 0.050, starting_estimate=(initial_er, 0.5*initial_er))
+
         plt.figure(figsize=(3, 3/1.6))
         plt.plot(r, w, color='black')
+        plt.plot(r, w5, color='grey')
         sns.despine()
         plt.plot(r, np.zeros(r.shape), 'k--', lw=1)
         plt.xlabel('Rate [Hz]')
@@ -135,3 +138,23 @@ if __name__ == '__main__':
         plt.tight_layout()
         plt.savefig(PLOTPATH + '/DeltaW_AdaptiveLearningRule_InitialER'+str(initial_er)+'.pdf')
         plt.close()
+
+
+    # testing analytical result
+    #rates = np.arange(1, 50)
+    plt.figure(figsize=(3, 2))
+    r, w3_notauref = analytical(rates, 0.1, 60, 15, 0.016, 0.050, starting_estimates=(5, 0.3 * 5),
+                                tau_ref=0.000)
+    r, w3 = analytical(rates, 0.1, 60, 15, 0.016, 0.050, starting_estimates=(5, 0.3 * 5), tau_ref=0.002)
+    r, w_longref = analytical(rates, 0.1, 60, 15, 0.016, 0.050, starting_estimates=(5, 0.3 * 5), tau_ref=0.004)
+    plt.plot(r, w_longref, 'r', label=r'$\tau_\mathrm{ref} = 4$ ms')
+    plt.plot(r, w3, 'k', label=r'$\tau_\mathrm{ref} = 2$ ms')
+    plt.plot(r, w3_notauref, 'k--', label=r'$\tau_\mathrm{ref} = 0$ ms')
+    plt.plot(r, w, '-', color='grey')
+    plt.plot(r, np.zeros(r.shape), ':', color='grey', lw=0.5)
+    plt.xlabel('Rate [Hz]')
+    plt.ylabel('$\Delta W$')
+    plt.legend(loc='best')
+    plt.tight_layout()
+    plt.savefig(PLOTPATH + '/Analytical.png')
+    plt.close()

@@ -160,7 +160,7 @@ class RandomProtocol(PairingProtocol):
         super().__init__()
         self.duration = duration
         self.rate = rate
-        self.abs_ref_per = 0.00
+        self.abs_ref_per = 0.002
         self.get_spiketimes()
 
     def get_spiketimes(self):
