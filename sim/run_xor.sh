@@ -8,7 +8,7 @@ RESULTDIR="../results/xor"
 mkdir -p $RESULTDIR
 
 # Parameters
-DUREX=10 # duration of each example
+DUREX=8 # duration of each example
 ALPHA=2 # moving average time constant
 NUMEX=2000 # total number of training examples
 NUMBERofNEURONS=500 # number of neurons/population
@@ -18,10 +18,10 @@ NUM_REAL=5 # number of realizations
 make
 for (( i=1; i<=$NUM_REAL; i++ ))
     do
-        ./sim_xor --dir $DIR --seed $i --durex $DUREX --alpha $ALPHA --numex $NUMEX --N $NUMBERofNEURONS
+        ./sim_xor_test --dir $DIR --seed $i --durex $DUREX --alpha $ALPHA --numex $NUMEX --N $NUMBERofNEURONS
     done
 
 # Analysis
-#cd ../analysis/xor
-#python plot_xor_new.py -durex $DUREX -alpha $ALPHA -numex $NUMEX
-#open ../../results/xor/XOR_NEW.pdf
+cd ../analysis/xor
+python plot_xor.py -durex $DUREX -alpha $ALPHA -numex $NUMEX
+open ../../results/xor/XOR.pdf
