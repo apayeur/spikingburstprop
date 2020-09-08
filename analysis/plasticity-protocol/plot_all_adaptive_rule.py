@@ -34,7 +34,7 @@ f, w_pp = pp.simulate(freqs, learning_rate, alpha, burst_threshold, tau_pre)
 
 # Poisson protocol
 rates = np.linspace(1., 50., 10)
-duration = 60.
+duration = 100.
 r, w_rp, _, _ = rp.simulate(rates, learning_rate, duration, alpha, burst_threshold, tau_pre, (5., 0.30*5.))
 r, w_rp2, _, _ = rp.simulate(rates, learning_rate, duration, alpha, burst_threshold, tau_pre, (5., 0.50*5.))
 

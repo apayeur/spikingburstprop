@@ -104,7 +104,7 @@ class PoissonBurstProtocol(PairingProtocol):
         self.duration = duration
         self.p = p
         self.rate_event = rate_event
-        self.abs_ref_per = 0.004  # absolute refractory due to spike shape
+        self.abs_ref_per = 0.002  # absolute refractory due to spike shape
         self.abs_ref_per_event = 0.020  # absolute refractory for events
         self.get_spiketimes()
 
@@ -160,21 +160,24 @@ class RandomProtocol(PairingProtocol):
         super().__init__()
         self.duration = duration
         self.rate = rate
+        self.abs_ref_per = 0.002
         self.get_spiketimes()
 
     def get_spiketimes(self):
         """
         Compute the pre and post spike times and put them in lists.
         """
+        hazard = self.rate/(1 - self.rate*self.abs_ref_per)
+
         spike_number = int(self.rate*self.duration*10)
         while True:
-            isis = np.random.exponential(1./self.rate, spike_number)
+            isis = self.abs_ref_per + np.random.exponential(1./hazard, spike_number)
             self.spiketimes_pre = isis.cumsum()
 
-            isis = np.random.exponential(1. / self.rate, spike_number)
+            isis = self.abs_ref_per + np.random.exponential(1./hazard, spike_number)
             self.spiketimes_post = isis.cumsum()
 
-            if self.spiketimes_pre[-1] > self.duration and self.spiketimes_post[-1]>self.duration:
+            if self.spiketimes_pre[-1] > self.duration and self.spiketimes_post[-1] > self.duration:
                 indices = np.where(self.spiketimes_pre < self.duration)[0]
                 self.spiketimes_pre = self.spiketimes_pre[indices]
 

@@ -21,7 +21,7 @@ LDFLAGS=$(BUILDDIR)/src/libauryn.a \
 
 OBJECTS=BiasIdentityConnection.o BiasConnection.o STPeTMConnection.o BCPConnection.o EBCPConnection.o AdaptiveEBCPConnection.o SineCurrentInjector.o FileCurrentInjector.o BurstPoissonGroup.o EventBurstPoissonGroup.o TransmitBurstConnection.o TransmitEventConnection.o 
 
-SIMULATIONS=sim_plasticity_rule sim_propagation sim_xor
+SIMULATIONS=sim_plasticity_rule sim_propagation sim_xor sim_propagation_inverted sim_xor_test
 
 .SECONDARY:
 

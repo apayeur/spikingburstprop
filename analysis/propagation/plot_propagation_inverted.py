@@ -97,7 +97,7 @@ eventtimes2, bursttimes2, _, _ = ra.get_eventtimes(rasterfile2, 0, 0.016)
 # --- plotting --- #
 output_file_prefix = args.resultdir
 fig = plt.figure(figsize=(183./25.4, 183./25.4/2.))
-gs = gridspec.GridSpec(4, 3, figure=fig, width_ratios=[0.6, 1.,1.])
+gs = gridspec.GridSpec(4, 3, figure=fig, width_ratios=[0.6, 1. ,1.])
 
 
 # empty panel on the left-hand side to accomodate the schematic
@@ -119,20 +119,20 @@ ax_raster2.set_xticks([1, 2, 3])
 ax_raster2.set_yticks([1, N_neurons])
 ax_raster2.spines['top'].set_visible(False)
 ax_raster2.spines['right'].set_visible(False)
-#set_axis_color(ax_raster2, custom_colors['sky_blue'])
+set_axis_color(ax_raster2, custom_colors['sky_blue'])
 ax_raster2.set_ylabel('Neuron')
 ax_raster2.annotate('b1', (-0.2, 1), xycoords='axes fraction')
 remove_xticklabel(ax_raster2)
 
 ax_raster2_tw = ax_raster2.twinx()
-ax_raster2_tw.plot(t, BR2, ':', lw=2.5, color=custom_colors['orange'])
-ax_raster2_tw.plot(t, ER2, ':', lw=2.5, color=custom_colors['blue'])
+ax_raster2_tw.plot(t, BR2, color=custom_colors['orange'])
+ax_raster2_tw.plot(t, ER2, color=custom_colors['blue'])
 ax_raster2_tw.set_yticks([0, 10])
-ax_raster2_tw.set_ylim([0, 11])
+ax_raster2_tw.set_ylim([0, 13])
 ax_raster2_tw.set_xlim([1, 3])
 ax_raster2_tw.set_ylabel('ER [Hz], BR [Hz]')
 remove_xticklabel(ax_raster2_tw)
-#set_axis_color(ax_raster2_tw, custom_colors['sky_blue'])
+set_axis_color(ax_raster2_tw, custom_colors['sky_blue'])
 
 ax_raster1 = fig.add_subplot(gs[2:, 1])
 ax_raster1.eventplot(eventtimes1[:N_neurons], colors=custom_colors['blue'], lineoffsets=lineoffs, linelengths=1, lw=0.5)
@@ -143,7 +143,7 @@ ax_raster1.set_xticks([1, 2, 3])
 ax_raster1.set_yticks([1, N_neurons])
 ax_raster1.spines['top'].set_visible(False)
 ax_raster1.spines['right'].set_visible(False)
-#set_axis_color(ax_raster1, custom_colors['bluish_green'])
+set_axis_color(ax_raster1, custom_colors['bluish_green'])
 ax_raster1.set_ylabel('Neuron')
 ax_raster1.set_xlabel('Time [s]')
 ax_raster1.annotate('c1', (-0.2, 1), xycoords='axes fraction')
@@ -152,55 +152,52 @@ ax_raster1_tw = ax_raster1.twinx()
 ax_raster1_tw.plot(t, BR1, color=custom_colors['orange'])
 ax_raster1_tw.plot(t, ER1, color=custom_colors['blue'])
 ax_raster1_tw.set_yticks([0, 10])
-ax_raster1_tw.set_ylim([0, 11])
+ax_raster1_tw.set_ylim([0, 13])
 ax_raster1_tw.set_xlim([1, 3])
 ax_raster1_tw.set_ylabel('ER [Hz], BR [Hz]')
-#set_axis_color(ax_raster1_tw, custom_colors['bluish_green'])
+set_axis_color(ax_raster1_tw, custom_colors['bluish_green'])
 
 
 # right column: population activities
 ax_pop2_dend = fig.add_subplot(gs[0, 2])
-ax_pop2_dend.plot(t, rescaled_input_pop2_dend, '--', lw=1, color='grey', label='$I_d$ (scaled)')
-ax_pop2_dend.plot(t, 100*mean2['BP'], ':', lw=2.5, color=custom_colors['red'])
+ax_pop2_dend.plot(t, 100*mean2['BP'], color=custom_colors['red'])
+#ax_pop2_dend.plot(t, rescaled_input_pop2_dend, '--', color=custom_colors['red'], label='$I_d$ (scaled)')
 ax_pop2_dend.fill_between(t, 100*(mean2['BP'] - 2*std2['BP']), 100*(mean2['BP'] + 2*std2['BP']),
-                          color=custom_colors['red'], alpha=0.5, lw=0)
+                          color=custom_colors['red'], alpha=0.5)
 ax_pop2_dend.set_xlim([pre_stim_burn, 3])
 ax_pop2_dend.set_ylim([0., 65])
 ax_pop2_dend.set_xticks([1, 2, 3])
 ax_pop2_dend.set_ylabel('BP, pop2 [%]')
-#set_axis_color(ax_pop2_dend, custom_colors['sky_blue'])
+set_axis_color(ax_pop2_dend, custom_colors['sky_blue'])
 sns.despine(ax=ax_pop2_dend)
 ax_pop2_dend.legend(loc='upper right', bbox_to_anchor=(1.05, 1.3))
 remove_xticklabel(ax_pop2_dend)
 ax_pop2_dend.annotate('b2', (-0.3, 1.05), xycoords='axes fraction')
 
-
 ax_pop2_soma = fig.add_subplot(gs[1, 2])
-ax_pop2_soma.plot(t, rescaled_input_pop2_soma, '-', color=custom_colors['blue'], label='mean ER, pop1 (scaled)')
-ax_pop2_soma.plot(t, mean2['ER'], ':', lw=2.5, color=custom_colors['blue'])
-ax_pop2_soma.fill_between(t, mean2['ER'] - 2*std2['ER'], mean2['ER'] + 2*std2['ER'],
-                          color=custom_colors['blue'], alpha=0.5, lw=0)
+ax_pop2_soma.plot(t, mean2['ER'], color=custom_colors['blue'])
+#ax_pop2_soma.plot(t, rescaled_input_pop2_soma, '--', color=custom_colors['blue'], label='ER, pop1 (scaled)')
+ax_pop2_soma.fill_between(t, mean2['ER'] - 2*std2['ER'], mean2['ER'] + 2*std2['ER'], color=custom_colors['blue'], alpha=0.5)
 ax_pop2_soma.set_xlim([pre_stim_burn, 3])
 ax_pop2_soma.set_ylim([0., 13.])
 ax_pop2_soma.set_xticks([1, 2, 3])
 ax_pop2_soma.set_ylabel('ER, pop2 [Hz]')
 ax_pop2_soma.legend(loc='upper right', bbox_to_anchor=(1.05, 1.3))
-#set_axis_color(ax_pop2_soma, custom_colors['sky_blue'])
+set_axis_color(ax_pop2_soma, custom_colors['sky_blue'])
 sns.despine(ax=ax_pop2_soma)
 remove_xticklabel(ax_pop2_soma)
 ax_pop2_soma.annotate('b3', (-0.3, 1.05), xycoords='axes fraction')
 
-
 ax_pop1_dend = fig.add_subplot(gs[2, 2])
 ax_pop1_dend.plot(t, 100*mean1['BP'], color=custom_colors['red'])
+#ax_pop1_dend.plot(t, rescaled_input_pop1_dend, '--', color=custom_colors['orange'], label='BR, pop2 (scaled)')
 ax_pop1_dend.fill_between(t, 100*(mean1['BP'] - 2*std1['BP']), 100*(mean1['BP'] + 2*std1['BP']),
-                          color=custom_colors['red'], alpha=0.5, lw=0)
-ax_pop1_dend.plot(t, rescaled_input_pop1_dend, ':', lw=2.5, color=custom_colors['orange'], label='mean BR, pop2 (scaled)')
+                          color=custom_colors['red'], alpha=0.5)
 ax_pop1_dend.set_xlim([pre_stim_burn, 3])
 ax_pop1_dend.set_ylim([0., 65])
 ax_pop1_dend.set_xticks([1, 2, 3])
 ax_pop1_dend.set_ylabel('BP, pop1 [%]')
-#set_axis_color(ax_pop1_dend, custom_colors['bluish_green'])
+set_axis_color(ax_pop1_dend, custom_colors['bluish_green'])
 sns.despine(ax=ax_pop1_dend)
 ax_pop1_dend.legend(loc='upper right', bbox_to_anchor=(1.05, 1.3))
 remove_xticklabel(ax_pop1_dend)
@@ -208,20 +205,32 @@ ax_pop1_dend.annotate('c2', (-0.3, 1.05), xycoords='axes fraction')
 
 
 ax_pop1_soma = fig.add_subplot(gs[3, 2])
-ax_pop1_soma.plot(t, rescaled_input_pop1_soma, '--', lw=1, color='grey', label='$I_s$ (scaled)')
 ax_pop1_soma.plot(t, mean1['ER'], color=custom_colors['blue'])
-ax_pop1_soma.fill_between(t, mean1['ER'] - 2*std1['ER'], mean1['ER'] + 2*std1['ER'],
-                          color=custom_colors['blue'], alpha=0.5, lw=0)
+#ax_pop1_soma.plot(t, rescaled_input_pop1_soma, '--', color=custom_colors['blue'], label='$I_s$ (scaled)')
+ax_pop1_soma.fill_between(t, mean1['ER'] - 2*std1['ER'], mean1['ER'] + 2*std1['ER'], color=custom_colors['blue'], alpha=0.5)
 ax_pop1_soma.set_xlim([pre_stim_burn, 3])
 ax_pop1_soma.set_ylim([0., 13.])
 ax_pop1_soma.set_xticks([1, 2, 3])
 ax_pop1_soma.set_ylabel('ER, pop1 [Hz]')
 ax_pop1_soma.legend(loc='upper right', bbox_to_anchor=(1.05, 1.3))
-#set_axis_color(ax_pop1_soma, custom_colors['bluish_green'])
+set_axis_color(ax_pop1_soma, custom_colors['bluish_green'])
 sns.despine(ax=ax_pop1_soma)
 ax_pop1_soma.annotate('c3', (-0.3, 1.05), xycoords='axes fraction', weight='bold')
+
 ax_pop1_soma.set_xlabel('Time [s]')
 
 plt.tight_layout()
-plt.savefig(args.resultdir + 'fig_propagation_prelim.pdf')
+plt.savefig(args.resultdir + 'fig_propagation_inverted.pdf')
 plt.close()
+
+'''
+inputs = {'times': times, 'dendrite': current_dend, 'soma': mean['ER']}
+BR2 = ra.display_BRER_with_inputs(filenames2, output_file_prefix + 'Pop2' + args.filesuffix + '.pdf', inputs,
+                            population='2', binsize=binSize)
+inputs = {'times': times, 'dendrite': BR2, 'soma': current_soma}
+BR1 = ra.display_BRER_with_inputs(filenames1, output_file_prefix + 'Pop1' + args.filesuffix + '.pdf', inputs,
+                            population='1', binsize=binSize)
+
+#ra.display_rates_with_inputs(filenamesPV, output_file_prefix + 'PV' + args.filesuffix + '.pdf', inputs)
+#ra.display_rates_with_inputs(filenamesSOM, output_file_prefix + 'SOM' + args.filesuffix + '.pdf', inputs, encoding='burst')
+'''

@@ -23,7 +23,7 @@ def simulate(bps, eta, duration, alpha, burst_threshold, tau_pre, event_rate):
     :return:                weights
     """
     # set random seed for reproducibility
-    np.random.seed(7)
+    np.random.seed(2)
 
     # parameters
     nb_reals = 20       # number of realizations of the random pairing
