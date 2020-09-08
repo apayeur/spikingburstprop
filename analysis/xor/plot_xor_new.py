@@ -281,5 +281,5 @@ set_axis_color(ax7, custom_colors['bluish_green'])
 
 
 plt.tight_layout()
-plt.savefig('../../results/xor/XOR_NEW.pdf')
+plt.savefig('../../results/xor-test/XOR_NEW.pdf')
 plt.close()

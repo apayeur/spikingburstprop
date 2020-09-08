@@ -592,10 +592,10 @@ int main(int ac, char* av[])
             cost_epoch += cost;
             
             // turn plasticity on
-            con_input1_to_hidden1_exc->stdp_active = false;
-            con_input1_to_hidden2_exc->stdp_active = false;
-            con_input2_to_hidden1_exc->stdp_active = false;
-            con_input2_to_hidden2_exc->stdp_active = false;
+            con_input1_to_hidden1_exc->stdp_active = true;
+            con_input1_to_hidden2_exc->stdp_active = true;
+            con_input2_to_hidden1_exc->stdp_active = true;
+            con_input2_to_hidden2_exc->stdp_active = true;
             
             con_hidden1_to_output_exc->stdp_active = true;
             con_hidden2_to_output_exc->stdp_active = true;
