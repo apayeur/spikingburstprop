@@ -25,12 +25,14 @@ This code works with the following Python packages:
 (Warning!!! This can be a **long** simulation (at least on a Macbook Air, 1.6 GHz Intel Core i5). There is no support for parallel simulations at this point.)
 
 ## Supplementary figures
-Codes for the supplementatry figures are more raw than the codes for the main figures. Folder `supplementary-figures/coarse-grained-model` contains the code and data to simulate the rate model of Figure S8. Folder `supplementary-figures/supp-sim` contains the simulations for Figures S1, S2 and S4. Figure S3 can be reproduced by slightly modifying the XOR program.
+Codes for the supplementatry figures are more raw than the codes for the main figures. Folder `supplementary-figures/coarse-grained-model` contains the code and data to simulate the rate model of Figure S4. Folder `supplementary-figures/supp-sim` contains the simulations for Figures S5, S10 and S11. Figures S1, S2 and S3 (using `sim_xor_symfb.cpp`) can be reproduced by slightly modifying the XOR program.
 
-* Figure S1: From folder `supplementary-figures/supp-sim/`, do: `bash run_normalization_of_bpcurves.sh`. Option `--w_pyr_to_pyr 0.02`, produces Figure S1b, left panel, whereas `--w_pyr_to_pyr 0.` produces Figure S1a, left panel. The right panels are produced in a similar fashion. 
+* Figure S4: From folder `supplementary-figures/coarse-grained-model/`, do: `bash run_coarse_grained.sh`. The MNIST data are in folder `supplementary-figures/coarse-grained-model/mnist` and are provided for convenience. Code to read that data was made by Eric Yuan (see license in file `readMNIST.cpp`). 
 
-* Figure S2: This one is a bit more plug-and-play. After compiling with `make`, run `./sim_direct_transmit`. Instructions to plot the results using gnuplot are provided in `sim_direct_transmit.cpp`. Several options can be tested by commenting/uncommenting relevant portions of the code.
+* Figure S5: From folder `supplementary-figures/supp-sim/`, do: `bash run_dendritic_modulation.sh`.
 
-* Figure S4: From folder `supplementary-figures/supp-sim/`, do: `bash run_dendritic_modulation.sh`.
+* Figure S10: From folder `supplementary-figures/supp-sim/`, do: `bash run_normalization_of_bpcurves.sh`. Option `--w_pyr_to_pyr 0.02`, produces Figure S1b, left panel, whereas `--w_pyr_to_pyr 0.` produces Figure S1a, left panel. The right panels are produced in a similar fashion. 
 
-* Figure S8: From folder `supplementary-figures/coarse-grained-model/`, do: `bash run_coarse_grained.sh`. The MNIST data are in folder `supplementary-figures/coarse-grained-model/mnist` and are provided for convenience. Code to read that data was made by Eric Yuan (see license in file `readMNIST.cpp`). 
+* Figure S11: This one is a bit more plug-and-play. After compiling with `make`, run `./sim_direct_transmit`. Instructions to plot the results using gnuplot are provided in `sim_direct_transmit.cpp`. Several options can be tested by commenting/uncommenting relevant portions of the code.
+
+
