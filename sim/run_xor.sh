@@ -18,10 +18,10 @@ NUM_REAL=5 # number of realizations
 make
 for (( i=1; i<=$NUM_REAL; i++ ))
     do
-        ./sim_xor_test --dir $DIR --seed $i --durex $DUREX --alpha $ALPHA --numex $NUMEX --N $NUMBERofNEURONS
+        ./sim_xor --dir $DIR --seed $i --durex $DUREX --alpha $ALPHA --numex $NUMEX --N $NUMBERofNEURONS
     done
 
-# Analysis
+# Produce the figure
 cd ../analysis/xor
 python plot_xor.py -durex $DUREX -alpha $ALPHA -numex $NUMEX
 open ../../results/xor/XOR.pdf

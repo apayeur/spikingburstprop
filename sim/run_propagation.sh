@@ -18,7 +18,7 @@ for (( i=1; i<=$NUM_REAL; i++ ))
    		./sim_propagation --seed $i --dir $DATADIR --w12 $W12 --w1som $W1SOM
 	done
 
-# Produce the figures		
+# Produce the figure		
 cd ../analysis/propagation
 python plot_propagation.py -datadir "../"$DATADIR -resultdir "../"$RESULTDIR -numberofrealiz $NUM_REAL
 

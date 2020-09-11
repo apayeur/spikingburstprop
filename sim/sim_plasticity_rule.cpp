@@ -171,8 +171,6 @@ int main(int ac, char* av[])
     /******           CONNECTIVITY            *********/
     /**************************************************/
     //-- Connect input group to main group's somata with plastic synapses
-    const double we_soma = w0;
-    const double we_dend = d0;
     const double sparseness = 0.2;
     const double learning_rate = 5e-3;
     const double max_weight = 1.0;
@@ -181,15 +179,15 @@ int main(int ac, char* av[])
     
     if (connect_type == "BCP") {
         std::cout << "WARNING! CHANGING TAU_PRE NOT SUPPORTED!!! tau_pre = 20 ms"<<std::endl;
-        con_ext_soma = new BCPConnection(input, neurons_exc, we_soma,
+        con_ext_soma = new BCPConnection(input, neurons_exc, w0,
                                          sparseness, learning_rate, max_weight, GLUT);
     }
     else if (connect_type == "EBCP"){
-        con_ext_soma = new EBCPConnection(input, neurons_exc, we_soma,
+        con_ext_soma = new EBCPConnection(input, neurons_exc, w0,
                                           sparseness, learning_rate, max_weight, tau_pre, GLUT);
     }
     else if (connect_type == "AdaptiveEBCP"){
-        con_ext_soma = new AdaptiveEBCPConnection(input, neurons_exc, we_soma,
+        con_ext_soma = new AdaptiveEBCPConnection(input, neurons_exc, w0,
                                                   sparseness, learning_rate, max_weight, tau_pre, GLUT);
         con_ext_soma->set_post_trace_event_tau(moving_average_time_constant);
         con_ext_soma->set_post_trace_burst_tau(moving_average_time_constant);
@@ -200,7 +198,7 @@ int main(int ac, char* av[])
     
     
     //-- Connect first Poisson noise group to main group's dendrites
-    SparseConnection * con_ext_dend = new SparseConnection(poisson_dend, neurons_exc, we_dend, sparseness);
+    SparseConnection * con_ext_dend = new SparseConnection(poisson_dend, neurons_exc, d0, sparseness);
     con_ext_dend->set_target("g_ampa_dend");
     
     //-- Connect noise to input population
@@ -302,22 +300,22 @@ int main(int ac, char* av[])
     double testtime = 10;
     
     con_ext_soma->stdp_active = false;
-    con_ext_dend->set_all(1.0*we_dend);
+    con_ext_dend->set_all(1.0*d0);
     sys->run(moving_average_time_constant*4);
     
     con_ext_soma->stdp_active = true;
     sys->run(simtime);
 
-    con_ext_dend->set_all(1.5*we_dend);
+    con_ext_dend->set_all(1.5*d0);
     sys->run(simtime);
 
-    con_ext_dend->set_all(1.0*we_dend);
+    con_ext_dend->set_all(1.0*d0);
     sys->run(simtime);
     
-    con_ext_dend->set_all(0.55*we_dend);
+    con_ext_dend->set_all(0.55*d0);
     sys->run(simtime);
     
-    con_ext_dend->set_all(1.0*we_dend);
+    con_ext_dend->set_all(1.0*d0);
     sys->run(simtime);
     
     // test that plasticity is not affected by burst prob in input population
