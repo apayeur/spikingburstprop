@@ -25,7 +25,7 @@ This code works with the following Python packages:
 (Warning!!! This can be a **long** simulation (at least on a Macbook Air, 1.6 GHz Intel Core i5). There is no support for parallel simulations at this point.)
 
 ## Supplementary figures
-Codes for the supplementatry figures are more raw than the codes for the main figures. Folder `supplementary-figures/coarse-grained-model` contains the code and data to simulate the rate model of Figure S4. Folder `supplementary-figures/supp-sim` contains the simulations for Figures S5, S10 and S11. Figures S1, S2 and S3 (using `sim_xor_symfb.cpp`) can be reproduced by slightly modifying the XOR program.
+Codes for the supplementatry figures are more raw than the codes for the main figures. Folder `supplementary-figures/coarse-grained-model` contains the code and data to simulate the rate model of Figure S4. Folder `supplementary-figures/supp-sim` contains the simulations for Figures S5, S10 and S11. Figures S1 and S2 can be reproduced by slightly modifying the XOR program, while Figure S3 uses `sim_xor_symfb.cpp`.
 
 * Figure S4: From folder `supplementary-figures/coarse-grained-model/`, do: `bash run_coarse_grained.sh`. The MNIST data are in folder `supplementary-figures/coarse-grained-model/mnist` and are provided for convenience. Code to read that data was made by Eric Yuan (see license in file `readMNIST.cpp`). 
 
