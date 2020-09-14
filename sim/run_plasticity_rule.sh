@@ -33,6 +33,7 @@ make
 
 # Produce the figure	
 cd ../analysis/learning-rule
+mkdir -p ../../results/learning-rule/Wsum/
 OUTFILE_NAME="../../results/learning-rule/Wsum/Wsum_vs_Time.pdf"
 python plot_all.py -datadir "../"$DATADIR -connect_type $CONNECT_TYPE -outfile_name $OUTFILE_NAME -durex $EXAMPLE_DURATION -alpha $ALPHA
 open $OUTFILE_NAME

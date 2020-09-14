@@ -5,7 +5,7 @@ from utils_plotting import custom_colors
 import seaborn as sns
 import numpy as np
 
-plt.style.use('/Users/alexandrepayeur/Documents/Recherches/Burstprop/Codes/thesis_mplrc.dms')
+plt.style.use('../thesis_mplrc.dms')
 
 
 class PairingProtocol(object):
