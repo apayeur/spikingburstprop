@@ -19,7 +19,7 @@ File  `./analysis/plasticity-protocol/env_py3.yml` contains the name of all pack
 It is best to create a conda environment from the `.yml` to make sure all required Python packages are available.   
 
 The C++ compiler is mpicxx. This code has been tested on Mac OS and Linux.
-In the make `./sim/Makefile` , you will have to specify your Auryn install path .
+In the makefile `./sim/Makefile` , you will have to specify your own Auryn install path .
 
 ## Main figures
 To reproduce Figs. 2-4 of our paper "*Burst-dependent synaptic plasticity can coordinate learning in hierarchical circuits*", do the following once you have cloned the present repository and with Auryn installed as described above. Runtime estimates are for a Macbook Air, 1.6 GHz Intel Core i5. 
