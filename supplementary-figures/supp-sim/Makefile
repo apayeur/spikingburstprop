@@ -19,9 +19,9 @@ LDFLAGS=$(BUILDDIR)/src/libauryn.a \
 #         -I$(AURYNDIR)/src -I$(AURYNDIR)/dev/src
 
 
-OBJECTS=TransmitBurstConnection.o TransmitEventConnection.o STPeTMConnection.o
+OBJECTS=BiasIdentityConnection.o BiasConnection.o STPeTMConnection.o BCPConnection.o EBCPConnection.o AdaptiveEBCPConnection.o SineCurrentInjector.o FileCurrentInjector.o BurstPoissonGroup.o EventBurstPoissonGroup.o TransmitBurstConnection.o TransmitEventConnection.o
 
-SIMULATIONS=sim_direct_transmit sim_normalization_of_bpcurves sim_dendritic_transfer_func_modulation
+SIMULATIONS=sim_direct_transmit sim_normalization_of_bpcurves sim_dendritic_transfer_func_modulation sim_xor_symfb
 
 .SECONDARY:
 

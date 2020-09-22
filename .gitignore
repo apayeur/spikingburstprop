@@ -17,7 +17,9 @@ supplementary-figures/coarse-grained-model/mnist/train-labels-idx1-ubyte
 
 # simulation executable, but not the .cpp files
 sim/sim_*
+supplementary-figures/supp-sim/sim_*
 !sim/sim_*.cpp
+!supplementary-figures/supp-sim/sim_*.cpp
 sim/sim_propagation_inverted.cpp
 sim/run_propagation_inverted.sh
 
