@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append('../')
 from utils_plotting import custom_colors
-import seaborn as sns
 import numpy as np
 
 plt.style.use('../thesis_mplrc.dms')
