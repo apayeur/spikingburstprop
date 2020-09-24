@@ -28,7 +28,7 @@ To reproduce Figs. 2-4 of our paper "*Burst-dependent synaptic plasticity can co
 
 * Figure 2B-D: From folder `./analysis/plasticity-protocol`, run the Python script `plot_all_adaptive_rule.py`.  (Runtime estimate: ~10 minutes)
 
-* Figure 2E-G: From folder `./sim`, do: `bash run_plasticity.sh` (Runtime estimate: ~1 minute)
+* Figure 2E-G: From folder `./sim`, do: `bash run_plasticity_rule.sh` (Runtime estimate: ~1 minute)
 
 * Figure 3: From folder `./sim`, do: `bash run_propagation.sh` (Runtime estimate: ~1 minute)
 
