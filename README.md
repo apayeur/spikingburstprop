@@ -24,7 +24,7 @@ This code has been tested on Mac OS Mojave 10.14.6 and Linux LTS Ubuntu.
 Other, more specific, requirements are detailed below where necessary.
 
 ## Main figures
-To reproduce Figs. 2-4 of our paper "*Burst-dependent synaptic plasticity can coordinate learning in hierarchical circuits*", do the following once you have cloned the present repository and with Auryn installed as described above. Runtime estimates are for a Macbook Air, 1.6 GHz Intel Core i5. 
+To reproduce Figs. 2-4 of our paper "*Burst-dependent synaptic plasticity can coordinate learning in hierarchical circuits*", do the following once you have cloned the present repository and with Auryn installed as described above. Runtime estimates are for a Macbook Air, 1.6 GHz Intel Core i5. Results are put in subfolders of folder `./results/`, which are created automatically as needed.
 
 * Figure 2B-D: From folder `./analysis/plasticity-protocol`, run the Python script `plot_all_adaptive_rule.py`.  (Runtime estimate: ~10 minutes)
 
