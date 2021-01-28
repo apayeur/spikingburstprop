@@ -172,7 +172,7 @@ int main(int ac, char* av[])
     /**************************************************/
     //-- Connect input group to main group's somata with plastic synapses
     const double sparseness = 0.2;
-    const double learning_rate = 5e-3;
+    const double learning_rate = 2e-3;
     const double max_weight = 1.0;
     
     BCPConnection * con_ext_soma;
@@ -227,12 +227,13 @@ int main(int ac, char* av[])
     /******              MONITORS             *********/
     /**************************************************/
     const double binsize = 4.; //std::max(moving_average_time_constant/5., 5.);
+    auto seed_str = std::to_string(seed);
     sys->set_online_rate_monitor_target(neurons_exc);
     sys->set_online_rate_monitor_tau(binsize);
-    SpikeMonitor * smon = new SpikeMonitor( neurons_exc, sys->fn("ras") );
-    PopulationRateMonitor * pmon = new PopulationRateMonitor( neurons_exc, sys->fn("prate"), binsize );
-    BurstRateMonitor * brmon = new BurstRateMonitor( neurons_exc, sys->fn("brate"), binsize );
-    BurstRateMonitor * brmon_input = new BurstRateMonitor( input, sys->fn("brate_input"), binsize );
+    SpikeMonitor * smon = new SpikeMonitor( neurons_exc, sys->fn("ras_seed"+seed_str) );
+    PopulationRateMonitor * pmon = new PopulationRateMonitor( neurons_exc, sys->fn("prate_seed"+seed_str), binsize );
+    BurstRateMonitor * brmon = new BurstRateMonitor( neurons_exc, sys->fn("brate_seed"+seed_str), binsize );
+    BurstRateMonitor * brmon_input = new BurstRateMonitor( input, sys->fn("brate_input_seed"+seed_str), binsize );
 
     VoltageMonitor * vmon   = new VoltageMonitor( neurons_exc, 0, sys->fn("mem"), 1e-3);
     StateMonitor * smon_vd  = new StateMonitor( neurons_exc, 0, "Vd", sys->fn("Vd") );
@@ -246,16 +247,16 @@ int main(int ac, char* av[])
     WeightMonitor * wmon = new WeightMonitor( con_ext_soma, sys->fn("consyn"), binsize);
     wmon->add_equally_spaced(100);
     
-    WeightSumMonitor * wsmon = new WeightSumMonitor( con_ext_soma, sys->fn("wsum"), binsize );
+    WeightSumMonitor * wsmon = new WeightSumMonitor( con_ext_soma, sys->fn("wsum_seed"+seed_str), binsize );
     
     // Monitors for  estimating burst probability
     std::vector< StateMonitor* > smon_tr_post_ev;
     std::vector< StateMonitor* > smon_tr_post_b;
     
     for (int i=0;i<50;i++){
-        StateMonitor * ev = new StateMonitor( con_ext_soma->get_tr_event(), i, sys->fn(simname,i,"trevent"), binsize);
+        StateMonitor * ev = new StateMonitor( con_ext_soma->get_tr_event(), i, sys->fn(simname,i,"trevent_seed"+seed_str), binsize);
         smon_tr_post_ev.push_back(ev);
-        StateMonitor * b = new StateMonitor( con_ext_soma->get_tr_burst(), i, sys->fn(simname,i,"trburst"), binsize);
+        StateMonitor * b = new StateMonitor( con_ext_soma->get_tr_burst(), i, sys->fn(simname,i,"trburst_seed"+seed_str), binsize);
         smon_tr_post_b.push_back(b);
         
     }
