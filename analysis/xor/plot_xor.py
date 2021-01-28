@@ -23,8 +23,8 @@ number_of_realizations = args.numberofrealiz
 
 
 # import data
-data_file_prefix = '../../data/xor/xor.0.brate_'
-datadir = '../../data/xor/'
+data_file_prefix = '../../data/xor-test/sym-ff/multiple-reals/xor-test.0.brate_'
+datadir = '../../data/xor-test/sym-ff/multiple-reals/'
 filenames_output = []
 for i in range(1, number_of_realizations+1):
     filenames_output.append(data_file_prefix + 'output_seed'+str(i))
@@ -49,11 +49,11 @@ during_learning_interval = [3*args.alpha + args.numex//5*args.durex,
 during_learning = [int(during_learning_interval[0]/binSize) + 1,
                    int(during_learning_interval[1]/binSize) + 1]
 
-er_trace = np.loadtxt(datadir + 'xor0.0.trevent_seed1')
-br_trace = np.loadtxt(datadir + 'xor0.0.trburst_seed1')
+er_trace = np.loadtxt(datadir + 'xor-test0.0.trevent_seed1')
+br_trace = np.loadtxt(datadir + 'xor-test0.0.trburst_seed1')
 for i in range(1,50):
-    er_tmp = np.loadtxt(datadir + 'xor'+str(i)+'.0.trevent_seed1')
-    br_tmp = np.loadtxt(datadir + 'xor'+str(i)+'.0.trburst_seed1')
+    er_tmp = np.loadtxt(datadir + 'xor-test'+str(i)+'.0.trevent_seed1')
+    br_tmp = np.loadtxt(datadir + 'xor-test'+str(i)+'.0.trburst_seed1')
     er_trace[:,1] += er_tmp[:,1]
     br_trace[:,1] += br_tmp[:,1]
 er_trace[:,1] /= 50.
@@ -78,10 +78,10 @@ ax1.plot(input1_rates[before_learning[0]:before_learning[1], 0],
 ax1.plot(input2_rates[before_learning[0]:before_learning[1], 0],
          input2_rates[before_learning[0]:before_learning[1], 2], '-', lw=1, color=custom_colors['blue'], label='input 2')
 xtik = list(3*args.alpha + args.durex*np.arange(5))
-ax1.text(xtik[0] + args.durex/2., -0.5, '(0, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax1.text(xtik[1] + args.durex/2., -0.5, '(1, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax1.text(xtik[2] + args.durex/2., -0.5, '(0, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax1.text(xtik[3] + args.durex/2., -0.5, '(1, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
+ax1.text(xtik[0] + args.durex/2., -0.5, '(0, 0)', horizontalalignment='center', verticalalignment='top')
+ax1.text(xtik[1] + args.durex/2., -0.5, '(1, 0)', horizontalalignment='center', verticalalignment='top')
+ax1.text(xtik[2] + args.durex/2., -0.5, '(0, 1)', horizontalalignment='center', verticalalignment='top')
+ax1.text(xtik[3] + args.durex/2., -0.5, '(1, 1)', horizontalalignment='center', verticalalignment='top')
 ax1.set_ylabel('ER, input [Hz]')
 ax1.set_ylim([0, 11])
 #ax1.set_title('Inputs for all examples', fontdict=None, loc='center', fontsize=9)
@@ -111,10 +111,10 @@ ax2.fill_between(time_output[before_learning[0]:before_learning[1]],
                  color=custom_colors['blue'], alpha=0.5, lw=0)
 ax2.plot(time_output[before_learning[0]:before_learning[1]],
          e_th*np.ones(np.shape(mean_output['ER'][before_learning[0]:before_learning[1]])), 'k:', lw=0.5)
-ax2.text(xtik[0] + args.durex/2., -0.5, '(0, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax2.text(xtik[1] + args.durex/2., -0.5, '(1, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax2.text(xtik[2] + args.durex/2., -0.5, '(0, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax2.text(xtik[3] + args.durex/2., -0.5, '(1, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
+ax2.text(xtik[0] + args.durex/2., -0.5, '(0, 0)', horizontalalignment='center', verticalalignment='top')
+ax2.text(xtik[1] + args.durex/2., -0.5, '(1, 0)', horizontalalignment='center', verticalalignment='top')
+ax2.text(xtik[2] + args.durex/2., -0.5, '(0, 1)', horizontalalignment='center', verticalalignment='top')
+ax2.text(xtik[3] + args.durex/2., -0.5, '(1, 1)', horizontalalignment='center', verticalalignment='top')
 ax2.set_ylabel('ER, output [Hz]')
 ax2.set_ylim([0, 11])
 #ax2.set_title('Output before/after learning', fontdict=None, loc='center', fontsize=9)
@@ -140,10 +140,10 @@ ra.add_step(teacher, int(2.9*args.durex/binSize), int(0.1*args.durex/binSize)-1,
 ra.add_step(teacher, int(3.9*args.durex/binSize), int(0.1*args.durex/binSize)-1, -1./(e_max - er_est[int(3.9*args.durex/binSize)]))
 
 ax3.plot(r_out[:, 0], 100*r_out[:, 1]/r_out[:, 2], color=custom_colors['red'])
-ax3.text(xtik[0] + args.durex/2., -4.5, '(0, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax3.text(xtik[1] + args.durex/2., -4.5, '(1, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax3.text(xtik[2] + args.durex/2., -4.5, '(0, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax3.text(xtik[3] + args.durex/2., -4.5, '(1, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
+ax3.text(xtik[0] + args.durex/2., -4.5, '(0, 0)', horizontalalignment='center', verticalalignment='top')
+ax3.text(xtik[1] + args.durex/2., -4.5, '(1, 0)', horizontalalignment='center', verticalalignment='top')
+ax3.text(xtik[2] + args.durex/2., -4.5, '(0, 1)', horizontalalignment='center', verticalalignment='top')
+ax3.text(xtik[3] + args.durex/2., -4.5, '(1, 1)', horizontalalignment='center', verticalalignment='top')
 #ax3.set_title('Error generation at output layer', fontdict=None, loc='center', fontsize=9)
 remove_xticklabel(ax3)
 #set_axis_color(ax3, custom_colors['sky_blue'])
@@ -177,10 +177,10 @@ ax4.set_xticks(xtik)
 ax4.set_yticks([0, 50])
 ax4.set_ylim([0, 60])
 ax4.set_ylabel('BP, hidden 1 [%]')
-ax4.text(xtik[0] + args.durex/2., -2.5, '(0, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax4.text(xtik[1] + args.durex/2., -2.5, '(1, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax4.text(xtik[2] + args.durex/2., -2.5, '(0, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax4.text(xtik[3] + args.durex/2., -2.5, '(1, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
+ax4.text(xtik[0] + args.durex/2., -2.5, '(0, 0)', horizontalalignment='center', verticalalignment='top')
+ax4.text(xtik[1] + args.durex/2., -2.5, '(1, 0)', horizontalalignment='center', verticalalignment='top')
+ax4.text(xtik[2] + args.durex/2., -2.5, '(0, 1)', horizontalalignment='center', verticalalignment='top')
+ax4.text(xtik[3] + args.durex/2., -2.5, '(1, 1)', horizontalalignment='center', verticalalignment='top')
 #ax4.set_title('Error propagation to hidden 1', fontdict=None, loc='center', fontsize=9)
 ax4.spines['top'].set_visible(False)
 ax4.spines['right'].set_visible(False)
@@ -205,10 +205,10 @@ ax5.set_xticks(list(during_learning[0]*binSize + args.durex*np.arange(5)-1))
 ax5.set_yticks([0, 50])
 ax5.set_ylim([0, 60])
 ax5.set_ylabel('BP, hidden 2 [%]')
-ax5.text(xtik[0] + args.durex/2., -2.5, '(0, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax5.text(xtik[1] + args.durex/2., -2.5, '(1, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax5.text(xtik[2] + args.durex/2., -2.5, '(0, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax5.text(xtik[3] + args.durex/2., -2.5, '(1, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
+ax5.text(xtik[0] + args.durex/2., -2.5, '(0, 0)', horizontalalignment='center', verticalalignment='top')
+ax5.text(xtik[1] + args.durex/2., -2.5, '(1, 0)', horizontalalignment='center', verticalalignment='top')
+ax5.text(xtik[2] + args.durex/2., -2.5, '(0, 1)', horizontalalignment='center', verticalalignment='top')
+ax5.text(xtik[3] + args.durex/2., -2.5, '(1, 1)', horizontalalignment='center', verticalalignment='top')
 #ax5.set_title('Error propagation to hidden 2', fontdict=None, loc='center', fontsize=9)
 ax5.spines['top'].set_visible(False)
 ax5.spines['right'].set_visible(False)
@@ -223,10 +223,10 @@ ax6.plot(hidden1_rates[before_learning[0]:before_learning[1], 0], hidden1_rates[
 ax6.plot(hidden1_rates[before_learning[0]+1:before_learning[1], 0], hidden1_rates[after_learning[0]+1:after_learning[1], 2],
          color=custom_colors['blue'], label='after')
 xtik = list(3*args.alpha + args.durex*np.arange(5))
-ax6.text(xtik[0] + args.durex/2., -0.5, '(0, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax6.text(xtik[1] + args.durex/2., -0.5, '(1, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax6.text(xtik[2] + args.durex/2., -0.5, '(0, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax6.text(xtik[3] + args.durex/2., -0.5, '(1, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
+ax6.text(xtik[0] + args.durex/2., -0.5, '(0, 0)', horizontalalignment='center', verticalalignment='top')
+ax6.text(xtik[1] + args.durex/2., -0.5, '(1, 0)', horizontalalignment='center', verticalalignment='top')
+ax6.text(xtik[2] + args.durex/2., -0.5, '(0, 1)', horizontalalignment='center', verticalalignment='top')
+ax6.text(xtik[3] + args.durex/2., -0.5, '(1, 1)', horizontalalignment='center', verticalalignment='top')
 ax6.set_ylabel('ER, hidden 1 [Hz]')
 ax6.set_ylim([0, 11])
 #ax6.set_title('Hidden 1 before/after learning', fontdict=None, loc='center', fontsize=9)
@@ -245,10 +245,10 @@ ax7.plot(hidden2_rates[before_learning[0]:before_learning[1], 0], hidden2_rates[
          linestyle='dashed', color=custom_colors['blue'], label='before')
 ax7.plot(hidden2_rates[before_learning[0]+1:before_learning[1], 0], hidden2_rates[after_learning[0]+1:after_learning[1], 2],
          color=custom_colors['blue'], label='after')
-ax7.text(xtik[0] + args.durex/2., -0.5, '(0, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax7.text(xtik[1] + args.durex/2., -0.5, '(1, 0)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax7.text(xtik[2] + args.durex/2., -0.5, '(0, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
-ax7.text(xtik[3] + args.durex/2., -0.5, '(1, 1)', horizontalalignment='center', verticalalignment='top', fontsize=8)
+ax7.text(xtik[0] + args.durex/2., -0.5, '(0, 0)', horizontalalignment='center', verticalalignment='top')
+ax7.text(xtik[1] + args.durex/2., -0.5, '(1, 0)', horizontalalignment='center', verticalalignment='top')
+ax7.text(xtik[2] + args.durex/2., -0.5, '(0, 1)', horizontalalignment='center', verticalalignment='top')
+ax7.text(xtik[3] + args.durex/2., -0.5, '(1, 1)', horizontalalignment='center', verticalalignment='top')
 ax7.set_ylabel('ER, hidden 2 [Hz]')
 ax7.set_ylim([0, 11])
 #ax7.set_title('Hidden 2 before/after learning', fontdict=None, loc='center', fontsize=9)

@@ -62,7 +62,7 @@ axs[1, 0].plot(rates, np.zeros(len(rates)), 'k--', lw=0.5)
 axs[1, 0].set_xticks([1, 50])
 axs[1, 0].set_xlabel('Rate [Hz]')
 axs[1, 0].set_ylabel('$\Delta W$')
-axs[1, 0].legend(loc='lower right', frameon=False, framealpha=0.5, ncol=1, handlelength=1, borderaxespad=0.1, prop={'size': 7})
+axs[1, 0].legend(loc='lower right', frameon=False, framealpha=0.5, ncol=1, handlelength=1, borderaxespad=0.1)
 axs[1, 0].set_title('Poisson protocol')
 sns.despine(ax=axs[1, 0])
 

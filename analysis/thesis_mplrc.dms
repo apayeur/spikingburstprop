@@ -20,7 +20,7 @@ font.sans-serif     : Helvetica Neue
 # settings for axes and ticks. Special text sizes can be defined
 # relative to font.size, using the following values: xx-small, x-small,
 # small, medium, large, x-large, xx-large, larger, or smaller
-font.size           : 9
+font.size           : 7
 
 ### TEXT
 # text properties used by text.Text.  See
@@ -32,7 +32,7 @@ text.usetex         : False
 ### AXES
 #axes.linewidth      : 1.5     # edge linewidth
 axes.titlesize      :  medium # fontsize of the axes title
-axes.labelsize      :  small  # fontsize of the x any y labels
+#axes.labelsize      :  small  # fontsize of the x any y labels
 axes.labelpad       : 3.0     # space between label and axis
 #axes.labelweight    : normal  # weight of the x and y labels
 #axes.labelcolor     : black
@@ -55,7 +55,7 @@ axes.labelpad       : 3.0     # space between label and axis
 #xtick.minor.width    : 0.5    # minor tick width in points
 xtick.major.pad      : 1.5      # distance to major tick label in points
 xtick.minor.pad      : 1.5      # distance to the minor tick label in points
-xtick.labelsize      :  small # fontsize of the tick labels
+#xtick.labelsize      :  small # fontsize of the tick labels
 #xtick.direction      : in     # direction: in, out, or inout
 
 #ytick.major.size     : 4      # major tick size in points
@@ -64,7 +64,7 @@ xtick.labelsize      :  small # fontsize of the tick labels
 #ytick.minor.width    : 0.5    # minor tick width in points
 ytick.major.pad      : 1.5      # distance to major tick label in points
 ytick.minor.pad      : 1.5      # distance to the minor tick label in points
-ytick.labelsize      : small # fontsize of the tick labels
+#ytick.labelsize      : small # fontsize of the tick labels
 #ytick.direction      : in     # direction: in, out, or inout
 
 
