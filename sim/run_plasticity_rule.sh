@@ -2,12 +2,12 @@
 
 # Parameters
 CONNECT_TYPE="AdaptiveEBCP"
-TAU_PRE=100.e-3
+TAU_PRE=25.e-3
 EXAMPLE_DURATION=50
 SIM_NAME="plasticity_rule"
 ALPHA=10
 D0=0.25 # dendritic input initial strength
-W0=0.08 # initial somatic synaptic strength
+W0=0.09 # initial somatic synaptic strength
 NUM_REAL=1
 
 # Create parent directory for data 
@@ -39,7 +39,7 @@ done
 # Produce the figure	
 cd ../analysis/learning-rule
 mkdir -p ../../results/learning-rule/Wsum/multiple-realizations
-OUTFILE_NAME="../../results/learning-rule/Wsum/Wsum_vs_Time_Multiple_Realizations.pdf"
+OUTFILE_NAME="../../results/learning-rule/Wsum/Wsum_vs_Time_Multiple_Realizations_taupre25.pdf"
 python plot_all.py -datadir "../"$DATADIR -connect_type $CONNECT_TYPE -outfile_name $OUTFILE_NAME -durex $EXAMPLE_DURATION -alpha $ALPHA -numberofrealiz $NUM_REAL
 open $OUTFILE_NAME
 
