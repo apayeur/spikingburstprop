@@ -2,13 +2,13 @@
 
 # Parameters
 CONNECT_TYPE="AdaptiveEBCP"
-TAU_PRE=25.e-3
+TAU_PRE=50.e-3
 EXAMPLE_DURATION=50
 SIM_NAME="plasticity_rule"
 ALPHA=10
 D0=0.25 # dendritic input initial strength
-W0=0.09 # initial somatic synaptic strength
-NUM_REAL=1
+W0=0.095 # initial somatic synaptic strength
+NUM_REAL=5
 
 # Create parent directory for data 
 PARENT_DIR="../data/learning-rule/$CONNECT_TYPE/tau_pre$TAU_PRE"
