@@ -172,7 +172,7 @@ int main(int ac, char* av[])
     /**************************************************/
     //-- Connect input group to main group's somata with plastic synapses
     const double sparseness = 0.2;
-    const double learning_rate = 2e-3;
+    const double learning_rate = 3.5e-3;
     const double max_weight = 1.0;
     
     BCPConnection * con_ext_soma;
@@ -226,7 +226,7 @@ int main(int ac, char* av[])
     /**************************************************/
     /******              MONITORS             *********/
     /**************************************************/
-    const double binsize = 4.; //std::max(moving_average_time_constant/5., 5.);
+    const double binsize = 2.5; //std::max(moving_average_time_constant/5., 5.);
     auto seed_str = std::to_string(seed);
     sys->set_online_rate_monitor_target(neurons_exc);
     sys->set_online_rate_monitor_tau(binsize);

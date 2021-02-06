@@ -2,60 +2,46 @@ from pairingprotocols import RandomProtocol
 from preeventsynapse import AdaptivePreEventSynapse
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import fsolve
-
-"""
-This plasticity protocol consists in pre and postsynaptic Poisson processes.
-"""
 
 
 def simulate(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_estimate=(5., 0.35*5.)):
-    np.random.seed(3)
+    """Plasticity protocol consisting of pre and postsynaptic Poisson processes."""
+    # Parameters
+    nb_reals = 20       # number of realizations
+    dt = 0.001          # integration time step
+    np.random.seed(3)   # for reproducibility
 
-    # select parameters for pairing protocol
-    nb_reals = 20
-    burnin = 0.
-
-    # create synapse
+    # Create synapse
     syn = AdaptivePreEventSynapse(eta,
                                   burst_def=burst_threshold,
                                   tau_trace=tau_pre,
                                   tau_ma=alpha,
                                   starting_estimate=starting_estimate)
 
-    # integration time step
-    dt = 0.001
-
-    weights = np.zeros(rates.shape)
-    dwdtdivr2 = np.zeros(rates.shape)
-    weight_trace = []
-    bp_est = []
-    bp = []
+    # Main simulation
+    weights = np.zeros((nb_reals, len(rates)))
     for n in range(nb_reals):
         if n % 10 == 0:
             print('realization #{}'.format(n+1))
         for idx, r in enumerate(rates):
             syn.reset()
-            protocol = RandomProtocol(duration=duration+burnin, rate=r)
-            syn.pre.compute_trains(protocol.spiketimes_pre, dt, duration+burnin)
-            syn.post_ma.compute_trains(protocol.spiketimes_post, dt, duration+burnin)
-            #meanER = len(np.where(syn.post_ma.train['event']>0)[0])/duration
-            #syn.post_ma.set_starting_estimate((meanER, (starting_estimate[1]/starting_estimate[0])*meanER))
+            protocol = RandomProtocol(duration=duration, rate=r)
+            syn.pre.compute_trains(protocol.spiketimes_pre, dt, duration)
+            syn.post_ma.compute_trains(protocol.spiketimes_post, dt, duration)
 
             count = 0
-            for x in range(int(burnin/dt), int((burnin+duration)/dt)):
+            for x in range(int(duration/dt)):
                 count += 1
                 syn.evolve(x, dt)
-                weight_trace.append(syn.weight/dt)
-                bp_est.append(syn.post_ma.moving_average['burst']/syn.post_ma.moving_average['event'])
-            weights[idx] += syn.weight/dt   # division by dt is because event and burst trains are not divided
-                                            # by dt in the rule (see preeventsynapse.py)
-    weights /= nb_reals
+            weights[n, idx] += syn.weight/dt
+            # division by dt is because event and burst trains are not divided
+            # by dt in the rule (see preeventsynapse.py)
 
-    return rates, weights, weight_trace, dwdtdivr2
+    return np.mean(weights, axis=0), np.std(weights, axis=0)
 
 
 def analytical(rates, eta, duration, alpha, burst_threshold, tau_pre, starting_estimates=(5, 0.35*5), tau_ref=0.):
+    """Analytical result for the weight change."""
     r = rates
     lambda_ = r/(1. - tau_ref*r)
     P_greater = np.exp(-lambda_ * (burst_threshold - tau_ref))
@@ -83,7 +69,6 @@ def plot_cov(synapse, rate, timestep, burst_threshold):
              cov_eb[L - 1 - int(10. / timestep):L - 1 + int(10. / timestep)], label=r'$\langle B(t) E(t+\tau) \rangle$')
     plt.plot(1000*tau, c_anal, label='anal')
     plt.xlim([-100, 100])
-    #plt.ylim([np.min(cov_be), 0.0005])
     plt.ylabel("Cross-covariance")
     plt.xlabel("Lag [ms]")
     plt.legend()

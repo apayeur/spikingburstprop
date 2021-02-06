@@ -21,9 +21,9 @@ parser.add_argument("-numberofrealiz", type=int, help="number of realization of 
 args = parser.parse_args()
 number_of_realizations = args.numberofrealiz
 
-# ~~~~~~~~~~~~~~~~~~~~~ #
-#       Import data     #
-# ~~~~~~~~~~~~~~~~~~~~~ #
+# ~~~~~~~~~~~
+# Import data
+# ~~~~~~~~~~~
 # Wsum (average of nonzero synaptic weights
 wsum = np.loadtxt('{}/plasticity_rule.0.wsum_seed{}'.format(args.datadir, 1))
 for i in range(1, number_of_realizations):
@@ -73,7 +73,10 @@ mean_BR_trace = np.mean(all_br_traces, axis=0)
 mean_BP_trace = np.mean(all_br_traces/all_er_traces, axis=0)
 std_BP_trace = np.std(all_br_traces/all_er_traces, axis=0)
 
-# --- plotting --- #
+# ~~~~~~~~
+# Plotting
+# ~~~~~~~~
+n_SD = 1
 fig = plt.figure(figsize=(70./25.4, 88./25.4))
 tics = list(4*args.alpha + args.durex*np.arange(0, 7))
 binSize = brate_post[1, 0] - brate_post[0, 0]
@@ -81,13 +84,13 @@ binSize = brate_post[1, 0] - brate_post[0, 0]
 ax1 = fig.add_subplot(311)
 ax1.plot(brate_post[:, 0], brate_post_meanER, color=custom_colors['blue'], lw=1, label='ER')
 ax1.fill_between(brate_post[:, 0],
-                 brate_post_meanER - 2*brate_post_stdER,
-                 brate_post_meanER + 2*brate_post_stdER,
+                 brate_post_meanER - n_SD*brate_post_stdER,
+                 brate_post_meanER + n_SD*brate_post_stdER,
                  color=custom_colors['blue'], alpha=0.5, lw=0)
 ax1.plot(brate_post[:, 0], np.ones_like(brate_post_meanER)*np.mean(brate_post_meanER[int(args.alpha/binSize):int((3*args.alpha + args.durex)/binSize)]), ':', color="black", lw=0.5)
 ax1.set_ylabel('Postsyn. ER [Hz]', color=custom_colors['blue'])
-ax1.set_ylim([0, 9])
-ax1.set_yticks([0, 8])
+ax1.set_ylim([0, 6])
+ax1.set_yticks([0, 5])
 ax1.spines['top'].set_visible(False)
 ax1.set_xticks([0]+tics)
 remove_xticklabel(ax1)
@@ -95,13 +98,13 @@ remove_xticklabel(ax1)
 ax1_tw = ax1.twinx()
 ax1_tw.plot(brate_post[:, 0], 100*brate_post_meanBP, color=custom_colors['red'], lw=1)
 ax1_tw.fill_between(brate_post[:, 0],
-                    100*brate_post_meanBP - 2*100*brate_post_stdBP,
-                    100*brate_post_meanBP + 2*100*brate_post_stdBP,
+                    100*brate_post_meanBP - n_SD*100*brate_post_stdBP,
+                    100*brate_post_meanBP + n_SD*100*brate_post_stdBP,
                     color=custom_colors['red'], alpha=0.5, lw=0)
 ax1_tw.plot(er_trace[:, 0], 100*mean_BR_trace/mean_ER_trace, '--', color=custom_colors['red'], lw=1, label=r'$\overline{P}$')
 ax1_tw.fill_between(er_trace[:, 0],
-                    100*mean_BP_trace - 2*100*std_BP_trace,
-                    100*mean_BP_trace + 2*100*std_BP_trace,
+                    100*mean_BP_trace - n_SD*100*std_BP_trace,
+                    100*mean_BP_trace + n_SD*100*std_BP_trace,
                     color=custom_colors['red'], alpha=0.5, lw=0)
 ax1_tw.set_yticks([0, 50])
 ax1_tw.set_ylim([0, 60])
@@ -111,14 +114,14 @@ ax1_tw.spines['top'].set_visible(False)
 
 ax2 = fig.add_subplot(312, sharex=ax1)
 ax2.plot(wsum[:, 0], 100*(wsum_mean - wsum_mean[0])/wsum[0, 1], color='black', lw=1.5, label='Weight change')
-ax2.fill_between(wsum[:, 0], 100*(wsum_mean - wsum_mean[0])/wsum[0, 1] - 100*2*wsum_std/wsum[0, 1],
-                 100*(wsum_mean - wsum_mean[0])/wsum[0, 1] + 100*2*wsum_std/wsum[0, 1],
+ax2.fill_between(wsum[:, 0], 100*(wsum_mean - wsum_mean[0])/wsum[0, 1] - 100*n_SD*wsum_std/wsum[0, 1],
+                 100*(wsum_mean - wsum_mean[0])/wsum[0, 1] + 100*n_SD*wsum_std/wsum[0, 1],
                  color='black', alpha=0.5, lw=0)
 ax2.plot(wsum[:, 0], 100*(brate_post_meanBP - mean_BP_trace), '-.', lw=1,
          color=custom_colors['red'], label=r'Postsyn. BP$ - \overline{P}$')
 ax2.fill_between(wsum[:, 0],
-                 100*(brate_post_meanBP - mean_BP_trace) - 2*100*np.sqrt(brate_post_stdBP**2 + std_BP_trace**2),
-                 100*(brate_post_meanBP - mean_BP_trace) + 2*100*np.sqrt(brate_post_stdBP**2 + std_BP_trace**2),
+                 100*(brate_post_meanBP - mean_BP_trace) - n_SD*100*np.sqrt(brate_post_stdBP**2 + std_BP_trace**2),
+                 100*(brate_post_meanBP - mean_BP_trace) + n_SD*100*np.sqrt(brate_post_stdBP**2 + std_BP_trace**2),
                  color=custom_colors['red'], alpha=0.5, lw=0)
 ax2.plot(wsum[:, 0], np.zeros_like(wsum[:, 0]), ':', color="black", lw=0.5)
 ax2.set_ylabel('[%]')
@@ -130,8 +133,8 @@ remove_xticklabel(ax2)
 ax3 = fig.add_subplot(313)
 ax3.plot(brate_pre[:, 0], brate_pre_meanER, color=custom_colors['blue'], lw=1, label='ER')
 ax3.fill_between(brate_pre[:, 0],
-                 brate_pre_meanER - 2*brate_pre_stdER,
-                 brate_pre_meanER + 2*brate_pre_stdER,
+                 brate_pre_meanER - n_SD*brate_pre_stdER,
+                 brate_pre_meanER + n_SD*brate_pre_stdER,
                  color=custom_colors['blue'], alpha=0.5, lw=0)
 ax3.set_ylim([0, 6])
 ax3.set_yticks([0, 5])
@@ -145,8 +148,8 @@ ax3_tw.set_yticks([0, 50])
 ax3_tw.set_ylim([0, 60])
 ax3_tw.plot(brate_pre[:, 0], 100*brate_pre_meanBP, color=custom_colors['red'], lw=1)
 ax3_tw.fill_between(brate_pre[:, 0],
-                    100*brate_pre_meanBP - 2*100*brate_pre_stdBP,
-                    100*brate_pre_meanBP + 2*100*brate_pre_stdBP,
+                    100*brate_pre_meanBP - n_SD*100*brate_pre_stdBP,
+                    100*brate_pre_meanBP + n_SD*100*brate_pre_stdBP,
                     color=custom_colors['red'], alpha=0.5, lw=0)
 ax3_tw.set_ylabel('Presyn. BP [%]', color=custom_colors['red'])
 ax3_tw.spines['top'].set_visible(False)

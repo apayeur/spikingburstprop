@@ -12,7 +12,8 @@ processes. Namely, a neuron fires an event, and a burst is then evoked with prob
 
 def simulate(bps, eta, duration, alpha, burst_threshold, tau_pre, event_rate):
     """
-    Compute the weight change for the burst-poisson protocol
+    Compute the weight change for the burst-poisson protocol, which consists in pre and postsynaptic Poisson event-burst
+processes. Namely, a neuron fires an event, and a burst is then evoked with probability p.
     :param bps:             burst probabilities of the protocol
     :param eta:             learning rate
     :param duration:        duration of the protocol (s)
@@ -22,19 +23,19 @@ def simulate(bps, eta, duration, alpha, burst_threshold, tau_pre, event_rate):
     :param event_rate:      rate of event generation
     :return:                weights
     """
-    # set random seed for reproducibility
+    # Set random seed for reproducibility
     np.random.seed(2)
 
-    # parameters
+    # Parameters
     nb_reals = 20       # number of realizations of the random pairing
     ER = event_rate     # event rate
     bp_protocol = 0.2   # initial BP estimate
     dt = 0.001          # integration time step
 
-    weights = np.zeros(bps.shape)
-
+    # Main simulation
+    weights = np.zeros((nb_reals, len(bps)))
     for n in range(nb_reals):
-        if (n+1) % 2 == 0:
+        if (n+1) % 10 == 0:
             print('realization #{}'.format(n+1))
         for i, p in enumerate(bps):
             syn = AdaptivePreEventSynapse(eta,
@@ -54,12 +55,11 @@ def simulate(bps, eta, duration, alpha, burst_threshold, tau_pre, event_rate):
 
             for t in range(int(duration/dt)):
                 syn.evolve(t, dt)
-            weights[i] += syn.weight/dt
+            weights[n, i] += syn.weight/dt
             #  division by dt is because event and burst trains are not divided
             #  by dt in the rule (see preeventsynapse.py)
-    weights /= nb_reals
 
-    return weights
+    return np.mean(weights, axis=0), np.std(weights, axis=0)
 
 
 if __name__ == '__main__':
@@ -86,5 +86,5 @@ if __name__ == '__main__':
     plt.xlabel('Initial BP [\%]')
     plt.ylabel('$\Delta W$')
     plt.tight_layout()
-    plt.savefig('../../results/learning-rule/Poisson/DeltaW_AdaptiveLearningRule_BurstPoisson_Alpha' + str(alpha) + '.pdf')
+    plt.savefig('../../results/learning-rule/Poisson/DeltaW_BurstPoisson_Alpha' + str(alpha) + '.pdf')
     plt.close()
