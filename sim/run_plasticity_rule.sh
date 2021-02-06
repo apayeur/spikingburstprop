@@ -8,7 +8,7 @@ SIM_NAME="plasticity_rule"
 ALPHA=5
 D0=0.25 # dendritic input initial strength
 W0=0.08 # initial somatic synaptic strength
-NUM_REAL=5
+NUM_REAL=20
 
 # Create parent directory for data 
 PARENT_DIR="../data/learning-rule/$CONNECT_TYPE/tau_pre$TAU_PRE"
@@ -39,7 +39,7 @@ done
 # Produce the figure	
 cd ../analysis/learning-rule
 mkdir -p ../../results/learning-rule/Wsum/multiple-realizations
-OUTFILE_NAME="../../results/learning-rule/Wsum/Wsum_vs_Time_MultipleRealizations.pdf"
+OUTFILE_NAME="../../results/learning-rule/Wsum/Wsum_vs_Time.pdf"
 python plot_all.py -datadir "../"$DATADIR -connect_type $CONNECT_TYPE -outfile_name $OUTFILE_NAME -durex $EXAMPLE_DURATION -alpha $ALPHA -numberofrealiz $NUM_REAL
 open $OUTFILE_NAME
 
