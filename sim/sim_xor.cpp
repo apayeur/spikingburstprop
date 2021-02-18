@@ -456,7 +456,7 @@ int main(int ac, char* av[])
     /**************************************************/
     /******              MONITORS             *********/
     /**************************************************/
-    double binSize_rate = 1;
+    double binSize_rate = durex/20.;
     double binSize_wsum = binSize_rate;
     auto seed_str = std::to_string(seed);
 
